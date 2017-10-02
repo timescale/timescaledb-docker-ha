@@ -13,7 +13,6 @@ WAL_PATH = os.getenv('WAL_PATH', '/data/wal/pgwal/')
 WALE_BIN = os.getenv('WALE_BIN', '/usr/local/bin/wal-e')
 WALE_PUSH_FLAGS = os.getenv('WALE_PUSH_FLAGS', '--terse')
 WALE_FETCH_FLAGS = os.getenv('WALE_FETCH_FLAGS', '')
-CLUSTER_PATH = os.getenv('CLUSTER_PATH', '')
 
 
 class WaleWrapper:
@@ -42,8 +41,8 @@ class WaleWrapper:
         logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
         # create routes
-        self.api.add_url_rule('/push/<path:path>', view_func=self.push, methods=['GET'])
-        self.api.add_url_rule('/fetch/<path:path>', view_func=self.fetch, methods=['GET'])
+        self.api.add_url_rule('/wal-push/<path:path>', view_func=self.push, methods=['GET'])
+        self.api.add_url_rule('/wal-fetch/<path:path>', view_func=self.fetch, methods=['GET'])
 
         self.api.logger.info('Ready to receive wal-e commands')
 
