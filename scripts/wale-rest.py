@@ -9,7 +9,8 @@ import os
 from logging.config import dictConfig
 
 API_PORT = int(os.getenv('WALE_LISTEN_PORT', '5000'))
-WAL_PATH = os.getenv('WAL_PATH', '/data/wal/pgwal/')
+PGDATA = os.getenv('PGDATA', '/var/lib/postgresql/data')
+PGWAL = os.getenv('PGWAL', PGDATA + '/pg_wal')
 WALE_BIN = os.getenv('WALE_BIN', '/usr/local/bin/wal-e')
 WALE_FLAGS = os.getenv('WALE_FLAGS', '--terse')
 WALE_PUSH_FLAGS = os.getenv('WALE_PUSH_FLAGS', '')
@@ -69,7 +70,7 @@ class WaleWrapper:
         if '/' in path:
             path = path.split('/')[-1]
 
-        file_path = WAL_PATH + path
+        file_path = PGWAL + '/' + path
 
         command = [WALE_BIN]
         if len(WALE_FLAGS) > 0:
@@ -94,7 +95,7 @@ class WaleWrapper:
 
         file_id = path
 
-        file_path  = WAL_PATH + '/' + file_id
+        file_path  = PGWAL + '/' + file_id
 
         command = [WALE_BIN]
         if len(WALE_FLAGS) > 0:
