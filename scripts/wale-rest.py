@@ -8,10 +8,10 @@ import logging.config
 import os
 from logging.config import dictConfig
 
-API_PORT = int(os.getenv('WALE_LISTEN_PORT', '5000'))
+API_PORT = int(os.getenv('WALE_LISTEN_PORT', '80'))
 PGDATA = os.getenv('PGDATA', '/var/lib/postgresql/data')
 PGWAL = os.getenv('PGWAL', PGDATA + '/pg_wal')
-WALE_BIN = os.getenv('WALE_BIN', '/usr/local/bin/wal-e')
+WALE_BIN = os.getenv('WALE_BIN', 'wal-e')
 WALE_FLAGS = os.getenv('WALE_FLAGS', '--terse')
 WALE_PUSH_FLAGS = os.getenv('WALE_PUSH_FLAGS', '')
 WALE_FETCH_FLAGS = os.getenv('WALE_FETCH_FLAGS', '-p=0')
@@ -46,11 +46,12 @@ class WaleWrapper:
         self.api.add_url_rule('/ping', view_func=self.ping, methods=['GET'])
         self.api.add_url_rule('/wal-push/<path:path>', view_func=self.push, methods=['GET'])
         self.api.add_url_rule('/wal-fetch/<path:path>', view_func=self.fetch, methods=['GET'])
+        self.api.add_url_rule('/backup-push', view_func=self.backup_push, methods=['GET'])
 
         self.api.logger.info('Ready to receive wal-e commands')
 
         # start API
-        self.api.run(host='0.0.0.0', port=API_PORT, debug=False)
+        self.api.run(host='0.0.0.0', port=API_PORT, debug=False, threaded=True)
 
     def perform_command(self, cmd, log_line, error_line, return_line):
 
@@ -112,6 +113,24 @@ class WaleWrapper:
                                     'Fetching wal {}'.format(file_id),
                                     'Failed to fetch wal {}'.format(file_id),
                                     'Fetched wal {}'.format(file_id))
+
+    def backup_push(self):
+        file_path = PGDATA
+        command = [WALE_BIN]
+        if len(WALE_FLAGS) > 0:
+            for s in WALE_FLAGS.split():
+                command.append(s)
+        command.append('backup-push')
+        if len(WALE_PUSH_FLAGS) > 0:
+            for s in WALE_PUSH_FLAGS.split():
+                command.append(s)
+        command.extend([file_path])
+        print(command)
+
+        return self.perform_command(command,
+                                    'Pushing backup {}'.format(file_path),
+                                    'Failed to push backup {}'.format(file_path),
+                                    'Pushed backup {}'.format(file_path))
 
     def ping(self):
         return 'pong'
