@@ -29,7 +29,7 @@ spec:
       serviceAccountName: patronidemo
       containers:
       - name: *cluster_name
-        image: patroni  # docker build -t patroni .
+        image: 142548018081.dkr.ecr.us-east-2.amazonaws.com/patroni:dev
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8008
