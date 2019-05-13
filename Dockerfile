@@ -13,12 +13,13 @@ ARG PG_MAJOR
 
 FROM timescale/timescaledb:latest-pg${PG_MAJOR}
 ENV SPILO_TAG 1.5-p7
+ENV PGBACKREST_TAG 2.13
 ENV PGROOT=/home/postgres \
     PGDATA=$PGROOT/data \
     PGLOG=$PGROOT/pg_log
 ENV LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 EDITOR=/usr/bin/editor
 RUN set -ex \
-    && apk add --no-cache python3 openssl \
+    && apk add --no-cache python3 openssl perl \
     && apk add --no-cache --virtual .build-deps \
                 coreutils \
                 gcc \
@@ -28,6 +29,22 @@ RUN set -ex \
                 linux-headers \
                 curl \
                 shadow \
+                make \
+                perl-dev \
+                zlib-dev \
+                openssl-dev \
+                libxml2-dev \
+    ## START pgBackrest https://pgbackrest.org/user-guide.html#build
+    && mkdir -p /tmp/pgbackrest \
+    && pwd \
+    && curl -L https://github.com/pgbackrest/pgbackrest/archive/release/${PGBACKREST_TAG}.tar.gz > /tmp/pgbackrest/pgbackrest.tar.gz \
+    && cd /tmp/pgbackrest/ && tar xzfp pgbackrest.tar.gz \
+    && make -s -C /tmp/pgbackrest/pg*/src \
+    && cp -a /tmp/pgbackrest/pg*/src/pgbackrest /usr/bin \
+    && chmod 755 /usr/bin/pgbackrest \
+    && install -o postgres -g postgres -m 0770 -d /etc/pgbackrest/ /etc/pgbackrest/conf.d /var/log/pgbackrest \
+    && rm -rf /tmp/pgbackrest && cd -\
+    ## END pgBackrest
     ## START SPILO compatibility
     ## The postgres operator requires the Docker Image to be Spilo. That does not really entail much, other than a pretty
     ## tight coupling between environment variables and the `configure_spilo` script. As we don't want to copy all the
