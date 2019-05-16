@@ -15,8 +15,8 @@ FROM timescale/timescaledb:latest-pg${PG_MAJOR}
 ENV SPILO_TAG 1.5-p7
 ENV PGBACKREST_TAG 2.13
 ENV PGROOT=/home/postgres \
-    PGDATA=$PGROOT/data \
-    PGLOG=$PGROOT/pg_log
+    PGDATA=/home/postgres/data \
+    PGLOG=/home/postgres/pg_log
 ENV LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 EDITOR=/usr/bin/editor
 RUN set -ex \
     && apk add --no-cache python3 openssl perl \
