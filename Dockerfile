@@ -46,7 +46,10 @@ ENV BUILD_PACKAGES="git patchutils binutils git gcc libc-dev make cmake libssl-d
 # PostgreSQL, all versions
 RUN apt-get install -y ${BUILD_PACKAGES}; \
     for pg in ${PG_MAJOR} ${PG_VERSIONS}; do \
-        apt-get install -y postgresql-${pg} postgresql-server-dev-${pg}; \
+        apt-get install -y postgresql-${pg} postgresql-server-dev-${pg} \
+        # We get the perl and python dependencies in the image anyway (patroni, pgbackrest)
+        # so why not allow their PL's to also be available in PostgreSQL
+        && apt-get install -y postgresql-plpython3-${pg} postgresql-plperl-${pg} ; \
     done \
     ## We want timescaledb to be loaded in this image by every created cluster
     && find /usr/share/postgresql -name 'postgresql.conf.sample' -exec \
@@ -91,6 +94,9 @@ RUN pip3 install setuptools && true \
     && find . -type f -name '*_test.py' -delete \
     && find . -type f -name '*_test.cpython*.pyc' -delete
 
+# And we need some more pgBackRest dependencies for us to use an s3-bucket as a store
+RUN apt-get install -y libio-socket-ssl-perl libxml-libxml-perl
+
 WORKDIR /
 ## The postgres operator requires the Docker Image to be Spilo. That does not really entail much,  than a pretty
 ## tight coupling between environment variables and the `configure_spilo` script. As we don't want to all the
@@ -114,7 +120,6 @@ RUN apt-get update \
             /usr/share/locale/?? \
             /usr/share/locale/??_?? \
     && find /var/log -type f -exec truncate --size 0 {} \;
-
 
 ## Create a smaller Docker images from the builder image
 FROM scratch
