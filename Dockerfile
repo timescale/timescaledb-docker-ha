@@ -97,16 +97,13 @@ RUN pip3 install setuptools && true \
 # And we need some more pgBackRest dependencies for us to use an s3-bucket as a store
 RUN apt-get install -y libio-socket-ssl-perl libxml-libxml-perl
 
-WORKDIR /
 ## The postgres operator requires the Docker Image to be Spilo. That does not really entail much,  than a pretty
 ## tight coupling between environment variables and the `configure_spilo` script. As we don't want to all the
 ## logic, let's just use that script to configure to configure our container as well.
+WORKDIR /scripts/
 RUN curl -O -L https://raw.githubusercontent.com/zalando/spilo/${GH_SPILO_TAG}/postgres-appliance/scripts/configure_spilo.py
 
-## Docker entrypoints and configuration scripts
-ADD patroni_entrypoint.sh /
-## Some patroni callbacks are configured by default by the operator.
-COPY scripts /scripts/
+
 
 ## Cleanup
 RUN apt-get update \
@@ -124,11 +121,23 @@ RUN apt-get update \
 ## Create a smaller Docker images from the builder image
 FROM scratch
 COPY --from=builder / /
+## Docker entrypoints and configuration scripts
+ADD patroni_entrypoint.sh /
+## Some patroni callbacks are configured by default by the operator.
+COPY scripts /scripts/
 
+
+## The mount being used by the postgres-operator is /home/postgres/pgdata
+## for Patroni to do it's work it will sometimes move an old/invalid data directory
+## inside the parent directory; therefore we need a subdirectory inside the mount
 
 ENV PGROOT=/home/postgres \
-    PGDATA=/home/postgres/data \
-    PGLOG=/home/postgres/pg_log
+    PGDATA=/home/postgres/pgdata/data \
+    PGLOG=/home/postgres/pg_log \
+    PGSOCKET=/home/postgres/pgdata \
+    BACKUPROOT=/home/postgres/pgdata/backup \
+    PGBACKREST_CONFIG=/home/postgres/pgdata/backup/pgbackrest.conf \
+    PGBACKREST_STANZA=poddb
 
 ## The postgres operator has strong opinions about the HOME directory of postgres, whereas we do not.  make
 ## the operator happy then
@@ -136,15 +145,20 @@ RUN usermod postgres --home ${PGROOT} --move-home
 
 ## The /etc/supervisor/conf.d directory is a very Spilo oriented directory. However, to make things work
 ## the user postgres currently needs to have write access to this directory
-RUN install -o postgres -g postgres -m 0750 -d "${PGROOT}" "${PGLOG}" "${PGDATA}" /etc/supervisor/conf.d /scripts
+RUN install -o postgres -g postgres -m 0750 -d "${PGROOT}" "${PGLOG}" "${PGDATA}" "${BACKUPROOT}" /etc/supervisor/conf.d /scripts
+
+## Making sure that pgbackrest is pointing to the right file
+RUN rm /etc/pgbackrest.conf && ln -s "${PGBACKREST_CONFIG}" /etc/pgbackrest.conf
 
 ## Some configurations allow daily csv files, with foreign data wrappers pointing to the files.
 ## to make this work nicely, they need to exist though
 RUN for i in $(seq 0 7); do touch "${PGLOG}/postgresql-$i.log" "${PGLOG}/postgresql-$i.csv"; done
 
 ## Fix permissions
-RUN chown postgres:postgres "${PGLOG}" "${PGROOT}" "${PGDATA}" /var/run/postgresql/ /etc/pgbackrest.conf /var/log/pgbackrest/ -R
-## END SPILO compatibility
+RUN chown postgres:postgres "${PGLOG}" "${PGROOT}" "${PGDATA}" /var/run/postgresql/ -R
+RUN chown postgres:postgres /var/log/pgbackrest/ /var/lib/pgbackrest /var/spool/pgbackrest -R
+
+
 
 WORKDIR /home/postgres
 EXPOSE 5432 8008

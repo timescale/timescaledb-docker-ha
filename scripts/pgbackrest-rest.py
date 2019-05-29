@@ -115,6 +115,7 @@ class PostgreSQLBackup ():
 
     def info(self):
         info = {'label': self.label, 'status': self.status, 'started': self.started, 'finished': self.finished}
+        info['pgbackrest'] = {'label': self.pgbackrest_info.get('label')}
 
         return info
 
@@ -276,7 +277,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         if self.path == '/backups':
             try:
-                content_len = int(self.headers.get('Content-Length'))
+                content_len = int(self.headers.get('Content-Length', 0))
                 post_body = json.loads(self.rfile.read(content_len).decode("utf-8")) if content_len else None
                 with self.server.lock:
                     if self.server.backup_trigger.is_set():
