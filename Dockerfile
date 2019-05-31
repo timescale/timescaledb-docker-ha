@@ -161,7 +161,7 @@ RUN chown postgres:postgres /var/log/pgbackrest/ /var/lib/pgbackrest /var/spool/
 
 
 WORKDIR /home/postgres
-EXPOSE 5432 8008
+EXPOSE 5432 8008 8081
 USER postgres
 
 CMD ["/bin/bash", "/patroni_entrypoint.sh"]

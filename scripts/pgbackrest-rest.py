@@ -49,7 +49,7 @@ import urllib.parse
 
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from subprocess import Popen, PIPE, check_output
+from subprocess import Popen, PIPE, check_output, STDOUT
 from threading import Thread, Event, Lock
 
 # We only ever want a single backup to be actively running. We have a global object that we share
@@ -145,31 +145,19 @@ class PostgreSQLBackup ():
                self.request['command'],
                '--type={0}'.format(self.request['type'])]
 
-        p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        # We want to augment the output with our default logging format,
+        # that is why we send both stdout/stderr to a PIPE over which we iterate
+        p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
         self.pid = p.pid
 
-        # We want to have the stderr and stdout of the subprocess printed to our own
-        # stderr *immediately*. However, we also want to augment the output with our default
-        # logging format. To achieve this, we start two threads which iterate over stdout/stderr
-        # of the subprocess. A bit of work setting this up, but it get's the job done nicely
-        def tail(i):
-            for e in i:
-                if e.startswith('WARN'):
-                    loglevel = logging.WARNING
-                elif e.startswith('ERROR'):
-                    loglevel = logging.ERROR
-                else:
-                    loglevel = logging.INFO
-                logging.log(loglevel, e.rstrip())
-
-        out_iter = io.TextIOWrapper(p.stdout, encoding="utf-8")
-        err_iter = io.TextIOWrapper(p.stderr, encoding="utf-8")
-
-        out_thread = Thread(target=tail, name='pgBackRest:{0}'.format(p.pid), args=(out_iter,))
-        err_thread = Thread(target=tail, name='pgBackRest:{0}'.format(p.pid), args=(err_iter,))
-
-        out_thread.start()
-        err_thread.start()
+        for line in io.TextIOWrapper(p.stdout, encoding="utf-8"):
+            if line.startswith('WARN'):
+                loglevel = logging.WARNING
+            elif line.startswith('ERROR'):
+                loglevel = logging.ERROR
+            else:
+                loglevel = logging.INFO
+            logging.log(loglevel, line.rstrip())
 
         self.returncode = p.wait()
         self.finished = utcnow()
@@ -177,6 +165,7 @@ class PostgreSQLBackup ():
         if self.returncode == 0:
             self.status = 'FINISHED'
             logging.info('Backup successful: {0}'.format(self.label))
+            logging.debug('Details\n{0}'.format(json.dumps(self.details(), default=json_serial, indent=4, sort_keys=True)))
         else:
             self.status = 'ERROR'
             logging.error('Backup {0} failed with returncode {1}'.format(self.label, self.returncode,))
@@ -224,7 +213,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         status            filter all backups for given status
 
         Example:   /backups/latest?status=ERROR
-        Would list the last backup that completed successfully
+        Would list the last backup that failed
         """
         global backup_history
 
@@ -275,7 +264,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         """
         global backup_history, current_backup, stanza
 
-        if self.path == '/backups':
+        if self.path == '/backups' or self.path == '/backups/':
             try:
                 content_len = int(self.headers.get('Content-Length', 0))
                 post_body = json.loads(self.rfile.read(content_len).decode("utf-8")) if content_len else None
@@ -360,16 +349,19 @@ def history_refresher(history_trigger, shutdown_trigger, interval):
             for b in backup_history.values():
                 b.pgbackrest_info.clear()
 
-            for b in json.loads(pgbackrest_out)[0]['backup']:
-                pgb = PostgreSQLBackup(
-                    stanza=stanza,
-                    request=None,
-                    started=EPOCH + datetime.timedelta(seconds=b['timestamp']['start']),
-                    finished=EPOCH + datetime.timedelta(seconds=b['timestamp']['stop']),
-                    status='FINISHED'
-                )
-                backup_history.setdefault(pgb.label, pgb)
-                backup_history[pgb.label].pgbackrest_info.update(b)
+            backup_info = json.loads(pgbackrest_out)
+
+            if backup_info:
+                for b in backup_info[0].get('backup', []):
+                    pgb = PostgreSQLBackup(
+                        stanza=stanza,
+                        request=None,
+                        started=EPOCH + datetime.timedelta(seconds=b['timestamp']['start']),
+                        finished=EPOCH + datetime.timedelta(seconds=b['timestamp']['stop']),
+                        status='FINISHED'
+                    )
+                    backup_history.setdefault(pgb.label, pgb)
+                    backup_history[pgb.label].pgbackrest_info.update(b)
             history_trigger.clear()
         except Exception as e:
             logging.error(e)
@@ -386,28 +378,12 @@ def main(args):
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(threadName)s - %(message)s', level=LOGLEVELS[args['loglevel'].lower()])
     stanza = args['stanza']
 
-    # The stanza needs to exist, this command is idempotent and should be quiet
-    check_output(['pgbackrest', '--stanza={0}'.format(stanza), 'stanza-create']).decode("utf-8")
-
     shutdown_trigger = Event()
     backup_trigger = Event()
     history_trigger = Event()
 
     backup_thread = Thread(target=backup_poller, args=(backup_trigger, history_trigger, shutdown_trigger), name='backup')
     history_thread = Thread(target=history_refresher, name='history', args=(history_trigger, shutdown_trigger, 3600))
-
-    # For cleanup, we will trigger all events when signalled
-    def sigterm_handler(_signo, _stack_frame):
-        logging.warning('Received kill {0}, shutting down'.format(_signo))
-        shutdown_trigger.set()
-        backup_trigger.set()
-        history_trigger.set()
-
-        while backup_thread.is_alive() or history_thread.is_alive():
-            time.sleep(1)
-
-    signal.signal(signal.SIGINT, sigterm_handler)
-    signal.signal(signal.SIGTERM, sigterm_handler)
 
     server_address = ('', args['port'])
     httpd = EventHTTPServer(backup_trigger, server_address, RequestHandler)
