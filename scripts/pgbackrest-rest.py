@@ -147,25 +147,31 @@ class PostgreSQLBackup ():
 
         # We want to augment the output with our default logging format,
         # that is why we send both stdout/stderr to a PIPE over which we iterate
-        p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
-        self.pid = p.pid
+        try:
+            p = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+            self.pid = p.pid
 
-        for line in io.TextIOWrapper(p.stdout, encoding="utf-8"):
-            if line.startswith('WARN'):
-                loglevel = logging.WARNING
-            elif line.startswith('ERROR'):
-                loglevel = logging.ERROR
-            else:
-                loglevel = logging.INFO
-            logging.log(loglevel, line.rstrip())
+            for line in io.TextIOWrapper(p.stdout, encoding="utf-8"):
+                if line.startswith('WARN'):
+                    loglevel = logging.WARNING
+                elif line.startswith('ERROR'):
+                    loglevel = logging.ERROR
+                else:
+                    loglevel = logging.INFO
+                logging.log(loglevel, line.rstrip())
 
-        self.returncode = p.wait()
-        self.finished = utcnow()
+            self.returncode = p.wait()
+            self.finished = utcnow()
+        # As many things can - and will - go wrong when calling a subprocess, we will catch and log that
+        # error and mark this backup as having failed.
+        except OSError as oe:
+            logging.exception(oe)
+            self.returncode = -1
 
+        logging.debug('Backup details\n{0}'.format(json.dumps(self.details(), default=json_serial, indent=4, sort_keys=True)))
         if self.returncode == 0:
             self.status = 'FINISHED'
             logging.info('Backup successful: {0}'.format(self.label))
-            logging.debug('Details\n{0}'.format(json.dumps(self.details(), default=json_serial, indent=4, sort_keys=True)))
         else:
             self.status = 'ERROR'
             logging.error('Backup {0} failed with returncode {1}'.format(self.label, self.returncode,))
@@ -264,7 +270,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         """
         global backup_history, current_backup, stanza
 
-        if self.path == '/backups' or self.path == '/backups/':
+        url = urllib.parse.urlsplit(self.path)
+        if url.path == '/backups' or url.path == '/backups/':
             try:
                 content_len = int(self.headers.get('Content-Length', 0))
                 post_body = json.loads(self.rfile.read(content_len).decode("utf-8")) if content_len else None
@@ -330,9 +337,17 @@ def backup_poller(backup_trigger, history_trigger, shutdown_trigger):
 
 
 def history_refresher(history_trigger, shutdown_trigger, interval):
-    """Refresh backup history regularly
+    """Refresh backup history regularly from pgBackRest
 
-    Will refresh the history when triggered, on when a timeout occurs.
+     Will refresh the history when triggered, on when a timeout occurs.
+    After the first pgBackRest run, this should show the history as it is known by
+    pgBackRest.
+    As the backup repository is supposed to be in S3, this means that calling the API
+    to get information about the backup history should show you all the backups of all
+    the pods, not just the backups of this pod.
+
+    For details on what pgBackRest returns:
+    https://pgbackrest.org/command.html#command-info/category-command/option-output
     """
     global backup_history, stanza
 
@@ -362,9 +377,12 @@ def history_refresher(history_trigger, shutdown_trigger, interval):
                     )
                     backup_history.setdefault(pgb.label, pgb)
                     backup_history[pgb.label].pgbackrest_info.update(b)
-            history_trigger.clear()
+        # This thread should keep running, as it only triggers backups. Therefore we catch
+        # all errors and log them, but The Thread Must Go On
         except Exception as e:
-            logging.error(e)
+            logging.exception(e)
+        finally:
+            history_trigger.clear()
 
     logging.warning('Shutting down thread')
 
@@ -389,7 +407,7 @@ def main(args):
     httpd = EventHTTPServer(backup_trigger, server_address, RequestHandler)
     httpd_thread = Thread(target=httpd.serve_forever, name='http')
 
-    # For cleanup, we will trigger all events when signalled, all the threads
+    # For cleanup, we will trigger all events when signaled, all the threads
     # will investigate the shutdown trigger before acting on their individual
     # triggers
     def sigterm_handler(_signo, _stack_frame):
