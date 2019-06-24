@@ -164,4 +164,7 @@ WORKDIR /home/postgres
 EXPOSE 5432 8008 8081
 USER postgres
 
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
 CMD ["/bin/bash", "/patroni_entrypoint.sh"]
