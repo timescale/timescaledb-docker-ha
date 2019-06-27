@@ -15,6 +15,10 @@ FROM debian:stretch-slim AS builder
 ARG PG_MAJOR=11
 ARG GH_SPILO_TAG=1.5-p7
 
+# We need full control over the running user, including the UID, therefore we
+# create the postgres user as the first thing on our list
+RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" postgres
+
 # Install the highlest level dependencies, like the PostgreSQL repositories,
 # the common PostgreSQL package etc.
 RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/apt.conf.d/01norecommend \
