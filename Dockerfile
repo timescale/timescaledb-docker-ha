@@ -13,7 +13,7 @@
 FROM debian:buster-slim AS builder
 
 ARG PG_MAJOR=11
-ARG GH_SPILO_TAG=1.5-p7
+ARG GH_SPILO_TAG=1.5-p9
 
 # We need full control over the running user, including the UID, therefore we
 # create the postgres user as the first thing on our list
