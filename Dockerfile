@@ -59,7 +59,7 @@ RUN apt-get install -y ${BUILD_PACKAGES}; \
     && find /usr/share/postgresql -name 'postgresql.conf.sample' -exec \
        sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" {} \;
 
-ENV TS_VERSIONS="0.10.1 0.11.0 0.12.0 0.12.1 1.0.0-rc1 1.0.0-rc2 1.0.0-rc3 1.0.0 1.0.1 1.1.0 1.1.1 1.2.0 1.2.1 1.2.2 1.3.0 1.3.1"
+ENV TS_VERSIONS="0.10.1 0.11.0 0.12.0 0.12.1 1.0.0-rc1 1.0.0-rc2 1.0.0-rc3 1.0.0 1.0.1 1.1.0 1.1.1 1.2.0 1.2.1 1.2.2 1.3.0 1.3.1 1.3.2 1.4.0"
 # Timescale, all versions, for all pg versions
 RUN mkdir -p /build \
     && git clone https://github.com/timescale/timescaledb /build/timescaledb \
