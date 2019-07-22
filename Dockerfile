@@ -10,7 +10,7 @@
 ## in relation to the total image size.
 ## By choosing a very basic base image, we do keep full control over every part
 ## of the build steps. This Dockerfile contains every piece of magic we want.
-FROM debian:stretch-slim AS builder
+FROM debian:buster-slim AS builder
 
 ARG PG_MAJOR=11
 ARG GH_SPILO_TAG=1.5-p7
@@ -23,9 +23,9 @@ RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" post
 # the common PostgreSQL package etc.
 RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/apt.conf.d/01norecommend \
     && apt-get update \
-    && apt-get install -y curl ca-certificates locales gnupg1 jq \
+    && apt-get install -y curl ca-certificates locales gnupg1 \
     && for t in deb deb-src; do \
-    echo "$t http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
+    echo "$t http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
     done \
     && curl -s -o - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
     && apt-get update \
@@ -79,24 +79,12 @@ RUN mkdir -p /build \
                 echo "Skipping building TimescaleDB ${ts} for PostgreSQL ${pg}"; \
             fi; \
         done; \
+        apt-get remove -y postgresql-server-dev-${pg}; \
     done \
     && cd / && rm -rf /build
 
 # Patroni and Spilo Dependencies
-RUN apt-get install -y patroni python3-etcd python3-requests python3-pystache
-
-# Kubernetes requires some newer stuff, so we use pip3 to get that installed
-RUN apt-get install -y python3-oauthlib python3-certifi python3-requests-oauthlib python3-pip python3-wheel python3-dev
-RUN pip3 install setuptools && true \
-    && pip3 install kubernetes \
-    && for d in /usr/local/lib/python3.? /usr/lib/python3; do \
-        cd $d/dist-packages \
-        && find . -type d -name tests | xargs rm -fr \
-        && find . -type f -name 'test_*.py*' -delete; \
-    done \
-    && find . -type f -name 'unittest_*.py*' -delete \
-    && find . -type f -name '*_test.py' -delete \
-    && find . -type f -name '*_test.cpython*.pyc' -delete
+RUN apt-get install -y patroni python3-etcd python3-requests python3-pystache python3-kubernetes
 
 # And we need some more pgBackRest dependencies for us to use an s3-bucket as a store
 RUN apt-get install -y libio-socket-ssl-perl libxml-libxml-perl
@@ -111,7 +99,7 @@ RUN curl -O -L https://raw.githubusercontent.com/zalando/spilo/${GH_SPILO_TAG}/p
 
 ## Cleanup
 RUN apt-get update \
-    && apt-get remove -y ${BUILD_PACKAGES} postgresql-server-dev-${PG_MAJOR} python3-pip python3-wheel python3-dev jq \
+    && apt-get remove -y ${BUILD_PACKAGES} \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
