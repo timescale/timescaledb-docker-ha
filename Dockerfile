@@ -23,7 +23,7 @@ RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" post
 # the common PostgreSQL package etc.
 RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/apt.conf.d/01norecommend \
     && apt-get update \
-    && apt-get install -y curl ca-certificates locales gnupg1 \
+    && apt-get install -y curl ca-certificates locales gnupg1 jq \
     && for t in deb deb-src; do \
     echo "$t http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
     done \
@@ -59,25 +59,18 @@ RUN apt-get install -y ${BUILD_PACKAGES}; \
     && find /usr/share/postgresql -name 'postgresql.conf.sample' -exec \
        sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" {} \;
 
-ENV TS_VERSIONS="0.10.1 0.11.0 0.12.0 0.12.1 1.0.0-rc1 1.0.0-rc2 1.0.0-rc3 1.0.0 1.0.1 1.1.0 1.1.1 1.2.0 1.2.1 1.2.2 1.3.0 1.3.1 1.3.2 1.4.0 1.4.1"
-# Timescale, all versions, for all pg versions
-RUN mkdir -p /build \
+# Timescale, all versions since 1.1.0. Building < 1.1.0 fails against PostgreSQL 11
+RUN TS_VERSIONS=$(curl "https://api.github.com/repos/timescale/timescaledb/releases" \
+        | jq -r '.[] | select(.draft == false) | select(.created_at > "2018-12-13") | .tag_name' | sort -V) \
+    && mkdir -p /build \
     && git clone https://github.com/timescale/timescaledb /build/timescaledb \
     && set -e \
     && for pg in ${PG_VERSIONS}; do \
         for ts in ${TS_VERSIONS}; do \
-            # Older versions (< 1.1) of TimescaleDB can only be built against PostgreSQL 9.6 or 10.
-            # As we need to carefully compare semantic versions, bash comparisons may be a bit awkward
-            # - if not flat out wrong -
-            # luckily dpkg has a useful flag to compare versions
-            if dpkg --compare-versions ${pg} lt 11 || dpkg --compare-versions ${ts} ge 1.1; then \
-                cd /build/timescaledb && git reset HEAD --hard && git checkout ${ts} \
-                && rm -rf build \
-                && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DPROJECT_INSTALL_METHOD="docker"${OSS_ONLY} \
-                && cd build && make -j 6 install || exit 1; \
-            else \
-                echo "Skipping building TimescaleDB ${ts} for PostgreSQL ${pg}"; \
-            fi; \
+            cd /build/timescaledb && git reset HEAD --hard && git checkout ${ts} \
+            && rm -rf build \
+            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DPROJECT_INSTALL_METHOD="docker"${OSS_ONLY} \
+            && cd build && make -j 6 install || exit 1; \
         done; \
         apt-get remove -y postgresql-server-dev-${pg}; \
     done \
