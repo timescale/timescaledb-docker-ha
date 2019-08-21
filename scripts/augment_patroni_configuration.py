@@ -35,7 +35,7 @@ if __name__ == '__main__':
         # Other provisions are also available, but this ensures no naming collisions
         # for deployments in separate Kubernetes Namespaces will occur
         # https://github.com/zalando/patroni/blob/master/docs/ENVIRONMENT.rst#globaluniversal
-        if 'etcd' in pgconfig:
+        if 'etcd' in pgconfig and os.getenv('POD_NAMESPACE'):
             pgconfig['namespace'] = os.getenv('POD_NAMESPACE')
 
         f.seek(0)
