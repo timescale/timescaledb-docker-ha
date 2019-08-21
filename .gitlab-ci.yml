@@ -53,3 +53,10 @@ build.feature-branch:
   tags: [ "docker" ]
   script:
     - make push
+
+release.feature-branch:
+  stage: release
+  only: [ "master" ]
+  tags: [ "docker" ]
+  script:
+    - make push-all
