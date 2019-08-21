@@ -23,7 +23,7 @@ RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" post
 # the common PostgreSQL package etc.
 RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/apt.conf.d/01norecommend \
     && apt-get update \
-    && apt-get install -y curl ca-certificates locales gnupg1 jq \
+    && apt-get install -y curl ca-certificates locales gnupg1 \
     && for t in deb deb-src; do \
     echo "$t http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
     done \
@@ -44,21 +44,49 @@ RUN find /usr/share/i18n/charmaps/ -type f ! -name UTF-8.gz -delete \
 # pg_upgrade from 11 to 12, so we need all the postgres & timescale libraries for
 # all supported versions. If we add 10 to this line, the Docker image grows with 90MB,
 # so for now, we'll just leave it out
-ENV PG_VERSIONS="11"
-ENV BUILD_PACKAGES="git patchutils binutils git gcc libc-dev make cmake libssl-dev"
+ENV PG_VERSIONS="${PG_MAJOR}"
+
+ENV BUILD_PACKAGES="git binutils patchutils gcc libc-dev make cmake libssl-dev jq python2-dev python3-dev devscripts equivs"
 
 # PostgreSQL, all versions
-RUN apt-get install -y ${BUILD_PACKAGES}; \
-    for pg in ${PG_MAJOR} ${PG_VERSIONS}; do \
-        apt-get install -y postgresql-${pg} postgresql-server-dev-${pg} \
-        # We get the perl and python dependencies in the image anyway (patroni, pgbackrest)
-        # so why not allow their PL's to also be available in PostgreSQL
-        && apt-get install -y postgresql-plpython3-${pg} postgresql-plperl-${pg} ; \
-    done \
-    ## We want timescaledb to be loaded in this image by every created cluster
-    && find /usr/share/postgresql -name 'postgresql.conf.sample' -exec \
-       sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" {} \;
+RUN apt-get install -y ${BUILD_PACKAGES}
 
+# We install the build dependencies and mark the installed packages as auto-installed,
+# this will cause the cleanup to get rid of all of these packages
+RUN mk-build-deps postgresql-${PG_MAJOR} && apt-get install -y ./postgresql-11-build-deps*.deb && apt-mark auto postgresql-11-build-deps
+RUN apt-mark auto ${BUILD_PACKAGES}
+RUN apt-get install -y libpq-dev libpq5
+
+RUN mkdir /build/
+WORKDIR /build/
+
+COPY customizations /build/customizations
+ARG TS_CUSTOMIZATION=""
+
+RUN for pg in ${PG_VERSIONS}; do \
+        if [ -z "${TS_CUSTOMIZATION}" ]; then \
+            # If no customizations are necessary, we'll just use the pgdg binary packages
+            apt-get install -y postgresql-${pg} postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg}; \
+        else \
+            # We'll fetch the sources, let the customizations script have its way at the sources
+            # and then compile and install the customized packages
+            cd /build/ && apt-get source postgresql-${pg} \
+            && cd $(find /build/ -maxdepth 1 -name "postgresql-${pg}-*") \
+            && PGVERSION=${pg} sh ../customizations/${TS_CUSTOMIZATION}* \
+            && DEB_BUILD_OPTIONS="parallel=6 nocheck" /usr/bin/debuild -b -uc -us \
+            && cd /build/ \
+            && dpkg -i postgresql-${pg}_*.deb postgresql-client-${pg}_*.deb postgresql-server-dev-${pg}_*.deb postgresql-plpython3-${pg}_*.deb postgresql-plperl-${pg}_*.deb postgresql-client-${pg}_*.deb; \
+        fi; \
+    done
+
+RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
+        # We want timescaledb to be loaded in this image by every created cluster
+        sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" $file \
+        # We need to listen on all interfaces, otherwise PostgreSQL is not accessible
+        && echo "listen_addresses = '*'" >> $file; \
+    done
+
+ARG OSS_ONLY
 # Timescale, all versions since 1.1.0. Building < 1.1.0 fails against PostgreSQL 11
 RUN TS_VERSIONS=$(curl "https://api.github.com/repos/timescale/timescaledb/releases" \
         | jq -r '.[] | select(.draft == false) | select(.created_at > "2018-12-13") | .tag_name' | sort -V) \
@@ -72,7 +100,6 @@ RUN TS_VERSIONS=$(curl "https://api.github.com/repos/timescale/timescaledb/relea
             && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DPROJECT_INSTALL_METHOD="docker"${OSS_ONLY} \
             && cd build && make -j 6 install || exit 1; \
         done; \
-        apt-get remove -y postgresql-server-dev-${pg}; \
     done \
     && cd / && rm -rf /build
 
@@ -88,12 +115,15 @@ RUN apt-get install -y libio-socket-ssl-perl libxml-libxml-perl
 WORKDIR /scripts/
 RUN curl -O -L https://raw.githubusercontent.com/zalando/spilo/${GH_SPILO_TAG}/postgres-appliance/scripts/configure_spilo.py
 
-
+# To always know what the git context was during building, we add git metadata to the image itself.
+# see https://stups.readthedocs.io/en/latest/user-guide/application-development.html#scm-source-json for
+# some background. By using jq we ensure it's valid json, as well as it is formatted semi human readable
+ARG GIT_INFO_JSON=""
+RUN [ -z "${GIT_INFO_JSON}" ] || echo "${GIT_INFO_JSON}" | jq . > /scm-source.json
 
 ## Cleanup
-RUN apt-get update \
-    && apt-get remove -y ${BUILD_PACKAGES} \
-    && apt-get autoremove -y \
+RUN apt-get remove -y ${BUILD_PACKAGES}
+RUN apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
             /var/cache/debconf/* \
@@ -101,16 +131,30 @@ RUN apt-get update \
             /usr/share/man \
             /usr/share/locale/?? \
             /usr/share/locale/??_?? \
+            /build/ \
     && find /var/log -type f -exec truncate --size 0 {} \;
 
 ## Create a smaller Docker images from the builder image
 FROM scratch
 COPY --from=builder / /
-## Docker entrypoints and configuration scripts
+
+## Entrypoints as they are from the bitnami/timescale image
+## We may want to reconsider this, for now this means we have the exact same interface
+## for this Docker images as for our other Docker images
+COPY --from=timescale/timescaledb /docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
+COPY --from=timescale/timescaledb /usr/local/bin/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY --from=timescale/timescaledb /usr/local/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
+RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+
+## Patroni entrypoints and configuration scripts
+## Within a k8s context, we expect the ENTRYPOINT/CMD to always be explicitly specified
 ADD patroni_entrypoint.sh /
 ## Some patroni callbacks are configured by default by the operator.
 COPY scripts /scripts/
 
+ARG PG_MAJOR=11
 
 ## The mount being used by the postgres-operator is /home/postgres/pgdata
 ## for Patroni to do it's work it will sometimes move an old/invalid data directory
@@ -122,7 +166,8 @@ ENV PGROOT=/home/postgres \
     PGSOCKET=/home/postgres/pgdata \
     BACKUPROOT=/home/postgres/pgdata/backup \
     PGBACKREST_CONFIG=/home/postgres/pgdata/backup/pgbackrest.conf \
-    PGBACKREST_STANZA=poddb
+    PGBACKREST_STANZA=poddb \
+    PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:${PATH}
 
 ## The postgres operator has strong opinions about the HOME directory of postgres, whereas we do not.  make
 ## the operator happy then
@@ -151,5 +196,3 @@ USER postgres
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
-
-CMD ["/bin/bash", "/patroni_entrypoint.sh"]
