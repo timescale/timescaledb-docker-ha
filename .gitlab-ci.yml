@@ -1,4 +1,4 @@
-# For more details on configuring a GitlabCI yaml file, see the docs here:
+## For more details on configuring a GitlabCI yaml file, see the docs here:
 # https://docs.gitlab.com/ee/ci/yaml/#parameter-details
 
 image:
