@@ -15,7 +15,7 @@ GIT_INFO_JSON=$(shell echo '{"url": "git:'$(GIT_REMOTE)'", "revision": "'$(GIT_R
 
 TAG?=$(subst /,_,$(GIT_BRANCH)-$(GIT_COMMIT))
 REGISTRY?=localhost:5000
-PATRONI_REPOSITORY?=timescale/timescaledb-operator/patroni
+PATRONI_REPOSITORY?=timescale/timescaledb-docker-patroni
 PATRONI_IMAGE?=$(REGISTRY)/$(PATRONI_REPOSITORY)
 PATRONI_RELEASE_URL?=$(PATRONI_IMAGE):$(TAG)-$(PGVERSION)
 PATRONI_LATEST_URL?=$(PATRONI_IMAGE):latest-$(PGVERSION)
