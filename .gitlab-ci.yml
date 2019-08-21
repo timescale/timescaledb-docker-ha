@@ -1,0 +1,55 @@
+# For more details on configuring a GitlabCI yaml file, see the docs here:
+# https://docs.gitlab.com/ee/ci/yaml/#parameter-details
+
+image:
+  # Use a docker aware base image with git. Though, any other image will do. Use something like
+  # this if you need access to the docker daemon.
+  name: docker:stable-git
+
+services:
+  # Include this service if you need to interface with Docker from the build container.
+  #
+  # Any other "services" which you might need from the CI system can be added here. They will be
+  # spun-up as new containers in the job's pod and will be accessible over the localhost network.
+  - name: docker:stable-dind
+    alias: docker
+
+# Gitlab CI stages define the general structure of any possible build job. For every job executed,
+# the stages will be triggered in order, executing any jobs defined for the respective stage.
+#
+# **THIS DOES NOT DEFINE THE ACTUAL PIPELINE.** The pipeline is composed of the stages defined
+# here combined with the jobs defined below (a job is any YAML section below which contains the
+# `script` keyword). Pipelines are formed by creating jobs which are executed as part
+# of specific stages.
+stages:
+  - build
+  - tests.system
+  - tests.load
+  - release
+
+variables:
+  # Use an allegedly faster FS option for docker builds.
+  DOCKER_DRIVER: "overlay2"
+  # Point to the `docker:stable-dind` service defined above.
+  DOCKER_HOST: "tcp://localhost:2375"
+  # The Docker Registry to which to push
+  REGISTRY: ${CI_REGISTRY}
+  # This is injected into the Docker image to have some traceability to its build context
+  GIT_AUTHOR: GitLab CI/CD
+  # The image tag to use for this CI pipeline's build. This is used by deployments.
+  TAG: ${CI_PIPELINE_ID}
+  # The name of the K8s ImagePullSecret to use for this project.
+  REGISTRY_SECRET_NAME: registry-key-savannah-timescaledb-docker-patroni
+
+before_script:
+  # NOTE: these credentials are created by the GitlabCI system, and are ephemeral. They are only
+  # valid for the duration of the currently running CI job.
+  - apk add make
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+build.feature-branch:
+  stage: build
+  except: [ "master", "release" ]
+  tags: [ "docker" ]
+  script:
+    - make push
