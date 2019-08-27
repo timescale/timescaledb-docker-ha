@@ -15,28 +15,28 @@ GIT_INFO_JSON=$(shell echo '{"url": "git:'$(GIT_REMOTE)'", "revision": "'$(GIT_R
 
 TAG?=$(subst /,_,$(GIT_BRANCH)-$(GIT_COMMIT))
 REGISTRY?=localhost:5000
-PATRONI_REPOSITORY?=timescale/timescaledb-docker-patroni
-PATRONI_IMAGE?=$(REGISTRY)/$(PATRONI_REPOSITORY)
-PATRONI_RELEASE_URL?=$(PATRONI_IMAGE):$(TAG)-$(PGVERSION)
-PATRONI_LATEST_URL?=$(PATRONI_IMAGE):latest-$(PGVERSION)
+TIMESCALEDB_REPOSITORY?=timescale/timescaledb-docker-patroni
+TIMESCALEDB_IMAGE?=$(REGISTRY)/$(TIMESCALEDB_REPOSITORY)
+TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)-$(PGVERSION)
+TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
 
 DOCKER_BUILD_COMMAND=docker build --build-arg GIT_INFO_JSON='$(GIT_INFO_JSON)' --build-arg PG_MAJOR=$(PG_MAJOR)
 
 default: image
 
 .build_$(TAG)_$(PGVERSION)_oss: Dockerfile
-	$(DOCKER_BUILD_COMMAND) -t $(PATRONI_RELEASE_URL)-oss --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"  .
-	docker tag $(PATRONI_RELEASE_URL)-oss $(PATRONI_LATEST_URL)-oss
+	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL)-oss --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"  .
+	docker tag $(TIMESCALEDB_RELEASE_URL)-oss $(TIMESCALEDB_LATEST_URL)-oss
 	touch .build_$(TAG)_$(PGVERSION)_oss
 
 .build_$(TAG)_$(PGVERSION)_nov: Dockerfile customizations/nov-namedatalen.sh
-	$(DOCKER_BUILD_COMMAND) -t $(PATRONI_RELEASE_URL)-nov --build-arg TS_CUSTOMIZATION=nov-namedatalen.sh  .
-	docker tag $(PATRONI_RELEASE_URL)-nov $(PATRONI_LATEST_URL)-nov
+	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL)-nov --build-arg TS_CUSTOMIZATION=nov-namedatalen.sh  .
+	docker tag $(TIMESCALEDB_RELEASE_URL)-nov $(TIMESCALEDB_LATEST_URL)-nov
 	touch .build_$(TAG)_$(PGVERSION)_nov
 
 .build_$(TAG)_$(PGVERSION): Dockerfile
-	$(DOCKER_BUILD_COMMAND) -t $(PATRONI_RELEASE_URL) .
-	docker tag $(PATRONI_RELEASE_URL) $(PATRONI_LATEST_URL)
+	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL) .
+	docker tag $(TIMESCALEDB_RELEASE_URL) $(TIMESCALEDB_LATEST_URL)
 	touch .build_$(TAG)_$(PGVERSION)
 
 image: .build_$(TAG)_$(PGVERSION)
@@ -48,13 +48,13 @@ nov: .build_$(TAG)_$(PGVERSION)_nov
 image-all: image oss nov
 
 push: image
-	docker push $(PATRONI_RELEASE_URL)
+	docker push $(TIMESCALEDB_RELEASE_URL)
 
 push-oss: oss
-	docker push $(PATRONI_RELEASE_URL)-oss
+	docker push $(TIMESCALEDB_RELEASE_URL)-oss
 
 push-nov: nov
-	docker push $(PATRONI_RELEASE_URL)-nov
+	docker push $(TIMESCALEDB_RELEASE_URL)-nov
 
 push-all: push push-oss push-nov
 
