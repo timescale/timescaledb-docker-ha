@@ -4,14 +4,14 @@
 image:
   # Use a docker aware base image with git. Though, any other image will do. Use something like
   # this if you need access to the docker daemon.
-  name: docker:stable-git
+  name: docker:18.09-git
 
 services:
   # Include this service if you need to interface with Docker from the build container.
   #
   # Any other "services" which you might need from the CI system can be added here. They will be
   # spun-up as new containers in the job's pod and will be accessible over the localhost network.
-  - name: docker:stable-dind
+  - name: docker:18.09-dind
     alias: docker
 
 # Gitlab CI stages define the general structure of any possible build job. For every job executed,
