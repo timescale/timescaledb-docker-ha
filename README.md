@@ -1,4 +1,4 @@
-# Patroni Docker image
+# TimescaleDB Docker image for Kubernetes
 This directory contains everything that allows us to create a Docker image with the following pieces of software:
 
 - PostgreSQL

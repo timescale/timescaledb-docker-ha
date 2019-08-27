@@ -148,9 +148,11 @@ RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 
-## Patroni entrypoints and configuration scripts
+## TimescaleDB entrypoints and configuration scripts
 ## Within a k8s context, we expect the ENTRYPOINT/CMD to always be explicitly specified
-ADD patroni_entrypoint.sh /
+COPY timescaledb_entrypoint.sh /
+## Backwards compatibility, some older deployments use patroni_entrypoint.sh
+RUN ln -s /timescaledb_entrypoint.sh /patroni_entrypoint.sh
 ## Some patroni callbacks are configured by default by the operator.
 COPY scripts /scripts/
 
