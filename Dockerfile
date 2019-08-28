@@ -153,6 +153,7 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 COPY timescaledb_entrypoint.sh /
 ## Backwards compatibility, some older deployments use patroni_entrypoint.sh
 RUN ln -s /timescaledb_entrypoint.sh /patroni_entrypoint.sh
+COPY pgbackrest_entrypoint.sh /
 ## Some patroni callbacks are configured by default by the operator.
 COPY scripts /scripts/
 
