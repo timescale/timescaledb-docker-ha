@@ -4,7 +4,7 @@ PGVERSION=pg$(PG_MAJOR)
 GIT_COMMIT=$(shell git describe --always --tag --long --abbrev=8)
 GIT_BRANCH=$(shell git symbolic-ref --short HEAD)
 GIT_REMOTE=$(shell git config --get remote.origin.url | sed 's/.*@//g')
-GIT_STATUS=$(shell git status --porcelain)
+GIT_STATUS=$(shell git status --porcelain | paste -sd "," -)
 GIT_AUTHOR?=$(USER)
 GIT_REV=$(shell git rev-parse HEAD)
 
