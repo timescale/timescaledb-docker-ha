@@ -3,7 +3,7 @@ PGVERSION=pg$(PG_MAJOR)
 
 GIT_COMMIT=$(shell git describe --always --tag --long --abbrev=8)
 GIT_BRANCH=$(shell git symbolic-ref --short HEAD)
-GIT_REMOTE=$(shell git config --get remote.origin.url)
+GIT_REMOTE=$(shell git config --get remote.origin.url | sed 's/.*@//g')
 GIT_STATUS=$(shell git status --porcelain)
 GIT_AUTHOR?=$(USER)
 GIT_REV=$(shell git rev-parse HEAD)
@@ -11,7 +11,7 @@ GIT_REV=$(shell git rev-parse HEAD)
 # We store the GIT_INFO_JSON inside the Docker image if we build it using make
 # this ensures we always know if we have an image, what the git context was when
 # it was created
-GIT_INFO_JSON=$(shell echo '{"url": "git:'$(GIT_REMOTE)'", "revision": "'$(GIT_REV)'", "status": "'$(GIT_STATUS)'", "author": "'$(GIT_AUTHOR)'"}')
+GIT_INFO_JSON=$(shell echo '{"url": "'$(GIT_REMOTE)'", "revision": "'$(GIT_REV)'", "status": "'$(GIT_STATUS)'", "author": "'$(GIT_AUTHOR)'"}')
 
 TAG?=$(subst /,_,$(GIT_BRANCH)-$(GIT_COMMIT))
 REGISTRY?=localhost:5000
