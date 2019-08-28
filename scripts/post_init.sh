@@ -4,6 +4,18 @@ function log {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - post_init - $1"
 }
 
+log "Adding timescaledb extension to template1 and postgres databases"
+psql -d template1 <<__SQL__
+-- As we're still only initializing, we cannot have synchronous_commit enabled just yet.
+SET synchronous_commit to 'off';
+CREATE EXTENSION timescaledb;
+
+\connect postgres
+
+SET synchronous_commit to 'off';
+CREATE EXTENSION timescaledb;
+__SQL__
+
 log "Waiting for pgBackRest API to become responsive"
 while sleep 1; do
     if [ $SECONDS -gt 10 ]; then
