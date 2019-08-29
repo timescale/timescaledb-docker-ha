@@ -6,7 +6,7 @@ GIT_BRANCH=$(shell git symbolic-ref --short HEAD)
 GIT_REMOTE=$(shell git config --get remote.origin.url | sed 's/.*@//g')
 GIT_STATUS=$(shell git status --porcelain | paste -sd "," -)
 GIT_AUTHOR?=$(USER)
-GIT_REV=$(shell git rev-parse HEAD)
+GIT_REV?=$(shell git rev-parse HEAD)
 
 # We store the GIT_INFO_JSON inside the Docker image if we build it using make
 # this ensures we always know if we have an image, what the git context was when
@@ -22,7 +22,7 @@ TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
 
 DOCKER_BUILD_COMMAND=docker build --build-arg GIT_INFO_JSON='$(GIT_INFO_JSON)' --build-arg PG_MAJOR=$(PG_MAJOR)
 
-default: image
+default: build
 
 .build_$(TAG)_$(PGVERSION)_oss: Dockerfile
 	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL)-oss --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"  .
@@ -39,15 +39,15 @@ default: image
 	docker tag $(TIMESCALEDB_RELEASE_URL) $(TIMESCALEDB_LATEST_URL)
 	touch .build_$(TAG)_$(PGVERSION)
 
-image: .build_$(TAG)_$(PGVERSION)
+build: .build_$(TAG)_$(PGVERSION)
 
-oss: .build_$(TAG)_$(PGVERSION)_oss
+build-oss: .build_$(TAG)_$(PGVERSION)_oss
 
-nov: .build_$(TAG)_$(PGVERSION)_nov
+build-nov: .build_$(TAG)_$(PGVERSION)_nov
 
-image-all: image oss nov
+build-all: build build-oss build-nov
 
-push: image
+push: build
 	docker push $(TIMESCALEDB_RELEASE_URL)
 
 push-oss: oss
@@ -58,7 +58,17 @@ push-nov: nov
 
 push-all: push push-oss push-nov
 
+test: build
+	# Very simple test that verifies the following things:
+	# - PATH has the correct setting
+	# - initdb succeeds
+	# - timescaledb is correctly injected into the default configuration
+	#
+	# TODO: Create a good test-suite. For now, it's nice to have this target in CI/CD,
+	# and have it do something worthwhile
+	docker run --rm --tty $(TIMESCALEDB_RELEASE_URL) /bin/bash -c "initdb -D test && grep timescaledb test/postgresql.conf"
+
 clean:
 	rm -f *~ .build_*
 
-.PHONY: default image oss nov image-all push push-oss push-nov push-all test
+.PHONY: default build build-oss build-nov build-all push push-oss push-nov push-all test

@@ -8,7 +8,7 @@ This directory contains everything that allows us to create a Docker image with 
 # Build images
 ## Build all images
 ```
-make image-all
+make build-all
 ```
 
 ## Push all images
