@@ -50,10 +50,10 @@ build-all: build build-oss build-nov
 push: build
 	docker push $(TIMESCALEDB_RELEASE_URL)
 
-push-oss: oss
+push-oss: build-oss
 	docker push $(TIMESCALEDB_RELEASE_URL)-oss
 
-push-nov: nov
+push-nov: build-nov
 	docker push $(TIMESCALEDB_RELEASE_URL)-nov
 
 push-all: push push-oss push-nov
