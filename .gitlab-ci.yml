@@ -62,8 +62,8 @@ build.master-branch:
   tags: [ "docker" ]
   script:
     - make test
-    - docker image ls
     - make push-all
+    - docker image ls
 
 build.release:
   stage: build
@@ -74,5 +74,5 @@ build.release:
     GIT_REV: ${CI_COMMIT_TAG}
   script:
     - make build test
-    - docker image ls
     - make push-all
+    - docker image ls
