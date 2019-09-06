@@ -144,9 +144,10 @@ COPY --from=builder / /
 COPY --from=timescale/timescaledb /docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
 COPY --from=timescale/timescaledb /usr/local/bin/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY --from=timescale/timescaledb /usr/local/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
+
 RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
-
+CMD ["postgres"]
 
 ## TimescaleDB entrypoints and configuration scripts
 ## Within a k8s context, we expect the ENTRYPOINT/CMD to always be explicitly specified
@@ -178,7 +179,8 @@ RUN usermod postgres --home ${PGROOT} --move-home
 
 ## The /etc/supervisor/conf.d directory is a very Spilo oriented directory. However, to make things work
 ## the user postgres currently needs to have write access to this directory
-RUN install -o postgres -g postgres -m 0750 -d "${PGROOT}" "${PGLOG}" "${PGDATA}" "${BACKUPROOT}" /etc/supervisor/conf.d /scripts
+## The /var/lib/postgresql/data is used as PGDATA by alpine/bitnami, which makes it useful to have it be owned by Postgres
+RUN install -o postgres -g postgres -m 0750 -d "${PGROOT}" "${PGLOG}" "${PGDATA}" "${BACKUPROOT}" /etc/supervisor/conf.d /scripts /var/lib/postgresql
 
 ## Making sure that pgbackrest is pointing to the right file
 RUN rm /etc/pgbackrest.conf && ln -s "${PGBACKREST_CONFIG}" /etc/pgbackrest.conf
@@ -190,7 +192,6 @@ RUN for i in $(seq 0 7); do touch "${PGLOG}/postgresql-$i.log" "${PGLOG}/postgre
 ## Fix permissions
 RUN chown postgres:postgres "${PGLOG}" "${PGROOT}" "${PGDATA}" /var/run/postgresql/ -R
 RUN chown postgres:postgres /var/log/pgbackrest/ /var/lib/pgbackrest /var/spool/pgbackrest -R
-
 
 
 WORKDIR /home/postgres
