@@ -1,6 +1,9 @@
 PG_MAJOR?=11
 PGVERSION=pg$(PG_MAJOR)
 
+TS_CUSTOM_BUILD_DIRECTORY=timescaledb-private
+TIMESCALE_GIT_TAG=multinode
+
 GIT_COMMIT=$(shell git describe --always --tag --long --abbrev=8)
 GIT_BRANCH=$(shell git symbolic-ref --short HEAD)
 GIT_REMOTE=$(shell git config --get remote.origin.url | sed 's/.*@//g')
@@ -24,6 +27,9 @@ DOCKER_BUILD_COMMAND=docker build --build-arg GIT_INFO_JSON='$(GIT_INFO_JSON)' -
 
 default: build
 
+timescaledb-private:
+	git clone git@github.com:timescale/timescaledb-private.git timescaledb-private
+
 .build_$(TAG)_$(PGVERSION)_oss: Dockerfile
 	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL)-oss --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"  .
 	docker tag $(TIMESCALEDB_RELEASE_URL)-oss $(TIMESCALEDB_LATEST_URL)-oss
@@ -33,6 +39,12 @@ default: build
 	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL)-nov --build-arg TS_CUSTOMIZATION=nov-namedatalen.sh  .
 	docker tag $(TIMESCALEDB_RELEASE_URL)-nov $(TIMESCALEDB_LATEST_URL)-nov
 	touch .build_$(TAG)_$(PGVERSION)_nov
+
+.build_$(TAG)_$(PGVERSION)_multinode: Dockerfile timescaledb-private
+	cd timescaledb-private && git fetch origin && git checkout ${TIMESCALE_GIT_TAG}
+	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL)-multinode --build-arg TS_CUSTOM_BUILD_DIRECTORY=timescaledb-private .
+	docker tag $(TIMESCALEDB_RELEASE_URL)-multinode $(TIMESCALEDB_LATEST_URL)-multinode
+	touch .build_$(TAG)_$(PGVERSION)_multinode
 
 .build_$(TAG)_$(PGVERSION): Dockerfile
 	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL) .
@@ -45,6 +57,8 @@ build-oss: .build_$(TAG)_$(PGVERSION)_oss
 
 build-nov: .build_$(TAG)_$(PGVERSION)_nov
 
+build-multinode: .build_$(TAG)_$(PGVERSION)_multinode
+
 build-all: build build-oss build-nov
 
 push: build
@@ -56,7 +70,10 @@ push-oss: build-oss
 push-nov: build-nov
 	docker push $(TIMESCALEDB_RELEASE_URL)-nov
 
-push-all: push push-oss push-nov
+push-multinode: build-multinode
+	docker push $(TIMESCALEDB_RELEASE_URL)-multinode
+
+push-all: push push-oss push-nov push-multinode
 
 test: build
 	# Very simple test that verifies the following things:
@@ -68,7 +85,10 @@ test: build
 	# and have it do something worthwhile
 	docker run --rm --tty $(TIMESCALEDB_RELEASE_URL) /bin/bash -c "initdb -D test && grep timescaledb test/postgresql.conf"
 
-clean:
-	rm -f *~ .build_*
+test-multinode: build-multinode
+	docker run --rm --tty $(TIMESCALEDB_RELEASE_URL)-multinode /bin/bash -c "initdb -D test && grep timescaledb test/postgresql.conf"
 
-.PHONY: default build build-oss build-nov build-all push push-oss push-nov push-all test
+clean:
+	rm -f *~ .build_* timescaledb-private
+
+.PHONY: default build build-oss build-nov build-all build-multinode push push-oss push-nov push-all push-multinode test test-multinode

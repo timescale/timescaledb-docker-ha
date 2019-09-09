@@ -53,8 +53,8 @@ build.feature-branch:
   tags: [ "docker" ]
   script:
     - make build test
+    - make push push-multinode
     - docker image ls
-    - make push
 
 build.master-branch:
   stage: build

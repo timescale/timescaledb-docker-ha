@@ -46,7 +46,7 @@ RUN find /usr/share/i18n/charmaps/ -type f ! -name UTF-8.gz -delete \
 # so for now, we'll just leave it out
 ENV PG_VERSIONS="${PG_MAJOR}"
 
-ENV BUILD_PACKAGES="git binutils patchutils gcc libc-dev make cmake libssl-dev jq python2-dev python3-dev devscripts equivs"
+ENV BUILD_PACKAGES="git binutils patchutils gcc libc-dev make cmake libkrb5-dev libssl-dev jq python2-dev python3-dev devscripts equivs"
 
 # PostgreSQL, all versions
 RUN apt-get install -y ${BUILD_PACKAGES}
@@ -86,11 +86,12 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
         && echo "listen_addresses = '*'" >> $file; \
     done
 
+RUN mkdir -p /build
+
 ARG OSS_ONLY
 # Timescale, all versions since 1.1.0. Building < 1.1.0 fails against PostgreSQL 11
 RUN TS_VERSIONS=$(curl "https://api.github.com/repos/timescale/timescaledb/releases" \
         | jq -r '.[] | select(.draft == false) | select(.created_at > "2018-12-13") | .tag_name' | sort -V) \
-    && mkdir -p /build \
     && git clone https://github.com/timescale/timescaledb /build/timescaledb \
     && set -e \
     && for pg in ${PG_VERSIONS}; do \
@@ -100,8 +101,30 @@ RUN TS_VERSIONS=$(curl "https://api.github.com/repos/timescale/timescaledb/relea
             && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DPROJECT_INSTALL_METHOD="docker"${OSS_ONLY} \
             && cd build && make -j 6 install || exit 1; \
         done; \
-    done \
-    && cd / && rm -rf /build
+    done
+
+## For local development, or private branches, it is useful to build the Dockerfile from those branches.
+## To allow this to happen, a directory can be specified that has the full sources available for it to be built.
+## We do this *after* we build all the regular, publicly available TimescaleDB sources, as by installing
+## this last, the TimescaleDB Extension will default to the development version when installed.
+
+ARG TS_CUSTOM_BUILD_DIRECTORY=
+## We need a conditional COPY, however that does not readily exist in a Dockerfile
+## By adding a file that is known to exist and a wildcard expression for the TS_CUSTOM_BUILD_DIRECTORY
+## this command should always succeed
+COPY Dockerfile ${TS_CUSTOM_BUILD_DIRECTORY}* /build/${TS_CUSTOM_BUILD_DIRECTORY}/
+
+RUN if [ ! -z "${TS_CUSTOM_BUILD_DIRECTORY}" ]; then \
+        cd /build/${TS_CUSTOM_BUILD_DIRECTORY}; \
+        for pg in ${PG_VERSIONS}; do \
+            rm -rf build \
+            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="docker"${OSS_ONLY} \
+            && cd build && make -j 6 install || exit 1; \
+        done; \
+    fi
+
+RUN cd / && rm -rf /build
+
 
 # Patroni and Spilo Dependencies
 RUN apt-get install -y patroni python3-etcd python3-requests python3-pystache python3-kubernetes
