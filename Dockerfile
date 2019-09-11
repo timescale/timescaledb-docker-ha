@@ -12,9 +12,6 @@
 ## of the build steps. This Dockerfile contains every piece of magic we want.
 FROM debian:buster-slim AS builder
 
-ARG PG_MAJOR=11
-ARG GH_SPILO_TAG=1.5-p9
-
 # We need full control over the running user, including the UID, therefore we
 # create the postgres user as the first thing on our list
 RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" postgres
@@ -24,12 +21,14 @@ RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" post
 RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/apt.conf.d/01norecommend \
     && apt-get update \
     && apt-get install -y curl ca-certificates locales gnupg1 \
+    && VERSION_CODENAME=$(awk -F '=' '/VERSION_CODENAME/ {print $2}' < /etc/os-release) \
     && for t in deb deb-src; do \
-    echo "$t http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
+    echo "$t http://apt.postgresql.org/pub/repos/apt/ ${VERSION_CODENAME}-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
     done \
-    && curl -s -o - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-    && apt-get update \
-    && apt-get install -y postgresql-common pgbackrest \
+    && curl -s -o - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+
+RUN apt-get update \
+    && apt-get install -y postgresql-common pgbackrest libpq-dev libpq5 \
     # forbid creation of a main cluster when package is installed
     && sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
 
@@ -40,22 +39,27 @@ RUN find /usr/share/i18n/charmaps/ -type f ! -name UTF-8.gz -delete \
     ## Make sure we have a en_US.UTF-8 locale available
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 
+# Some Patroni prerequisites
+RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes
+
+# And we need some more pgBackRest dependencies for us to use an s3-bucket as a store
+RUN apt-get install -y libio-socket-ssl-perl libxml-libxml-perl
+
+# We install some build dependencies and mark the installed packages as auto-installed,
+# this will cause the cleanup to get rid of all of these packages
+ENV BUILD_PACKAGES="git binutils patchutils gcc libc-dev make cmake libssl-dev jq python2-dev python3-dev devscripts equivs libkrb5-dev"
+RUN apt-get install -y ${BUILD_PACKAGES}
+RUN apt-mark auto ${BUILD_PACKAGES}
+
 # We currently only build 11, but in future release we may need to support
 # pg_upgrade from 11 to 12, so we need all the postgres & timescale libraries for
 # all supported versions. If we add 10 to this line, the Docker image grows with 90MB,
 # so for now, we'll just leave it out
+ARG PG_MAJOR=11
 ENV PG_VERSIONS="${PG_MAJOR}"
 
-ENV BUILD_PACKAGES="git binutils patchutils gcc libc-dev make cmake libssl-dev jq python2-dev python3-dev devscripts equivs"
-
-# PostgreSQL, all versions
-RUN apt-get install -y ${BUILD_PACKAGES}
-
-# We install the build dependencies and mark the installed packages as auto-installed,
-# this will cause the cleanup to get rid of all of these packages
+# We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
 RUN mk-build-deps postgresql-${PG_MAJOR} && apt-get install -y ./postgresql-11-build-deps*.deb && apt-mark auto postgresql-11-build-deps
-RUN apt-mark auto ${BUILD_PACKAGES}
-RUN apt-get install -y libpq-dev libpq5
 
 RUN mkdir /build/
 WORKDIR /build/
@@ -78,6 +82,10 @@ RUN for pg in ${PG_VERSIONS}; do \
             && dpkg -i postgresql-${pg}_*.deb postgresql-client-${pg}_*.deb postgresql-server-dev-${pg}_*.deb postgresql-plpython3-${pg}_*.deb postgresql-plperl-${pg}_*.deb postgresql-client-${pg}_*.deb; \
         fi; \
     done
+
+# Patroni and Spilo Dependencies
+# This need to be done after the PostgreSQL packages have been installed
+RUN apt-get install -y patroni
 
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
         # We want timescaledb to be loaded in this image by every created cluster
@@ -103,24 +111,6 @@ RUN TS_VERSIONS=$(curl "https://api.github.com/repos/timescale/timescaledb/relea
     done \
     && cd / && rm -rf /build
 
-# Patroni and Spilo Dependencies
-RUN apt-get install -y patroni python3-etcd python3-requests python3-pystache python3-kubernetes
-
-# And we need some more pgBackRest dependencies for us to use an s3-bucket as a store
-RUN apt-get install -y libio-socket-ssl-perl libxml-libxml-perl
-
-## The postgres operator requires the Docker Image to be Spilo. That does not really entail much,  than a pretty
-## tight coupling between environment variables and the `configure_spilo` script. As we don't want to all the
-## logic, let's just use that script to configure to configure our container as well.
-WORKDIR /scripts/
-RUN curl -O -L https://raw.githubusercontent.com/zalando/spilo/${GH_SPILO_TAG}/postgres-appliance/scripts/configure_spilo.py
-
-# To always know what the git context was during building, we add git metadata to the image itself.
-# see https://stups.readthedocs.io/en/latest/user-guide/application-development.html#scm-source-json for
-# some background. By using jq we ensure it's valid json, as well as it is formatted semi human readable
-ARG GIT_INFO_JSON=""
-RUN [ -z "${GIT_INFO_JSON}" ] || echo "${GIT_INFO_JSON}" | jq . > /scm-source.json
-
 ## Cleanup
 RUN apt-get remove -y ${BUILD_PACKAGES}
 RUN apt-get autoremove -y \
@@ -134,11 +124,11 @@ RUN apt-get autoremove -y \
             /build/ \
     && find /var/log -type f -exec truncate --size 0 {} \;
 
-## Create a smaller Docker images from the builder image
+## Create a smaller Docker image from the builder image
 FROM scratch
 COPY --from=builder / /
 
-## Entrypoints as they are from the bitnami/timescale image
+## Entrypoints as they are from the Timescale image
 ## We may want to reconsider this, for now this means we have the exact same interface
 ## for this Docker images as for our other Docker images
 COPY --from=timescale/timescaledb /docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
@@ -157,6 +147,13 @@ RUN ln -s /timescaledb_entrypoint.sh /patroni_entrypoint.sh
 COPY pgbackrest_entrypoint.sh /
 ## Some patroni callbacks are configured by default by the operator.
 COPY scripts /scripts/
+
+## The postgres operator requires the Docker Image to be Spilo. That does not really entail much, other than a pretty
+## tight coupling between environment variables and the `configure_spilo` script. As we don't want to all the
+## logic, let's just use that script to configure to configure our container as well.
+ARG GH_SPILO_TAG=1.5-p9
+WORKDIR /scripts/
+RUN curl -O -L https://raw.githubusercontent.com/zalando/spilo/${GH_SPILO_TAG}/postgres-appliance/scripts/configure_spilo.py
 
 ARG PG_MAJOR=11
 
@@ -193,6 +190,13 @@ RUN for i in $(seq 0 7); do touch "${PGLOG}/postgresql-$i.log" "${PGLOG}/postgre
 RUN chown postgres:postgres "${PGLOG}" "${PGROOT}" "${PGDATA}" /var/run/postgresql/ -R
 RUN chown postgres:postgres /var/log/pgbackrest/ /var/lib/pgbackrest /var/spool/pgbackrest -R
 
+# To always know what the git context was during building, we add git metadata to the image itself.
+# see https://stups.readthedocs.io/en/latest/user-guide/application-development.html#scm-source-json for
+# some background. By parsing it using python3 we ensure it's valid json, as well as it is formatted semi human readable
+ARG GIT_INFO_JSON=""
+RUN [ -z "${GIT_INFO_JSON}" ] || echo "${GIT_INFO_JSON}" | \
+    python3 -c 'import json,sys; document = json.load(sys.stdin); print(json.dumps(document, indent=4, sort_keys=True))' \
+    > /scm-source.json
 
 WORKDIR /home/postgres
 EXPOSE 5432 8008 8081

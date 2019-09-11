@@ -49,12 +49,12 @@ before_script:
 
 build.feature-branch:
   stage: build
-  except: [ "master", "release" ]
+  except: [ "master", "release", "tags" ]
   tags: [ "docker" ]
   script:
-    - make build test
-    - docker image ls
+    - make test
     - make push
+    - docker image ls
 
 build.master-branch:
   stage: build
@@ -73,6 +73,6 @@ build.release:
     TAG: ${CI_COMMIT_TAG}
     GIT_REV: ${CI_COMMIT_TAG}
   script:
-    - make build test
+    - make test
     - make push-all
     - docker image ls
