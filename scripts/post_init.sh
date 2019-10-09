@@ -14,6 +14,8 @@ CREATE EXTENSION timescaledb;
 
 SET synchronous_commit to 'off';
 CREATE EXTENSION timescaledb;
+
+\i /scripts/tsdbadmin.sql
 __SQL__
 
 log "Waiting for pgBackRest API to become responsive"
