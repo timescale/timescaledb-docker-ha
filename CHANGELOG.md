@@ -10,6 +10,7 @@ These are changes that will probably be included in the next release.
 
 ### Added
  * Include pgextwlist to allow extension whitelisting
+ * Possibility to build a Docker image for a given repository and/or tag
 ### Changed
 ### Removed
 ### Fixed

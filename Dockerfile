@@ -95,17 +95,29 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
     done
 
 ARG OSS_ONLY
-# Timescale, all versions since 1.1.0. Building < 1.1.0 fails against PostgreSQL 11
-RUN TS_VERSIONS=$(curl "https://api.github.com/repos/timescale/timescaledb/releases" \
+ARG GITHUB_USER
+ARG GITHUB_TOKEN
+ARG GITHUB_REPO=timescale/timescaledb
+ARG GITHUB_TAG
+
+RUN mkdir -p /build \
+    && if [ "${GITHUB_TOKEN}" != "" ]; then \
+            git clone "https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}" /build/timescaledb; \
+       else \
+            git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
+       fi
+
+# If a specific GITHUB_TAG is provided, we will build that tag only. Otherwise
+# we build all the public (recent) releases
+RUN TS_VERSIONS=$(curl "https://api.github.com/repos/${GITHUB_REPO}/releases" \
         | jq -r '.[] | select(.draft == false) | select(.created_at > "2018-12-13") | .tag_name' | sort -V) \
-    && mkdir -p /build \
-    && git clone https://github.com/timescale/timescaledb /build/timescaledb \
+    && if [ "${GITHUB_TAG}" != "" ]; then TS_VERSIONS="${GITHUB_TAG}"; fi \
     && set -e \
     && for pg in ${PG_VERSIONS}; do \
         for ts in ${TS_VERSIONS}; do \
             cd /build/timescaledb && git reset HEAD --hard && git checkout ${ts} \
             && rm -rf build \
-            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DPROJECT_INSTALL_METHOD="docker"${OSS_ONLY} \
+            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="docker"${OSS_ONLY} \
             && cd build && make -j 6 install || exit 1; \
         done; \
     done \
