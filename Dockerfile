@@ -128,12 +128,19 @@ RUN apt-get autoremove -y \
 FROM scratch
 COPY --from=builder / /
 
+# Inherit the previous PG_MAJOR build argument
+ARG PG_MAJOR
+
 ## Entrypoints as they are from the Timescale image
 ## We may want to reconsider this, for now this means we have the exact same interface
 ## for this Docker images as for our other Docker images
 COPY --from=timescale/timescaledb /docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
 COPY --from=timescale/timescaledb /usr/local/bin/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY --from=timescale/timescaledb /usr/local/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
+
+# timescaledb-tune does not support PostgreSQL 12 yet, however the (global) pg_config shipped by Debian
+# is PostgreSQL 12. Therefore we need to explicitly pass on the PostgreSQL version to timescaledb-tune
+RUN sed -i "s/timescaledb-tune/timescaledb-tune --pg-version=${PG_MAJOR}/g" /docker-entrypoint-initdb.d/*.sh
 
 RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
@@ -154,8 +161,6 @@ COPY scripts /scripts/
 ARG GH_SPILO_TAG=1.5-p9
 WORKDIR /scripts/
 RUN curl -O -L https://raw.githubusercontent.com/zalando/spilo/${GH_SPILO_TAG}/postgres-appliance/scripts/configure_spilo.py
-
-ARG PG_MAJOR=11
 
 ## The mount being used by the postgres-operator is /home/postgres/pgdata
 ## for Patroni to do it's work it will sometimes move an old/invalid data directory
