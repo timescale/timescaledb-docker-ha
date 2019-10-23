@@ -111,6 +111,24 @@ RUN TS_VERSIONS=$(curl "https://api.github.com/repos/timescale/timescaledb/relea
     done \
     && cd / && rm -rf /build
 
+# if PG_PROM is set to an empty string, the pg_prometheus extension will not be added to the db
+ARG PG_PROMETHEUS=0.2.2
+# add pg_prometheus to shared_preload_libraries also
+RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
+        for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
+            # We want pg_prometheus to be loaded in this image by every created cluster
+            sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'pg_prometheus,\2'/;s/,'/'/" $file; \
+        done; \
+    fi
+# build and install the pg_prometheus extension
+RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
+        mkdir -p /build \
+            && git clone https://github.com/timescale/pg_prometheus.git /build/pg_prometheus \
+            && set -e \
+            && cd /build/pg_prometheus && git reset HEAD --hard && git checkout ${PG_PROMETHEUS} \
+            && make install; \
+    fi
+
 ## Cleanup
 RUN apt-get remove -y ${BUILD_PACKAGES}
 RUN apt-get autoremove -y \
