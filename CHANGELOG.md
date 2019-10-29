@@ -12,7 +12,15 @@ These are changes that will probably be included in the next release.
 ### Changed
 ### Removed
 ### Fixed
-* Invoke timescaledb-tune explicitly with the PostgreSQL version we want
+
+## [v0.2.4] - 2019-10-29
+
+### Added
+ * pg_prometheus is now part of the Docker image
+### Changed
+ * Pass on all PostgreSQL parameters to Patroni
+### Fixed
+ * timescaledb-tune runs with the PG_MAJOR version
 
 ## [v0.2.3] - 2019-10-09
 ### Added
