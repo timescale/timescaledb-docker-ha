@@ -70,7 +70,7 @@ ARG TS_CUSTOMIZATION=""
 RUN for pg in ${PG_VERSIONS}; do \
         if [ -z "${TS_CUSTOMIZATION}" ]; then \
             # If no customizations are necessary, we'll just use the pgdg binary packages
-            apt-get install -y postgresql-${pg} postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg}; \
+            apt-get install -y postgresql-${pg} postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} postgresql-${pg}-pgextwlist; \
         else \
             # We'll fetch the sources, let the customizations script have its way at the sources
             # and then compile and install the customized packages
