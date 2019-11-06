@@ -1,4 +1,4 @@
-BEGIN;
+set log_statement=none; set log_min_duration_statement=-1; BEGIN;
 -- Source: sql/00_preparation.sql
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
@@ -404,7 +404,7 @@ This can also be achieved by giving the user the `CREATEROLE` privilege, however
 that privilege extends to *all roles* that are not `superuser` roles,
 which does not allow for very fine-grained control over roles and users.
 
-By using these functions, any user that has the `tsdb_administrator` role granted,
+By using these functions, any user that has the `tsdbowner` role granted,
 will be able to:
 
 * Create new roles
@@ -556,17 +556,40 @@ function of the [`pgcrypto`](https://www.postgresql.org/docs/current/pgcrypto.ht
 extension to generate new passwords, which is documented to generate cryptographically
 strong random bytes.
 
+The currently supported 
 ### Arguments
 | Name | Description | Example | Default |
 |:--|:--|:--|:--|
 | username | User or role name to be dropped | `jdoe` | |
-| if_exists | If set, does not raise error if user does not exist | `true` | `false` |
+| password | If set, set this password | `g6yuAFCz9Yv5ZMA` | `NULL` (auto-generate) |
+| password_length | Set length of auto-generated password | 32 | 16 |
+| password_encryption | The hashing algorithm¹ | `scram-sha-256` | `NULL` (default) |
+
+1. [password_encryption](
+https://www.postgresql.org/docs/current/runtime-config-connection.html#GUC-PASSWORD-ENCRYPTION)
+documentation
 
 ### Return values
 | Name | Description | Example |
 |:--|:--|:--|
 | username | The user that was created | `johndoe` |
 | password | The password that was set for this user | `lY0WYsa3KI00Myg` |
+
+### Reset Password examples
+
+**Generate new password for jdoe**
+```sql
+SELECT * FROM tsdbadmin.reset_password('jdoe');
+```
+**Set new password for jdoe**
+```sql
+SELECT * FROM tsdbadmin.reset_password('jdoe', password => 'ThisIsNotAStrongPassword');
+```
+
+**Reset password for jdoe, with `md5` hashing algorithm**
+```sql
+SELECT * FROM tsdbadmin.reset_password('jdoe', password_encryption => 'md5');
+```
 
 # Utility functions
 
