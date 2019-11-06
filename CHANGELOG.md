@@ -10,9 +10,13 @@ These are changes that will probably be included in the next release.
 
 ### Added
 ### Changed
- * Reduce log output during installation of tsdbadmin scripts
 ### Removed
 ### Fixed
+
+## [v0.2.6] - 2019-11-06
+
+### Changed
+ * Reduce log output during installation of tsdbadmin scripts
 
 ## [v0.2.5] - 2019-10-31
 
