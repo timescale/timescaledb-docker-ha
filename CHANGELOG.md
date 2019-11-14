@@ -13,6 +13,13 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.2.7] - 2019-11-14
+
+### Changed
+ * PostgreSQL 11.6 was released
+ * TimescaleDB 1.5.1 was released
+
+
 ## [v0.2.6] - 2019-11-06
 
 ### Changed
