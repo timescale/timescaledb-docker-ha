@@ -20,7 +20,7 @@ RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" post
 # the common PostgreSQL package etc.
 RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/apt.conf.d/01norecommend \
     && apt-get update \
-    && apt-get install -y curl ca-certificates locales gnupg1 \
+    && apt-get install -y curl ca-certificates locales gnupg1 less \
     && VERSION_CODENAME=$(awk -F '=' '/VERSION_CODENAME/ {print $2}' < /etc/os-release) \
     && for t in deb deb-src; do \
     echo "$t http://apt.postgresql.org/pub/repos/apt/ ${VERSION_CODENAME}-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
