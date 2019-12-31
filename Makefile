@@ -1,5 +1,6 @@
 PG_MAJOR?=11
 PGVERSION=pg$(PG_MAJOR)
+POSTGIS_VERSIONS?="3 2.5"
 
 # CI/CD can benefit from specifying a specific apt packages mirror
 DEBIAN_REPO_MIRROR?=""
@@ -37,6 +38,11 @@ DOCKER_BUILD_COMMAND=docker build --build-arg GIT_INFO_JSON='$(GIT_INFO_JSON)' -
 
 default: build
 
+.build_$(TAG)_$(PGVERSION)_postgis: Dockerfile
+	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL)-postgis --build-arg "$(POSTGIS_VERSIONS)"  .
+	docker tag $(TIMESCALEDB_RELEASE_URL)-postgis $(TIMESCALEDB_LATEST_URL)-postgis
+	touch .build_$(TAG)_$(PGVERSION)_postgis
+
 .build_$(TAG)_$(PGVERSION)_oss: Dockerfile
 	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL)-oss --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"  .
 	docker tag $(TIMESCALEDB_RELEASE_URL)-oss $(TIMESCALEDB_LATEST_URL)-oss
@@ -58,6 +64,8 @@ builder:
 
 build: builder .build_$(TAG)_$(PGVERSION)
 
+build-postgis: .build_$(TAG)_$(PGVERSION)_postgis
+
 build-oss: .build_$(TAG)_$(PGVERSION)_oss
 
 build-tag: .build_$(TAG)_$(PGVERSION)_tag
@@ -72,10 +80,13 @@ push: build
 	docker push $(TIMESCALEDB_RELEASE_URL)
 	docker push $(TIMESCALEDB_LATEST_URL)
 
+push-postgis: build-postgis
+	docker push $(TIMESCALEDB_RELEASE_URL)-postgis
+
 push-oss: build-oss
 	docker push $(TIMESCALEDB_RELEASE_URL)-oss
 
-push-all: push push-oss
+push-all: push push-postgis push-oss push-nov
 
 test: build
 	# Very simple test that verifies the following things:
@@ -90,4 +101,5 @@ test: build
 clean:
 	rm -f *~ .build_*
 
-.PHONY: default build builder build-oss build-tag build-all push push-builder push-oss push-all test
+.PHONY: default build builder build-postgis build-oss build-tag build-all push push-builder push-postgis push-oss push-all test
+
