@@ -37,11 +37,6 @@ default: build
 	docker tag $(TIMESCALEDB_RELEASE_URL)-oss $(TIMESCALEDB_LATEST_URL)-oss
 	touch .build_$(TAG)_$(PGVERSION)_oss
 
-.build_$(TAG)_$(PGVERSION)_nov: Dockerfile customizations/nov-namedatalen.sh
-	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL)-nov --build-arg TS_CUSTOMIZATION=nov-namedatalen.sh  .
-	docker tag $(TIMESCALEDB_RELEASE_URL)-nov $(TIMESCALEDB_LATEST_URL)-nov
-	touch .build_$(TAG)_$(PGVERSION)_nov
-
 .build_$(TAG)_$(PGVERSION)_tag: Dockerfile
 	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL) \
 		--build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GITHUB_USER=$(GITHUB_USER) \
@@ -57,12 +52,10 @@ build: .build_$(TAG)_$(PGVERSION)
 
 build-oss: .build_$(TAG)_$(PGVERSION)_oss
 
-build-nov: .build_$(TAG)_$(PGVERSION)_nov
-
 build-tag: .build_$(TAG)_$(PGVERSION)_tag
 	docker image ls $(TIMESCALEDB_RELEASE_URL)
 
-build-all: build build-oss build-nov
+build-all: build build-oss
 
 push: build
 	docker push $(TIMESCALEDB_RELEASE_URL)
@@ -70,10 +63,7 @@ push: build
 push-oss: build-oss
 	docker push $(TIMESCALEDB_RELEASE_URL)-oss
 
-push-nov: build-nov
-	docker push $(TIMESCALEDB_RELEASE_URL)-nov
-
-push-all: push push-oss push-nov
+push-all: push push-oss
 
 test: build
 	# Very simple test that verifies the following things:
@@ -88,4 +78,4 @@ test: build
 clean:
 	rm -f *~ .build_*
 
-.PHONY: default build build-oss build-nov build-tag build-all push push-oss push-nov push-all test
+.PHONY: default build build-oss build-tag build-all push push-oss push-all test

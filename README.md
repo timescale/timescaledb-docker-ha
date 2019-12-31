@@ -21,7 +21,7 @@ To allow source customizations of PostgreSQL, you can add a script to the `custo
 and build the Docker image with a `TS_CUSTOMIZATION` build argument, e.g.:
 
 ```
-docker build --tag test --build-arg TS_CUSTOMIZATION=nov-namedatalen.sh .
+docker build --tag test --build-arg TS_CUSTOMIZATION=namedatalen.sh .
 ```
 
 As we can only support a limited amount of customization in the Docker build process, this is what is available to
