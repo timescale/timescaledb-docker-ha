@@ -147,6 +147,15 @@ RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
             && make install; \
     fi
 
+# We put Postgis in last, so we can reuse most of the Docker layers if POSTGIS_VERSIONS is not set
+ARG POSTGIS_VERSIONS=""
+RUN for postgisv in ${POSTGIS_VERSIONS}; do \
+        for pg in ${PG_VERSIONS}; do \
+            apt-get install -y postgresql-${pg}-postgis-${postgisv}-scripts  postgresql-${pg}-postgis-${postgisv}; \
+        done; \
+    done
+
+
 ## Cleanup
 RUN apt-get remove -y ${BUILD_PACKAGES}
 RUN apt-get autoremove -y \
