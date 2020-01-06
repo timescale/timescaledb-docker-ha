@@ -1,6 +1,9 @@
 PG_MAJOR?=11
 PGVERSION=pg$(PG_MAJOR)
 
+# CI/CD can benefit from specifying a specific apt packages mirror
+DEBIAN_REPO_MIRROR?=""
+
 # These variables have to do with this Docker repository
 GIT_COMMIT=$(shell git describe --always --tag --long --abbrev=8)
 GIT_BRANCH=$(shell git symbolic-ref --short HEAD)
@@ -28,7 +31,8 @@ TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)-$(PGVERSION)
 TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
 PG_PROMETHEUS?=0.2.2
 
-DOCKER_BUILD_COMMAND=docker build --build-arg GIT_INFO_JSON='$(GIT_INFO_JSON)' --build-arg PG_MAJOR=$(PG_MAJOR) --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS)
+DOCKER_BUILD_COMMAND=docker build --build-arg GIT_INFO_JSON='$(GIT_INFO_JSON)' --build-arg PG_MAJOR=$(PG_MAJOR) \
+					 --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS) --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR)
 
 default: build
 

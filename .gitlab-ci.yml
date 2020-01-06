@@ -40,6 +40,8 @@ variables:
   TAG: ${CI_PIPELINE_ID}
   # The name of the K8s ImagePullSecret to use for this project.
   REGISTRY_SECRET_NAME: registry-key-savannah-timescaledb-docker-patroni
+  # Using the default mirrors caused a lot of timeouts previously
+  DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
 
 before_script:
   # NOTE: these credentials are created by the GitlabCI system, and are ephemeral. They are only
