@@ -16,10 +16,16 @@ FROM debian:buster-slim AS builder
 # create the postgres user as the first thing on our list
 RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" postgres
 
+# CI/CD may benefit a lot from using a specific package mirror
+ARG DEBIAN_REPO_MIRROR=""
+RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/apt.conf.d/01norecommend \
+    && if [ "${DEBIAN_REPO_MIRROR}" != "" ]; then \
+        sed -i "s{http://*.debian.org{http://${DEBIAN_REPO_MIRROR}{g" /etc/apt/sources.list; \
+    fi
+
 # Install the highlest level dependencies, like the PostgreSQL repositories,
 # the common PostgreSQL package etc.
-RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/apt.conf.d/01norecommend \
-    && apt-get update \
+RUN apt-get update \
     && apt-get install -y curl ca-certificates locales gnupg1 less \
     && VERSION_CODENAME=$(awk -F '=' '/VERSION_CODENAME/ {print $2}' < /etc/os-release) \
     && for t in deb deb-src; do \
