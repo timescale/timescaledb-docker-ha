@@ -42,6 +42,8 @@ variables:
   REGISTRY_SECRET_NAME: registry-key-savannah-timescaledb-docker-patroni
   # Using the default mirrors caused a lot of timeouts previously
   DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
+  # By using the previously built image, we can build the images very quickly
+  DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
 
 before_script:
   # NOTE: these credentials are created by the GitlabCI system, and are ephemeral. They are only
@@ -53,7 +55,10 @@ build.feature-branch:
   stage: build
   except: [ "master", "release", "tags" ]
   tags: [ "docker" ]
+  variables:
   script:
+    - docker pull registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
+    - make push-builder
     - make test
     - make push
     - docker image ls
@@ -63,6 +68,7 @@ build.master-branch:
   only: [ "master" ]
   tags: [ "docker" ]
   script:
+    - make push-builder
     - make test
     - make push-all
     - docker image ls

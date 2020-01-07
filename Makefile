@@ -27,12 +27,13 @@ TAG?=$(subst /,_,$(GIT_BRANCH)-$(GIT_COMMIT))
 REGISTRY?=localhost:5000
 TIMESCALEDB_REPOSITORY?=timescale/timescaledb-docker-ha
 TIMESCALEDB_IMAGE?=$(REGISTRY)/$(TIMESCALEDB_REPOSITORY)
+TIMESCALEDB_BUILDER_URL?=$(TIMESCALEDB_IMAGE):builder-$(PGVERSION)
 TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)-$(PGVERSION)
 TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
 PG_PROMETHEUS?=0.2.2
 
 DOCKER_BUILD_COMMAND=docker build --build-arg GIT_INFO_JSON='$(GIT_INFO_JSON)' --build-arg PG_MAJOR=$(PG_MAJOR) \
-					 --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS) --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR)
+					 --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS) --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) $(DOCKER_IMAGE_CACHE)
 
 default: build
 
@@ -52,7 +53,10 @@ default: build
 	docker tag $(TIMESCALEDB_RELEASE_URL) $(TIMESCALEDB_LATEST_URL)
 	touch .build_$(TAG)_$(PGVERSION)
 
-build: .build_$(TAG)_$(PGVERSION)
+builder:
+	$(DOCKER_BUILD_COMMAND) --target builder -t $(TIMESCALEDB_BUILDER_URL) .
+
+build: builder .build_$(TAG)_$(PGVERSION)
 
 build-oss: .build_$(TAG)_$(PGVERSION)_oss
 
@@ -61,8 +65,12 @@ build-tag: .build_$(TAG)_$(PGVERSION)_tag
 
 build-all: build build-oss
 
+push-builder: builder
+	docker push $(TIMESCALEDB_BUILDER_URL)
+
 push: build
 	docker push $(TIMESCALEDB_RELEASE_URL)
+	docker push $(TIMESCALEDB_LATEST_URL)
 
 push-oss: build-oss
 	docker push $(TIMESCALEDB_RELEASE_URL)-oss
@@ -82,4 +90,4 @@ test: build
 clean:
 	rm -f *~ .build_*
 
-.PHONY: default build build-oss build-tag build-all push push-oss push-all test
+.PHONY: default build builder build-oss build-tag build-all push push-builder push-oss push-all test
