@@ -39,7 +39,7 @@ DOCKER_BUILD_COMMAND=docker build --build-arg GIT_INFO_JSON='$(GIT_INFO_JSON)' -
 default: build
 
 .build_$(TAG)_$(PGVERSION)_postgis: Dockerfile
-	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL)-postgis --build-arg "$(POSTGIS_VERSIONS)"  .
+	$(DOCKER_BUILD_COMMAND) -t $(TIMESCALEDB_RELEASE_URL)-postgis --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) .
 	docker tag $(TIMESCALEDB_RELEASE_URL)-postgis $(TIMESCALEDB_LATEST_URL)-postgis
 	touch .build_$(TAG)_$(PGVERSION)_postgis
 
