@@ -86,7 +86,7 @@ push-postgis: build-postgis
 push-oss: build-oss
 	docker push $(TIMESCALEDB_RELEASE_URL)-oss
 
-push-all: push push-postgis push-oss push-nov
+push-all: push push-postgis push-oss
 
 test: build
 	# Very simple test that verifies the following things:
