@@ -20,7 +20,7 @@ RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" post
 ARG DEBIAN_REPO_MIRROR=""
 RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/apt.conf.d/01norecommend \
     && if [ "${DEBIAN_REPO_MIRROR}" != "" ]; then \
-        sed -i "s{http://*.debian.org{http://${DEBIAN_REPO_MIRROR}{g" /etc/apt/sources.list; \
+        sed -i "s{http://.*.debian.org{http://${DEBIAN_REPO_MIRROR}{g" /etc/apt/sources.list; \
     fi
 
 # Install the highlest level dependencies, like the PostgreSQL repositories,
