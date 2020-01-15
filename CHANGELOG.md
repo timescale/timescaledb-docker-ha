@@ -13,6 +13,13 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.2.8] - 2020-01-15
+
+### Added
+ * Create a additional Docker image including PostGIS
+### Changed
+ * TimescaleDB 1.6.0 was released
+
 ## [v0.2.7] - 2019-11-14
 
 ### Changed
