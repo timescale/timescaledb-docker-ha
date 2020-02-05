@@ -113,6 +113,8 @@ RUN mkdir -p /build \
             git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
        fi
 
+ARG INSTALL_METHOD=docker-ha
+
 # If a specific GITHUB_TAG is provided, we will build that tag only. Otherwise
 # we build all the public (recent) releases
 RUN TS_VERSIONS=$(curl "https://api.github.com/repos/${GITHUB_REPO}/releases" \
@@ -123,7 +125,7 @@ RUN TS_VERSIONS=$(curl "https://api.github.com/repos/${GITHUB_REPO}/releases" \
         for ts in ${TS_VERSIONS}; do \
             cd /build/timescaledb && git reset HEAD --hard && git checkout ${ts} \
             && rm -rf build \
-            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="docker"${OSS_ONLY} \
+            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
             && cd build && make -j 6 install || exit 1; \
         done; \
     done \
