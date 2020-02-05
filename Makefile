@@ -32,9 +32,10 @@ TIMESCALEDB_BUILDER_URL?=$(TIMESCALEDB_IMAGE):builder-$(PGVERSION)
 TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)-$(PGVERSION)
 TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
 PG_PROMETHEUS?=0.2.2
+INSTALL_METHOD?="docker-ha"
 
 DOCKER_BUILD_COMMAND=docker build --build-arg GIT_INFO_JSON='$(GIT_INFO_JSON)' --build-arg PG_MAJOR=$(PG_MAJOR) \
-					 --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS) --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) $(DOCKER_IMAGE_CACHE)
+					 --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS) --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) $(DOCKER_IMAGE_CACHE)
 
 default: build
 
@@ -102,4 +103,3 @@ clean:
 	rm -f *~ .build_*
 
 .PHONY: default build builder build-postgis build-oss build-tag build-all push push-builder push-postgis push-oss push-all test
-
