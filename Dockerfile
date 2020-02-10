@@ -70,27 +70,13 @@ RUN mk-build-deps postgresql-${PG_MAJOR} && apt-get install -y ./postgresql-11-b
 RUN mkdir /build/
 WORKDIR /build/
 
-COPY customizations /build/customizations
-ARG TS_CUSTOMIZATION=""
-
 RUN for pg in ${PG_VERSIONS}; do \
-        if [ -z "${TS_CUSTOMIZATION}" ]; then \
-            # If no customizations are necessary, we'll just use the pgdg binary packages
-            apt-get install -y postgresql-${pg} postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} postgresql-${pg}-pgextwlist; \
-        else \
-            # We'll fetch the sources, let the customizations script have its way at the sources
-            # and then compile and install the customized packages
-            cd /build/ && apt-get source postgresql-${pg} \
-            && cd $(find /build/ -maxdepth 1 -name "postgresql-${pg}-*") \
-            && PGVERSION=${pg} sh ../customizations/${TS_CUSTOMIZATION}* \
-            && DEB_BUILD_OPTIONS="parallel=6 nocheck" /usr/bin/debuild -b -uc -us \
-            && cd /build/ \
-            && dpkg -i postgresql-${pg}_*.deb postgresql-client-${pg}_*.deb postgresql-server-dev-${pg}_*.deb postgresql-plpython3-${pg}_*.deb postgresql-plperl-${pg}_*.deb postgresql-client-${pg}_*.deb; \
-        fi; \
+        apt-get install -y postgresql-${pg} postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} postgresql-${pg}-pgextwlist; \
     done
 
 # Patroni and Spilo Dependencies
-# This need to be done after the PostgreSQL packages have been installed
+# This need to be done after the PostgreSQL packages have been installed,
+# to ensure we have the preferred libpq installations etc.
 RUN apt-get install -y patroni
 
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
@@ -113,6 +99,7 @@ RUN mkdir -p /build \
             git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
        fi
 
+# INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
 ARG INSTALL_METHOD=docker-ha
 
 # If a specific GITHUB_TAG is provided, we will build that tag only. Otherwise
