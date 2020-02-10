@@ -181,9 +181,9 @@ ARG PG_MAJOR
 ## Entrypoints as they are from the Timescale image
 ## We may want to reconsider this, for now this means we have the exact same interface
 ## for this Docker images as for our other Docker images
-COPY --from=timescale/timescaledb /docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
-COPY --from=timescale/timescaledb /usr/local/bin/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY --from=timescale/timescaledb /usr/local/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
+COPY --from=timescale/timescaledb:latest-pg11 /docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
+COPY --from=timescale/timescaledb:latest-pg11 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY --from=timescale/timescaledb:latest-pg11 /usr/local/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
 
 # timescaledb-tune does not support PostgreSQL 12 yet, however the (global) pg_config shipped by Debian
 # is PostgreSQL 12. Therefore we need to explicitly pass on the PostgreSQL version to timescaledb-tune
