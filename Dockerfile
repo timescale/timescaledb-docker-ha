@@ -26,7 +26,7 @@ RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/a
 # Install the highlest level dependencies, like the PostgreSQL repositories,
 # the common PostgreSQL package etc.
 RUN apt-get update \
-    && apt-get install -y curl ca-certificates locales gnupg1 less \
+    && apt-get install -y curl ca-certificates locales gnupg1 less jq \
     && VERSION_CODENAME=$(awk -F '=' '/VERSION_CODENAME/ {print $2}' < /etc/os-release) \
     && for t in deb deb-src; do \
     echo "$t http://apt.postgresql.org/pub/repos/apt/ ${VERSION_CODENAME}-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
@@ -53,7 +53,7 @@ RUN apt-get install -y libio-socket-ssl-perl libxml-libxml-perl
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="git binutils patchutils gcc libc-dev make cmake libssl-dev jq python2-dev python3-dev devscripts equivs libkrb5-dev"
+ENV BUILD_PACKAGES="git binutils patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
@@ -244,11 +244,9 @@ RUN chown postgres:postgres /var/log/pgbackrest/ /var/lib/pgbackrest /var/spool/
 
 # To always know what the git context was during building, we add git metadata to the image itself.
 # see https://stups.readthedocs.io/en/latest/user-guide/application-development.html#scm-source-json for
-# some background. By parsing it using python3 we ensure it's valid json, as well as it is formatted semi human readable
+# some background. By parsing it using jq we ensure it's valid json, as well as it is formatted semi human readable
 ARG GIT_INFO_JSON=""
-RUN [ -z "${GIT_INFO_JSON}" ] || echo "${GIT_INFO_JSON}" | \
-    python3 -c 'import json,sys; document = json.load(sys.stdin); print(json.dumps(document, indent=4, sort_keys=True))' \
-    > /scm-source.json
+RUN [ -z "${GIT_INFO_JSON}" ] || echo "${GIT_INFO_JSON}" | jq . > /scm-source.json
 
 WORKDIR /home/postgres
 EXPOSE 5432 8008 8081
@@ -256,3 +254,4 @@ USER postgres
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
+
