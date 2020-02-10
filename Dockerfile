@@ -202,13 +202,6 @@ COPY pgbackrest_entrypoint.sh /
 ## Some patroni callbacks are configured by default by the operator.
 COPY scripts /scripts/
 
-## The postgres operator requires the Docker Image to be Spilo. That does not really entail much, other than a pretty
-## tight coupling between environment variables and the `configure_spilo` script. As we don't want to all the
-## logic, let's just use that script to configure to configure our container as well.
-ARG GH_SPILO_TAG=1.5-p9
-WORKDIR /scripts/
-RUN curl -O -L https://raw.githubusercontent.com/zalando/spilo/${GH_SPILO_TAG}/postgres-appliance/scripts/configure_spilo.py
-
 ## The mount being used by the postgres-operator is /home/postgres/pgdata
 ## for Patroni to do it's work it will sometimes move an old/invalid data directory
 ## inside the parent directory; therefore we need a subdirectory inside the mount
@@ -220,7 +213,11 @@ ENV PGROOT=/home/postgres \
     BACKUPROOT=/home/postgres/pgdata/backup \
     PGBACKREST_CONFIG=/home/postgres/pgdata/backup/pgbackrest.conf \
     PGBACKREST_STANZA=poddb \
-    PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:${PATH}
+    PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:${PATH} \
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    # When having an interactive psql session, it is useful if the PAGER is disable
+    PAGER=""
 
 ## The postgres operator has strong opinions about the HOME directory of postgres, whereas we do not.  make
 ## the operator happy then
@@ -251,7 +248,3 @@ RUN [ -z "${GIT_INFO_JSON}" ] || echo "${GIT_INFO_JSON}" | jq . > /scm-source.js
 WORKDIR /home/postgres
 EXPOSE 5432 8008 8081
 USER postgres
-
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
-
