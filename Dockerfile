@@ -153,7 +153,7 @@ RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
 ARG POSTGIS_VERSIONS=""
 RUN for postgisv in ${POSTGIS_VERSIONS}; do \
         for pg in ${PG_VERSIONS}; do \
-            apt-get install -y postgresql-${pg}-postgis-${postgisv}-scripts  postgresql-${pg}-postgis-${postgisv}; \
+            apt-get install -y postgresql-${pg}-postgis-${postgisv} -o Dpkg::Options::="--force-overwrite"; \
         done; \
     done
 
