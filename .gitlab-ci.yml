@@ -85,4 +85,4 @@ build.release:
      - make build
      - make push
 #    - make push-all
-    - docker image ls
+     - docker image ls
