@@ -81,6 +81,8 @@ build.release:
     TAG: ${CI_COMMIT_TAG}
     GIT_REV: ${CI_COMMIT_TAG}
   script:
-    - make test
-    - make push-all
+#    - make test
+     - make build
+     - make push
+#    - make push-all
     - docker image ls
