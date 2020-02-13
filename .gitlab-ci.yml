@@ -48,7 +48,7 @@ variables:
 before_script:
   # NOTE: these credentials are created by the GitlabCI system, and are ephemeral. They are only
   # valid for the duration of the currently running CI job.
-  - apk add make
+  - apk add make jq
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
 build.feature-branch:
