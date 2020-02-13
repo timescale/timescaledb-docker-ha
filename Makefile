@@ -27,19 +27,22 @@ TIMESCALEDB_BUILDER_URL?=$(TIMESCALEDB_IMAGE):builder-$(PGVERSION)
 TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)-$(PGVERSION)
 TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
 PG_PROMETHEUS?=0.2.2
-INSTALL_METHOD?="docker-ha"
 
 CICD_REPOSITORY=registry.gitlab.com/timescale/timescaledb-docker-ha
-DOCKER_HUB_REPOSITORY=localhost:32000/timescaledev/timescaledb-ha
+PUBLISH_REPOSITORY=localhost:32000/timescaledev/timescaledb-ha
 
-build:         POSTFIX   = 
-build: 		   BUILDARGS =
+BUILDARGS=
+POSTFIX=
+INSTALL_METHOD?=docker-ha
+
 build-oss:     POSTFIX   = -oss
 build-oss:	   BUILDARGS = --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"
-build-postgis: POSTFIX   = -postgis
-build-postgis: BUILDARGS = --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS)
-build-tag:	   POSTFIX   =
+build-tag: 	   POSTFIX   = -$(GITHUB_TAG)
 build-tag: 	   BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GITHUB_USER=$(GITHUB_USER) --build-arg GITHUB_TOKEN=$(GITHUB_TOKEN) --build-arg GITHUB_TAG=$(GITHUB_TAG)
+build-cloud:   POSTFIX   = -cloud
+build-cloud:   INSTALL_METHOD = cloud
+
+publish-cloud: PUBLISH_REPOSITORY = registry.gitlab.com/timescale/timescaledb-docker-ha
 
 # We label all the Docker Images with the versions of PostgreSQL, TimescaleDB and other extensions
 # that are in versions.json.
@@ -48,8 +51,8 @@ build-tag: 	   BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GI
 # versions.
 # I'm using $$(jq) instead of $(shell), as we need to evaluate these variables for every new image build
 DOCKER_BUILD_COMMAND=docker build --build-arg PG_MAJOR=$(PG_MAJOR) \
-					 --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" \
 					 --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS) \
+					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) $(DOCKER_IMAGE_CACHE) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
@@ -58,11 +61,14 @@ DOCKER_BUILD_COMMAND=docker build --build-arg PG_MAJOR=$(PG_MAJOR) \
 
 default: build
 
-.PHONY: build build-postgis build-oss build-tag
-build build-postgis build-oss build-tag: builder
-	$(DOCKER_BUILD_COMMAND) --tag $(TIMESCALEDB_RELEASE_URL)$(POSTFIX)-wip $(BUILDARGS) .
+.PHONY: build build-cloud build-oss build-tag
+build build-oss build-cloud build-tag: builder
+	$(DOCKER_BUILD_COMMAND) --tag $(TIMESCALEDB_RELEASE_URL)$(POSTFIX)-wip --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" $(BUILDARGS) .
 	
-	# In these steps we do some introspection to find out some details of the versions that are inside the Docker image
+	# In these steps we do some introspection to find out some details of the versions
+	# that are inside the Docker image. As we use the Debian packages, we do not know until
+	# after we have built the image, what patch version of PostgreSQL, or PostGIS is installed.
+	#
 	# We will then attach this information as OCI labels to the final Docker image
 	# https://github.com/opencontainers/image-spec/blob/master/annotations.md
 	docker stop dummy$(POSTFIX) || true
@@ -79,7 +85,7 @@ build build-postgis build-oss build-tag: builder
 	docker tag $(TIMESCALEDB_RELEASE_URL)$(POSTFIX) $(TIMESCALEDB_LATEST_URL)$(POSTFIX)
 
 .PHONY: build-all
-build-all: build build-postgis build-oss
+build-all: build build-cloud build-oss
 
 # To speed up most builds, having .builder be an actual target is very useful
 .builder: Dockerfile $(shell find . -type f ! -path '*.git*' ! -name '*build*')
@@ -88,28 +94,56 @@ build-all: build build-postgis build-oss
 .PHONY: builder
 builder: .builder
 
-.PHONY: push push-postgis push-oss
-push push-postgis push-oss: push% : build%
+.PHONY: push push-oss push-cloud
+push push-oss push-cloud: push% : build%
 	export POSTFIX=$$(echo $@ | cut -c 5-) \
 	&& docker push $(TIMESCALEDB_RELEASE_URL)$${POSTFIX} \
 	&& docker push $(TIMESCALEDB_LATEST_URL)$${POSTFIX}
 
 .PHONY: push-all
-push-all: push push-postgis push-oss
+push-all: push push-oss push-cloud
 
-.PHONY: release
-release:
+# The purpose of publishing the images under many tags, is to provide
+# some choice to the user as to their appetite for volatility.
+#
+#  1. timescaledev/timescaledb-ha:pg11
+#  2. timescaledev/timescaledb-ha:pg11-ts1.6
+#  3. timescaledev/timescaledb-ha:pg11.7-ts1.6
+#  4. timescaledev/timescaledb-ha:pg11.7-ts1.6.0
+#
+# Tag 4 is immutable, and we will only push that one iff it does not yet exist.
+# 4. would therefore be most suitable for production environments
+.PHONY: publish publish-oss publish-cloud
+publish publish-oss publish-cloud:
+	export POSTFIX=$$(echo $@ | cut -c 8-) \
+	&& export CICDIMAGE="$(CICD_REPOSITORY):$(RELEASE_TAG)-pg$(PG_MAJOR)$${POSTFIX}" \
+	&& docker pull $${CICDIMAGE} \
+	&& export PGVERSION=$$(docker inspect $${CICDIMAGE} | jq '.[0]."ContainerConfig"."Labels"."com.timescaledb.image.postgresql.version"' -r) \
+	&& export TSPATCH=$$(docker inspect $${CICDIMAGE} | jq '.[0]."ContainerConfig"."Labels"."com.timescaledb.image.timescaledb.version"' -r) \
+	&& export TSMINOR=$${TSPATCH%.*} \
+	&& for variant in pg$(PG_MAJOR)$${POSTFIX} pg$(PG_MAJOR)-ts$${TSMINOR}$${POSTFIX} pg$${PGVERSION}-ts$${TSMINOR}$${POSTFIX}; \
+		do \
+			docker tag $${CICDIMAGE} $(PUBLISH_REPOSITORY):$${variant} \
+			&& docker push $(PUBLISH_REPOSITORY):$${variant} || exit 1; \
+		done \
+	&& export variant=pg$${PGVERSION}-ts$${TSPATCH}$${POSTFIX} \
+	&& docker pull $(PUBLISH_REPOSITORY):$${variant} > /dev/null && echo "Not pushing $(PUBLISH_REPOSITORY):$${variant} as it already exists" \
+	   || docker push $(PUBLISH_REPOSITORY):$${variant}
+
+.PHONY: publish
+publish-all:
+ifndef RELEASE_TAG
+	$(error RELEASE_TAG is undefined, please set it to a tag that was succesfully built)
+endif
 	@echo "This operation will push new Docker images to the timescaledev public Docker hub"                              
+	@echo "including an immutable one for production environments."
+	@echo "This will publish images for the tag $${RELEASE_TAG}"
+	@echo ""
 	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
-	@echo -n "For which tagged release do you wish to push the Docker images? " && read RELEASE_TAG \
-	&& for variant in "" -oss -postgis; do \
-		docker pull $(CICD_REPOSITORY):$${RELEASE_TAG}-pg11$${variant} \
-		&& docker inspect $(CICD_REPOSITORY):$${RELEASE_TAG}-pg11$${variant} \
-		| jq '.[0]."ContainerConfig"."Labels"."com.timescaledb.image.postgresql.version"' -r; \
-	done
+	$(MAKE) publish publish-oss publish-cloud
 
-
-test: build-postgis
+.PHONY: test
+test: build
 	# Very simple test that verifies the following things:
 	# - PATH has the correct setting
 	# - initdb succeeds
@@ -117,7 +151,7 @@ test: build-postgis
 	#
 	# TODO: Create a good test-suite. For now, it's nice to have this target in CI/CD,
 	# and have it do something worthwhile
-	docker run --rm --tty $(TIMESCALEDB_RELEASE_URL)-postgis /bin/bash -c "initdb -D test && grep timescaledb test/postgresql.conf"
+	docker run --rm --tty $(TIMESCALEDB_RELEASE_URL) /bin/bash -c "initdb -D test && grep timescaledb test/postgresql.conf"
 
 clean:
-	rm -f *~ .build_* versions.json builder
+	rm -f .builder
