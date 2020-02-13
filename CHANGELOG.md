@@ -13,6 +13,25 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.2.9] - 2020-02-13
+
+### Changed
+ * PostgreSQL 11.7 was released
+ * PostGIS is now included in all the Docker images
+
+     This reduces the number of images that need to be built, maintained and supported
+
+#### Build process
+ * Add Labels to the Docker images, in line with the Open Container Initiative
+ [Annotations Rules](https://github.com/opencontainers/image-spec/blob/master/annotations.md#rules) for their Image Format Specification.
+
+     These labels can be used to identify exact version information of TimescaleDB, PostgreSQL and some
+     other extensions, as well as the default labels for `created`, `revision` and `source`.
+
+     This deprecates adding  the `scm-source.json` that was added to the Docker Images.
+ * Improve build & release process
+
+
 ## [v0.2.8] - 2020-01-15
 
 ### Added
