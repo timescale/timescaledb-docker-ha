@@ -225,12 +225,6 @@ RUN for i in $(seq 0 7); do touch "${PGLOG}/postgresql-$i.log" "${PGLOG}/postgre
 RUN chown postgres:postgres "${PGLOG}" "${PGROOT}" "${PGDATA}" /var/run/postgresql/ -R
 RUN chown postgres:postgres /var/log/pgbackrest/ /var/lib/pgbackrest /var/spool/pgbackrest -R
 
-# To always know what the git context was during building, we add git metadata to the image itself.
-# see https://stups.readthedocs.io/en/latest/user-guide/application-development.html#scm-source-json for
-# some background. By parsing it using jq we ensure it's valid json, as well as it is formatted semi human readable
-ARG GIT_INFO_JSON=""
-RUN [ -z "${GIT_INFO_JSON}" ] || echo "${GIT_INFO_JSON}" | jq . > /scm-source.json
-
 WORKDIR /home/postgres
 EXPOSE 5432 8008 8081
 USER postgres
