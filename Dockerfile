@@ -74,6 +74,14 @@ RUN for pg in ${PG_VERSIONS}; do \
         apt-get install -y postgresql-${pg} postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} postgresql-${pg}-pgextwlist; \
     done
 
+# We put Postgis in first, so these layers can be reused
+ARG POSTGIS_VERSIONS="2.5 3"
+RUN for postgisv in ${POSTGIS_VERSIONS}; do \
+        for pg in ${PG_VERSIONS}; do \
+            apt-get install -y postgresql-${pg}-postgis-${postgisv} -o Dpkg::Options::="--force-overwrite"; \
+        done; \
+    done
+
 # Patroni and Spilo Dependencies
 # This need to be done after the PostgreSQL packages have been installed,
 # to ensure we have the preferred libpq installations etc.
@@ -135,15 +143,6 @@ RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
             && cd /build/pg_prometheus && git reset HEAD --hard && git checkout ${PG_PROMETHEUS} \
             && make install; \
     fi
-
-# We put Postgis in last, so we can reuse most of the Docker layers if POSTGIS_VERSIONS is not set
-ARG POSTGIS_VERSIONS=""
-RUN for postgisv in ${POSTGIS_VERSIONS}; do \
-        for pg in ${PG_VERSIONS}; do \
-            apt-get install -y postgresql-${pg}-postgis-${postgisv}-scripts  postgresql-${pg}-postgis-${postgisv}; \
-        done; \
-    done
-
 
 ## Cleanup
 RUN apt-get remove -y ${BUILD_PACKAGES}

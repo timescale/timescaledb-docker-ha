@@ -1,6 +1,6 @@
 PG_MAJOR?=11
 PGVERSION=pg$(PG_MAJOR)
-POSTGIS_VERSIONS?="3 2.5"
+POSTGIS_VERSIONS?="2.5 3"
 
 # CI/CD can benefit from specifying a specific apt packages mirror
 DEBIAN_REPO_MIRROR?=""
