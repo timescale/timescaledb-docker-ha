@@ -29,7 +29,7 @@ TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
 PG_PROMETHEUS?=0.2.2
 
 CICD_REPOSITORY=registry.gitlab.com/timescale/timescaledb-docker-ha
-PUBLISH_REPOSITORY=registry.hub.docker.com/timescaledev/timescaledb-ha
+PUBLISH_REPOSITORY=docker.io/timescaledev/timescaledb-ha
 
 BUILDARGS=
 POSTFIX=
@@ -128,6 +128,7 @@ publish publish-oss:
 			&& docker push $(PUBLISH_REPOSITORY):$${variant} || exit 1; \
 		done \
 	&& export variant=pg$${PGVERSION}-ts$${TSPATCH}$${POSTFIX} \
+	&& docker tag $${CICDIMAGE} $(PUBLISH_REPOSITORY):$${variant} \
 	&& docker pull $(PUBLISH_REPOSITORY):$${variant} > /dev/null && echo "Not pushing $(PUBLISH_REPOSITORY):$${variant} as it already exists" \
 	   || docker push $(PUBLISH_REPOSITORY):$${variant}
 
