@@ -29,7 +29,7 @@ Release branches are considered to be frozen and should only be updated with pat
 
 No code should be committed directly to master or release branches. All code should be submitted to review and CI testing by creating a pull request.
 
-## Release Images
+## Release Process
 
 Between releases we keep track of notable changes in CHANGELOG.md.
 
@@ -52,6 +52,22 @@ Create a new release branch for each major or minor release using the pattern `M
 to apply or backport fixes. Patch releases will be based on tagged commits on this branch.
 
 Major and minor releases should tag commits in the `master` branch. Patch releases should tag commits in a release branch.
+
+## Publish the images to Docker Hub
+Publishing images to Docker Hub currently requires the following:
+
+- pull the images from GitLab
+- add annotations about versions
+- pushes the images to Docker Hub
+
+We may at some point automate this further, for now there is a Makefile target that does this for you.
+To publish, you need to point to a tagged release that was successfully built by GitLab CI/CD.
+
+> NOTE: You need to be logged in to docker hub as well as gitlab registry for this Makefile target to succeed
+
+```console
+RELEASE_TAG=v0.2.9 make publish-all
+```
 
 ## Patch process
 
