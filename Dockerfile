@@ -23,15 +23,18 @@ RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/a
         sed -i "s{http://.*.debian.org{http://${DEBIAN_REPO_MIRROR}{g" /etc/apt/sources.list; \
     fi
 
-# Install the highlest level dependencies, like the PostgreSQL repositories,
-# the common PostgreSQL package etc.
+# Install the highlest level dependencies, like the PostgreSQL repositories
 RUN apt-get update \
-    && apt-get install -y curl ca-certificates locales gnupg1 less jq \
+    && apt-get install -y curl ca-certificates locales gnupg1 \
     && VERSION_CODENAME=$(awk -F '=' '/VERSION_CODENAME/ {print $2}' < /etc/os-release) \
     && for t in deb deb-src; do \
     echo "$t http://apt.postgresql.org/pub/repos/apt/ ${VERSION_CODENAME}-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
     done \
     && curl -s -o - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+
+# Some tools that are not strictly required for running PostgreSQL, but have a tiny
+# footprint and can be very valuable when troubleshooting a running container
+RUN apt-get update && apt-get install -y less jq strace
 
 RUN apt-get update \
     && apt-get install -y postgresql-common pgbackrest libpq-dev libpq5 \
