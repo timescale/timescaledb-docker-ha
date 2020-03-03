@@ -48,9 +48,6 @@ RUN find /usr/share/i18n/charmaps/ -type f ! -name UTF-8.gz -delete \
 # Some Patroni prerequisites
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes
 
-# And we need some more pgBackRest dependencies for us to use an s3-bucket as a store
-RUN apt-get install -y libio-socket-ssl-perl libxml-libxml-perl
-
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
 ENV BUILD_PACKAGES="git binutils patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev"
