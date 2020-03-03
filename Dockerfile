@@ -188,7 +188,7 @@ COPY pgbackrest_entrypoint.sh /
 ## Some patroni callbacks are configured by default by the operator.
 COPY scripts /scripts/
 
-## The mount being used by the postgres-operator is /home/postgres/pgdata
+## The mount being used by the Zalando postgres-operator is /home/postgres/pgdata
 ## for Patroni to do it's work it will sometimes move an old/invalid data directory
 ## inside the parent directory; therefore we need a subdirectory inside the mount
 
@@ -205,12 +205,12 @@ ENV PGROOT=/home/postgres \
     # When having an interactive psql session, it is useful if the PAGER is disable
     PAGER=""
 
-## The postgres operator has strong opinions about the HOME directory of postgres, whereas we do not.  make
-## the operator happy then
+## The Zalando postgres-operator has strong opinions about the HOME directory of postgres,
+## whereas we do not. Make the operator happy then
 RUN usermod postgres --home ${PGROOT} --move-home
 
-## The /etc/supervisor/conf.d directory is a very Spilo oriented directory. However, to make things work
-## the user postgres currently needs to have write access to this directory
+## The /etc/supervisor/conf.d directory is a very Spilo (Zalando postgres-operator) oriented directory.
+## However, to make things work the user postgres currently needs to have write access to this directory
 ## The /var/lib/postgresql/data is used as PGDATA by alpine/bitnami, which makes it useful to have it be owned by Postgres
 RUN install -o postgres -g postgres -m 0750 -d "${PGROOT}" "${PGLOG}" "${PGDATA}" "${BACKUPROOT}" /etc/supervisor/conf.d /scripts /var/lib/postgresql
 
