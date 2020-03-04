@@ -2,19 +2,34 @@
 This directory contains everything that allows us to create a Docker image with the following pieces of software:
 
 - PostgreSQL
+- Some PostgreSQL extensions, most notably PostGIS
 - TimescaleDB, multiple versions
-- Backup Software
+- pgBackRest
+- scripts to make it all work in a Kubernetes Context
 
 # Build images
-## Build all images
-```
-make build-all
+
+To build an image, run the following make target:
+```console
+make build
 ```
 
-## Push all images
+> NOTE: This Docker image will contain software under the Timescale License. If you want to build an image that contains
+> only Timescale components that are licensed with Apache 2.0, you should use the following command:
+>
+> `make build-oss`
+>
+> For more information about licensing, please read our [blog post](https://blog.timescale.com/blog/how-we-are-building-an-open-source-business-a7701516a480/) about the subject.
+
+By default, the Docker image contains [pg_prometheus](https://github.com/timescale/pg_prometheus) and [PostGIS](https://postgis.net/),
+however you can override many of these defaults by setting environment variables, some examples:
+
+```console
+# Build without any PostGIS
+POSTGIS_VERSIONS="" make build
 ```
-make push-all
-```
+
+For further environment variables that can be set, we point you to the [Makefile](Makefile) itself.
 
 # Versioning and Releases
 
@@ -75,4 +90,3 @@ When a patch needs to be applied to an existing release, first create a feature 
 for review as normal. Create a separate PR for applying the patch to master. Both of these changes should update CHANGELOG.md with
 information about the bugfix or patch. Once both pull requests are approved, merge to the feature branch and tag the release branch with the
 patch number. Draft a new release as described above.
-
