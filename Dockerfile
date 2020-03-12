@@ -71,14 +71,14 @@ RUN mkdir /build/
 WORKDIR /build/
 
 RUN for pg in ${PG_VERSIONS}; do \
-        apt-get install -y postgresql-${pg} postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} postgresql-${pg}-pgextwlist; \
+        apt-get install -y postgresql-${pg} postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} postgresql-${pg}-pgextwlist || exit 1; \
     done
 
 # We put Postgis in first, so these layers can be reused
 ARG POSTGIS_VERSIONS="2.5 3"
 RUN for postgisv in ${POSTGIS_VERSIONS}; do \
         for pg in ${PG_VERSIONS}; do \
-            apt-get install -y postgresql-${pg}-postgis-${postgisv} -o Dpkg::Options::="--force-overwrite"; \
+            apt-get install -y postgresql-${pg}-postgis-${postgisv} -o Dpkg::Options::="--force-overwrite" || exit 1; \
         done; \
     done
 
@@ -132,7 +132,7 @@ ARG PG_PROMETHEUS=0.2.2
 RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
         for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
             # We want pg_prometheus to be loaded in this image by every created cluster
-            sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'pg_prometheus,\2'/;s/,'/'/" $file; \
+            sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'pg_prometheus,\2'/;s/,'/'/" $file || exit 1; \
         done; \
     fi
 # build and install the pg_prometheus extension
@@ -141,7 +141,7 @@ RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
             && git clone https://github.com/timescale/pg_prometheus.git /build/pg_prometheus \
             && set -e \
             && cd /build/pg_prometheus && git reset HEAD --hard && git checkout ${PG_PROMETHEUS} \
-            && make install; \
+            && make install || exit 1; \
     fi
 
 ## Cleanup
