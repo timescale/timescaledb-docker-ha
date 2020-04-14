@@ -33,8 +33,12 @@ RUN apt-get update \
     && curl -s -o - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 
 # Some tools that are not strictly required for running PostgreSQL, but have a tiny
-# footprint and can be very valuable when troubleshooting a running container
+# footprint and can be very valuable when troubleshooting a running container,
 RUN apt-get update && apt-get install -y less jq strace
+# These packages allow for a better integration for some containers, for example
+# daemontools provides envdir, which is very convenient for passing backup
+# environment variables around.
+RUN apt-get update && apt-get install -y dumb-init daemontools
 
 RUN apt-get update \
     && apt-get install -y postgresql-common pgbackrest libpq-dev libpq5 \
