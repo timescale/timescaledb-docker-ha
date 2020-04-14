@@ -61,15 +61,15 @@ ENV BUILD_PACKAGES="git binutils patchutils gcc libc-dev make cmake libssl-dev p
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
-# We currently only build 11, but in future release we may need to support
-# pg_upgrade from 11 to 12, so we need all the postgres & timescale libraries for
-# all supported versions. If we add 10 to this line, the Docker image grows with 90MB,
-# so for now, we'll just leave it out
-ARG PG_MAJOR=11
-ENV PG_VERSIONS="${PG_MAJOR}"
+# By including multiple versions of PostgreSQL we can use the same Docker image,
+# regardless of the major PostgreSQL Version. It also allow us to support (eventually)
+# pg_upgrade from 11 to 12, so we need all the postgres & timescale libraries for all versions
+ARG PG_VERSIONS="12 11"
 
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
-RUN mk-build-deps postgresql-${PG_MAJOR} && apt-get install -y ./postgresql-11-build-deps*.deb && apt-mark auto postgresql-11-build-deps
+RUN for pg in ${PG_VERSIONS}; do \
+        mk-build-deps postgresql-${pg} && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
+    done
 
 RUN mkdir /build/
 WORKDIR /build/
@@ -122,7 +122,8 @@ RUN TS_VERSIONS=$(curl "https://api.github.com/repos/${GITHUB_REPO}/releases" \
     && set -e \
     && for pg in ${PG_VERSIONS}; do \
         for ts in ${TS_VERSIONS}; do \
-            cd /build/timescaledb && git reset HEAD --hard && git checkout ${ts} \
+            if [ ${pg} -ge 12 ] && dpkg --compare-versions ${ts} lt 1.7.0; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
+            && cd /build/timescaledb && git reset HEAD --hard && git checkout ${ts} \
             && rm -rf build \
             && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
             && cd build && make -j 6 install || exit 1; \
@@ -130,7 +131,7 @@ RUN TS_VERSIONS=$(curl "https://api.github.com/repos/${GITHUB_REPO}/releases" \
     done \
     && cd / && rm -rf /build
 
-# if PG_PROM is set to an empty string, the pg_prometheus extension will not be added to the db
+# if PG_PROMETHEUS is set to an empty string, the pg_prometheus extension will not be added to the db
 ARG PG_PROMETHEUS=0.2.2
 # add pg_prometheus to shared_preload_libraries also
 RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
@@ -142,10 +143,13 @@ RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
 # build and install the pg_prometheus extension
 RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
         mkdir -p /build \
-            && git clone https://github.com/timescale/pg_prometheus.git /build/pg_prometheus \
-            && set -e \
-            && cd /build/pg_prometheus && git reset HEAD --hard && git checkout ${PG_PROMETHEUS} \
-            && make install || exit 1; \
+        && git clone https://github.com/timescale/pg_prometheus.git /build/pg_prometheus \
+        && set -e \
+        && for pg in ${PG_VERSIONS}; do \
+            cd /build/pg_prometheus && git reset HEAD --hard && git checkout ${PG_PROMETHEUS} \
+            && git clean -f -x \
+            && PATH=/usr/lib/postgresql/${pg}/bin:${PATH} PG_VER=pg${pg} make install || exit 1; \
+        done; \
     fi
 
 ## Cleanup
@@ -165,8 +169,7 @@ RUN apt-get autoremove -y \
 FROM scratch
 COPY --from=builder / /
 
-# Inherit the previous PG_MAJOR build argument
-ARG PG_MAJOR
+ARG PG_MAJOR=11
 
 ## Entrypoints as they are from the Timescale image
 ## We may want to reconsider this, for now this means we have the exact same interface
