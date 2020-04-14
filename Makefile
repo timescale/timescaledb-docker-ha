@@ -1,4 +1,7 @@
 PG_MAJOR?=11
+# All PG_VERSIONS binaries/libraries will be included in the Dockerfile
+# specifying multiple versions will allow things like pg_upgrade etc to work.
+PG_VERSIONS?=12 11
 PGVERSION=pg$(PG_MAJOR)
 POSTGIS_VERSIONS?="2.5 3"
 
@@ -51,6 +54,7 @@ DOCKER_BUILD_COMMAND=docker build --build-arg PG_MAJOR=$(PG_MAJOR) \
 					 --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS) \
 					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) $(DOCKER_IMAGE_CACHE) \
+					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
 					 --label org.opencontainers.image.vendor=Timescale \
@@ -86,7 +90,7 @@ build-all: build build-oss
 
 # To speed up most builds, having .builder be an actual target is very useful
 .builder: Dockerfile $(shell find . -type f ! -path '*.git*' ! -name '*build*')
-	$(DOCKER_BUILD_COMMAND) --target builder -t $(TIMESCALEDB_BUILDER_URL) .
+	$(DOCKER_BUILD_COMMAND) --target builder -t $(TIMESCALEDB_BUILDER_URL) $(BUILDARGS) .
 	touch .builder
 .PHONY: builder
 builder: .builder
