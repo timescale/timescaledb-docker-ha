@@ -180,7 +180,7 @@ COPY --from=timescale/timescaledb:latest-pg11 /usr/local/bin/timescaledb-tune /u
 
 # timescaledb-tune does not support PostgreSQL 12 yet, however the (global) pg_config shipped by Debian
 # is PostgreSQL 12. Therefore we need to explicitly pass on the PostgreSQL version to timescaledb-tune
-RUN sed -i "s/timescaledb-tune/timescaledb-tune --pg-version=${PG_MAJOR}/g" /docker-entrypoint-initdb.d/*.sh
+RUN sed -i "s/timescaledb-tune/timescaledb-tune --pg-version=11/g" /docker-entrypoint-initdb.d/*.sh
 
 RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]

@@ -42,8 +42,6 @@ variables:
   REGISTRY_SECRET_NAME: registry-key-savannah-timescaledb-docker-patroni
   # Using the default mirrors caused a lot of timeouts previously
   DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
-  # By using the previously built image, we can build the images very quickly
-  DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
 
 before_script:
   # NOTE: these credentials are created by the GitlabCI system, and are ephemeral. They are only
@@ -51,32 +49,49 @@ before_script:
   - apk add make jq
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
-build.feature-branch:
+build.feature-branch-11: &build_feature-branch
   stage: build
   except: [ "master", "release", "tags" ]
   tags: [ "docker" ]
   variables:
+    PG_MAJOR: "11"
+    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
   script:
-    - docker pull registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
+    - docker pull registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg${PG_MAJOR} || true
     - make push-builder
     - make test
     - make push
     - docker image ls
 
-build.master-branch:
+build.feature-branch-12:
+  << : *build_feature-branch
+  variables:
+    PG_MAJOR: "12"
+    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
+
+build.master-branch-11: &build_master-branch
   stage: build
   only: [ "master" ]
   tags: [ "docker" ]
+  variables:
+    PG_MAJOR: "11"
   script:
     - make push-builder
     - make test
     - make push-all
     - docker image ls
 
-build.release:
+build.master-branch-12:
+  << : *build_master-branch
+  variables:
+    PG_MAJOR: "12"
+
+build.release-11: &build_release
   stage: build
   only: [ "tags" ]
   tags: [ "docker" ]
+  variables:
+    PG_MAJOR: "11"
   variables:
     TAG: ${CI_COMMIT_TAG}
     GIT_REV: ${CI_COMMIT_TAG}
@@ -84,3 +99,9 @@ build.release:
     - make test
     - make push-all
     - docker image ls
+
+build.release-12:
+  << : *build_release
+  variables:
+    PG_MAJOR: "12"
+
