@@ -72,12 +72,12 @@ build build-oss build-tag: builder
 	#
 	# We will then attach this information as OCI labels to the final Docker image
 	# https://github.com/opencontainers/image-spec/blob/master/annotations.md
-	docker stop dummy$(POSTFIX) || true
-	docker run -d --rm --name dummy$(POSTFIX) -e PGDATA=/tmp/pgdata --user=postgres $(TIMESCALEDB_RELEASE_URL)$(POSTFIX)-wip \
+	docker stop dummy$(PG_MAJOR)$(POSTFIX) || true
+	docker run -d --rm --name dummy$(PG_MAJOR)$(POSTFIX) -e PGDATA=/tmp/pgdata --user=postgres $(TIMESCALEDB_RELEASE_URL)$(POSTFIX)-wip \
 		sh -c 'initdb && timeout 30 postgres'
-	docker exec -i dummy$(POSTFIX) sh -c 'while ! pg_isready; do sleep 1; done'
-	cat scripts/version_info.sql | docker exec -i dummy$(POSTFIX) psql -AtXq | tee .$@
-	docker stop dummy$(POSTFIX)
+	docker exec -i dummy$(PG_MAJOR)$(POSTFIX) sh -c 'while ! pg_isready; do sleep 1; done'
+	cat scripts/version_info.sql | docker exec -i dummy$(PG_MAJOR)$(POSTFIX) psql -AtXq | tee .$@
+	docker stop dummy$(PG_MAJOR)$(POSTFIX)
 
 	# This is where we build the final Docker Image, including all the version labels
 	echo "FROM $(TIMESCALEDB_RELEASE_URL)$(POSTFIX)-wip" | docker build --tag $(TIMESCALEDB_RELEASE_URL)$(POSTFIX) - \
