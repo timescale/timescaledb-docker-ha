@@ -9,12 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 These are changes that will probably be included in the next release.
 
 ### Added
- * Support PostgreSQL 12
 ### Changed
 ### Removed
 ### Fixed
 
 ## [v0.2.10] - 2020-03-20
+
+### Added
+ * Support PostgreSQL 12
+ * Support for TimescaleDB 1.7 (PostgreSQL 11 & PostgreSQL 12)
+### Changed
+ * Build 2 sets of Docker images in CI/CD (PostgreSQL 11 & PostgreSQL 12)
 
 ### Added
  * Remove stale pidfile if it exists
