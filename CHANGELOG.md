@@ -13,24 +13,21 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
-## [v0.2.10] - 2020-03-20
+## [v0.2.10] - 2020-04-20
 
 ### Added
  * Support PostgreSQL 12
  * Support for TimescaleDB 1.7 (PostgreSQL 11 & PostgreSQL 12)
-### Changed
- * Build 2 sets of Docker images in CI/CD (PostgreSQL 11 & PostgreSQL 12)
-
-### Added
  * Remove stale pidfile if it exists
  * Include `strace` for debugging
 ### Changed
- * TimescaleDB 1.6.1 was released
+ * Build 2 sets of Docker images in CI/CD (PostgreSQL 11 & PostgreSQL 12)
 ### Fixed
  * Fail build if a single item in a loop fails
 ### Removed
  * Some perl dependencies of `pgBackRest`, which are no longer needed
      as `pgBackRest` is now fully written in C
+
 
 ## [v0.2.9] - 2020-02-13
 
