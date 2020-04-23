@@ -31,8 +31,8 @@ TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)-$(PGVERSION)
 TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
 PG_PROMETHEUS?=0.2.2
 
-CICD_REPOSITORY=registry.gitlab.com/timescale/timescaledb-docker-ha
-PUBLISH_REPOSITORY=docker.io/timescaledev/timescaledb-ha
+CICD_REPOSITORY?=registry.gitlab.com/timescale/timescaledb-docker-ha
+PUBLISH_REPOSITORY?=docker.io/timescaledev/timescaledb-ha
 
 BUILDARGS=
 POSTFIX=
