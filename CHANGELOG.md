@@ -10,8 +10,10 @@ These are changes that will probably be included in the next release.
 
 ### Added
 ### Changed
+ * Allow restore from backup even when no master is running
 ### Removed
 ### Fixed
+ * Backup parameters
 
 ## [v0.2.10] - 2020-04-20
 
