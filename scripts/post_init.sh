@@ -20,7 +20,7 @@ __SQL__
 
 log "Waiting for pgBackRest API to become responsive"
 while sleep 1; do
-    if [ $SECONDS -gt 10 ]; then
+    if [ $SECONDS -gt 30 ]; then
         log "pgBackRest API did not respond within $SECONDS seconds, will not trigger a backup"
         exit 0
     fi

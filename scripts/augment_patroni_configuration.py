@@ -22,13 +22,14 @@ postgresql:
     command: '/usr/bin/pgbackrest --stanza=poddb --delta restore --log-level-stderr=info'
     keep_data: True
     no_params: True
+    no_master: 1
 bootstrap:
   dcs:
     postgresql:
       recovery_conf:
         recovery_target_timeline: latest
         standby_mode: 'on'
-        restore_command: 'pgbackrest --stanza=demo archive-get %f "%p"'
+        restore_command: 'pgbackrest --stanza=poddb archive-get %f "%p"'
 """
 
 
