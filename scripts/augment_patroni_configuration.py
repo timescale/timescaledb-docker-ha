@@ -22,7 +22,7 @@ postgresql:
     command: '/usr/bin/pgbackrest --stanza=poddb --delta restore --log-level-stderr=info'
     keep_data: True
     no_params: True
-    no_master: 1
+    no_master: True
 bootstrap:
   dcs:
     postgresql:
