@@ -132,7 +132,7 @@ RUN TS_VERSIONS=$(curl "https://api.github.com/repos/${GITHUB_REPO}/releases" \
     && cd / && rm -rf /build
 
 # if PG_PROMETHEUS is set to an empty string, the pg_prometheus extension will not be added to the db
-ARG PG_PROMETHEUS=0.2.2
+ARG PG_PROMETHEUS=
 # add pg_prometheus to shared_preload_libraries also
 RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
         for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
@@ -149,6 +149,22 @@ RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
             cd /build/pg_prometheus && git reset HEAD --hard && git checkout ${PG_PROMETHEUS} \
             && git clean -f -x \
             && PATH=/usr/lib/postgresql/${pg}/bin:${PATH} PG_VER=pg${pg} make install || exit 1; \
+        done; \
+    fi
+
+ARG TIMESCALE_PROMETHEUS=
+# build and install the pg_prometheus extension
+RUN if [ ! -z "${TIMESCALE_PROMETHEUS}" ]; then \
+        mkdir -p /build \
+        && git clone https://github.com/timescale/timescale-prometheus /build/timescale_prometheus \
+        && set -e \
+        && for pg in ${PG_VERSIONS}; do \
+            if [ "${pg}" = "12" ]; then \
+                cd /build/timescale_prometheus && git reset HEAD --hard && git checkout ${TIMESCALE_PROMETHEUS} \
+                && git clean -f -x \
+                && cd /build/timescale_prometheus/extension \
+                && PATH=/usr/lib/postgresql/${pg}/bin:${PATH} PG_VER=pg${pg} make install || exit 1; \
+            fi; \
         done; \
     fi
 
