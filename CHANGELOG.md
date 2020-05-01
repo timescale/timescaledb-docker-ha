@@ -9,8 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 These are changes that will probably be included in the next release.
 
 ### Added
+ * Include the [timescale-prometheus](https://github.com/timescale/timescale-prometheus) extension by default
 ### Changed
  * Allow restore from backup even when no master is running
+ * Deprecate including the `pg_prometheus` extension, it is not built by default anymore
 ### Removed
 ### Fixed
  * Backup parameters

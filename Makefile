@@ -29,7 +29,8 @@ TIMESCALEDB_IMAGE?=$(REGISTRY)/$(TIMESCALEDB_REPOSITORY)
 TIMESCALEDB_BUILDER_URL?=$(TIMESCALEDB_IMAGE):builder-$(PGVERSION)
 TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)-$(PGVERSION)
 TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
-PG_PROMETHEUS?=0.2.2
+PG_PROMETHEUS?=
+TIMESCALE_PROMETHEUS?=master
 
 CICD_REPOSITORY?=registry.gitlab.com/timescale/timescaledb-docker-ha
 PUBLISH_REPOSITORY?=docker.io/timescaledev/timescaledb-ha
@@ -52,6 +53,7 @@ build-tag: 	   BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GI
 # I'm using $$(jq) instead of $(shell), as we need to evaluate these variables for every new image build
 DOCKER_BUILD_COMMAND=docker build --build-arg PG_MAJOR=$(PG_MAJOR) \
 					 --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS) \
+					 --build-arg TIMESCALE_PROMETHEUS=$(TIMESCALE_PROMETHEUS) \
 					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) $(DOCKER_IMAGE_CACHE) \
 					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
