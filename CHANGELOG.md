@@ -13,6 +13,11 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.2.12] - 2020-05-19
+### Changed
+ * TimescaleDB 1.7.1 is released
+ * PostgreSQL 11.8 and 12.3 are released
+
 ## [v0.2.11] - 2020-05-14
 
 These are changes that will probably be included in the next release.
