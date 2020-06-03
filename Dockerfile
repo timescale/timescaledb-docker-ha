@@ -34,7 +34,7 @@ RUN apt-get update \
 
 # Some tools that are not strictly required for running PostgreSQL, but have a tiny
 # footprint and can be very valuable when troubleshooting a running container,
-RUN apt-get update && apt-get install -y less jq strace
+RUN apt-get update && apt-get install -y less jq strace procps
 # These packages allow for a better integration for some containers, for example
 # daemontools provides envdir, which is very convenient for passing backup
 # environment variables around.
