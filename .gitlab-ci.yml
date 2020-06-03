@@ -26,6 +26,7 @@ stages:
   - tests.system
   - tests.load
   - release
+  - publish
 
 variables:
   # Use an allegedly faster FS option for docker builds.
@@ -42,6 +43,8 @@ variables:
   REGISTRY_SECRET_NAME: registry-key-savannah-timescaledb-docker-patroni
   # Using the default mirrors caused a lot of timeouts previously
   DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
+  #
+  CUSTOM_INSTALL_METHOD: ${CUSTOM_INSTALL_METHOD}
 
 before_script:
   # NOTE: these credentials are created by the GitlabCI system, and are ephemeral. They are only
@@ -49,13 +52,13 @@ before_script:
   - apk add make jq
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
-build.feature-branch-11: &build_feature-branch
+.build.feature-branch:
   stage: build
   except: [ "master", "release", "tags" ]
   tags: [ "docker" ]
   variables:
-    PG_MAJOR: "11"
-    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
+    PG_MAJOR: "12"
+    DOCKER_IMAGE_CACH: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
   script:
     - docker pull registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg${PG_MAJOR} || true
     - make push-builder
@@ -63,45 +66,91 @@ build.feature-branch-11: &build_feature-branch
     - make push
     - docker image ls
 
-build.feature-branch-12:
-  << : *build_feature-branch
+.build.feature-branch-12:
+  extends: .build.feature-branch
   variables:
     PG_MAJOR: "12"
-    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
+    DOCKER_IMAGE_CACH: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
 
-build.master-branch-11: &build_master-branch
+.build.feature-branch-11:
+  extends: .build.feature-branch
+  variables:
+    PG_MAJOR: "11"
+    DOCKER_IMAGE_CACH: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
+
+.build.master-branch:
   stage: build
   only: [ "master" ]
   tags: [ "docker" ]
   variables:
-    PG_MAJOR: "11"
+    PG_MAJOR: "12"
   script:
     - make push-builder
     - make test
     - make push-all
     - docker image ls
 
-build.master-branch-12:
-  << : *build_master-branch
+.build.master-branch-12:
+  extends: .build.master-branch
   variables:
     PG_MAJOR: "12"
 
-build.release-11: &build_release
-  stage: build
-  only: [ "tags" ]
-  tags: [ "docker" ]
+.build.master-branch-11:
+  extends: .build.master-branch
   variables:
     PG_MAJOR: "11"
+
+.build.release:
+  only: [ "tags" ]
+  tags: [ "docker" ]
+  stage: build
   variables:
+    PG_MAJOR: "12"
+    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg$(PG_MAJOR)
     TAG: ${CI_COMMIT_TAG}
     GIT_REV: ${CI_COMMIT_TAG}
   script:
+    # Remove the next line before merging, this line should not exist after 2020-05-27
+    - env | sort
+    - docker pull ${DOCKER_IMAGE_CACHE} || true
     - make test
+    - "false" # debugging, breaking early ;-)
     - make push-all
     - docker image ls
 
-build.release-12:
-  << : *build_release
+.build.release-12:
+  extends: .build.release
   variables:
     PG_MAJOR: "12"
+    DOCKER_IMAGE_CACH: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
 
+.build.release-11:
+  extends: .build.release
+  variables:
+    PG_MAJOR: "11"
+    DOCKER_IMAGE_CACH: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
+
+.build-custom.release:
+  stage: build
+  extends: .build.release
+  variables:
+    PG_MAJOR: "12"
+    INSTALL_METHOD: ${CUSTOM_INSTALL_METHOD}
+    INCLUDE_PROTECTED_ROLES: 1
+    DOCKER_IMAGE_CACH: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg$(PG_MAJOR)
+
+build-custom.release-12:
+  stage: build
+  extends: .build-custom.release
+  variables:
+    PG_MAJOR: "12"   
+  script:
+  - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/timescale/protected_roles
+  - make INCLUDE_PROTECTED_ROLES=1 build
+
+
+.build-custom.release-11:
+  stage: build
+  extends: .build-custom.release
+  variables:
+    PG_MAJOR: "11"

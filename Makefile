@@ -22,6 +22,10 @@ GITHUB_TOKEN?=""
 GITHUB_REPO?="timescale/timescaledb"
 GITHUB_TAG?="master"
 
+# This variable is set when running in gitlab CI/CD, and allows us to clone
+# private repositories.
+CI_JOB_TOKEN?=""
+
 TAG?=$(subst /,_,$(GIT_BRANCH)-$(GIT_COMMIT))
 REGISTRY?=localhost:5000
 TIMESCALEDB_REPOSITORY?=timescale/timescaledb-docker-ha
@@ -31,6 +35,7 @@ TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)-$(PGVERSION)
 TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
 PG_PROMETHEUS?=
 TIMESCALE_PROMETHEUS?=master
+INCLUDE_PROTECTED_ROLES?=
 
 CICD_REPOSITORY?=registry.gitlab.com/timescale/timescaledb-docker-ha
 PUBLISH_REPOSITORY?=docker.io/timescaledev/timescaledb-ha
@@ -39,6 +44,10 @@ BUILDARGS=
 POSTFIX=
 INSTALL_METHOD?=docker-ha
 
+builder-11:    PG_MAJOR  = 11
+builder-12:    PG_MAJOR  = 12
+build-all-11:  PG_MAJOR  = 11
+build-all-12:  PG_MAJOR  = 12
 build-oss:     POSTFIX   = -oss
 build-oss:	   BUILDARGS = --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"
 build-tag: 	   POSTFIX   = -$(GITHUB_TAG)
@@ -57,6 +66,8 @@ DOCKER_BUILD_COMMAND=docker build --build-arg PG_MAJOR=$(PG_MAJOR) \
 					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) $(DOCKER_IMAGE_CACHE) \
 					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
+					 --build-arg INCLUDE_PROTECTED_ROLES="$(INCLUDE_PROTECTED_ROLES)" \
+					 --build-arg CI_JOB_TOKEN="$(CI_JOB_TOKEN)" \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
 					 --label org.opencontainers.image.vendor=Timescale \
@@ -66,7 +77,7 @@ default: build
 
 .PHONY: build build-oss build-tag
 build build-oss build-tag: builder
-	$(DOCKER_BUILD_COMMAND) --tag $(TIMESCALEDB_RELEASE_URL)$(POSTFIX)-wip --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" $(BUILDARGS) .
+	echo $(DOCKER_BUILD_COMMAND) --tag $(TIMESCALEDB_RELEASE_URL)$(POSTFIX)-wip --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" $(BUILDARGS) .
 
 	# In these steps we do some introspection to find out some details of the versions
 	# that are inside the Docker image. As we use the Debian packages, we do not know until
@@ -88,14 +99,24 @@ build build-oss build-tag: builder
 	docker tag $(TIMESCALEDB_RELEASE_URL)$(POSTFIX) $(TIMESCALEDB_LATEST_URL)$(POSTFIX)
 
 .PHONY: build-all
-build-all: build build-oss
+build-all:
+	$(MAKE) build-all-11
+	$(MAKE) build-all-12
+
+.PHONY: build-all-11 build-all-12
+build-all-11 build-all-12: build build-oss
+
 
 # To speed up most builds, having .builder be an actual target is very useful
-.builder: Dockerfile $(shell find . -type f ! -path '*.git*' ! -name '*build*')
+.builder-11 .builder-12: Dockerfile $(shell find . -type f ! -path '*.git*' ! -name '*build*')
 	$(DOCKER_BUILD_COMMAND) --target builder -t $(TIMESCALEDB_BUILDER_URL) $(BUILDARGS) .
-	touch .builder
-.PHONY: builder
-builder: .builder
+	touch .builder-$(PG_MAJOR)
+
+.PHONY: builder builder-11 builder-12
+builder-11 builder-12: .builder-$(PG_MAJOR)
+builder:
+	$(MAKE) builder-11
+	$(MAKE) builder-12
 
 .PHONY: push-builder
 push-builder: .builder
