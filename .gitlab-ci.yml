@@ -106,7 +106,7 @@ before_script:
   stage: build
   variables:
     PG_MAJOR: "12"
-    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg$(PG_MAJOR)
+    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
     TAG: ${CI_COMMIT_TAG}
     GIT_REV: ${CI_COMMIT_TAG}
   script:
@@ -122,13 +122,13 @@ before_script:
   extends: .build.release
   variables:
     PG_MAJOR: "12"
-    DOCKER_IMAGE_CACH: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
+    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
 
 .build.release-11:
   extends: .build.release
   variables:
     PG_MAJOR: "11"
-    DOCKER_IMAGE_CACH: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
+    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
 
 .build-custom.release:
   stage: build
@@ -137,7 +137,7 @@ before_script:
     PG_MAJOR: "12"
     INSTALL_METHOD: ${CUSTOM_INSTALL_METHOD}
     TIMESCALE_TSDB_ADMIN: master
-    DOCKER_IMAGE_CACH: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg$(PG_MAJOR)
+    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg$(PG_MAJOR)
 
 build-custom.release-12:
   stage: build
