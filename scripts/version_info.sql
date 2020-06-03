@@ -25,11 +25,6 @@ WITH versions(name, version) AS (
         :'pgbackrest'
 )
 SELECT
-    jsonb_pretty(
-        jsonb_object_agg(
-            name,
-            version
-        )
-    )
+    format('%s=%s', name, version)
 FROM
     versions;
