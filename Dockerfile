@@ -170,10 +170,10 @@ RUN if [ ! -z "${TIMESCALE_PROMETHEUS}" ]; then \
 
 # Protected Roles is a library that restricts the CREATEROLE/CREATEDB privileges of non-superusers.
 # It is a private timescale project and is therefore not included/built by default
-ARG INCLUDE_PROTECTED_ROLES=
+ARG TIMESCALE_TSDB_ADMIN=
 ARG CI_JOB_TOKEN=
 RUN if [ ! -z "${CI_JOB_TOKEN}" ]; then \
-        if [ ! -z "${INCLUDE_PROTECTED_ROLES}" ]; then \
+        if [ ! -z "${TIMESCALE_TSDB_ADMIN}" ]; then \
             cd /build \
             && git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/timescale/protected_roles \
             && for pg in ${PG_VERSIONS}; do \
