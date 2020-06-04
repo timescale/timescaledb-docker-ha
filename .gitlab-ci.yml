@@ -148,6 +148,7 @@ build-custom.release-12:
   script:
   - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/timescale/protected_roles
   - make build
+  - make push-builder
 
 
 .build-custom.release-11:
