@@ -33,7 +33,7 @@ TIMESCALEDB_BUILDER_URL?=$(TIMESCALEDB_IMAGE):builder
 TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)
 TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest
 PG_PROMETHEUS?=
-TIMESCALE_PROMETHEUS?=master
+TIMESCALE_PROMETHEUS?=0.1.0-alpha.4
 TIMESCALE_TSDB_ADMIN?=
 
 CICD_REPOSITORY?=registry.gitlab.com/timescale/timescaledb-docker-ha
@@ -76,7 +76,7 @@ default: build
 
 .PHONY: build build-oss build-tag
 build build-oss build-tag: builder
-	$(DOCKER_BUILD_COMMAND) --tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)-$(POSTFIX)-wip --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" --build-arg PG_MAJOR=$(PG_MAJOR) $(BUILDARGS) .
+	$(DOCKER_BUILD_COMMAND) --tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX)-wip --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" --build-arg PG_MAJOR=$(PG_MAJOR) $(BUILDARGS) .
 	# In these steps we do some introspection to find out some details of the versions
 	# that are inside the Docker image. As we use the Debian packages, we do not know until
 	# after we have built the image, what patch version of PostgreSQL, or PostGIS is installed.
@@ -84,7 +84,7 @@ build build-oss build-tag: builder
 	# We will then attach this information as OCI labels to the final Docker image
 	# https://github.com/opencontainers/image-spec/blob/master/annotations.md
 	docker stop dummy$(PG_MAJOR)$(POSTFIX) || true
-	docker run -d --rm --name dummy$(PG_MAJOR)$(POSTFIX) -e PGDATA=/tmp/pgdata --user=postgres $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)-$(POSTFIX)-wip \
+	docker run -d --rm --name dummy$(PG_MAJOR)$(POSTFIX) -e PGDATA=/tmp/pgdata --user=postgres $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX)-wip \
 		sh -c 'initdb && timeout 30 postgres'
 	docker exec -i dummy$(PG_MAJOR)$(POSTFIX) sh -c 'while ! pg_isready; do sleep 1; done'
 	cat scripts/version_info.sql | docker exec -i dummy$(PG_MAJOR)$(POSTFIX) psql -AtXq | tee .$@
@@ -94,41 +94,39 @@ build build-oss build-tag: builder
 	[ -z "$(TIMESCALE_PROMETHEUS)" ] || echo "timescale_prometheus=$(TIMESCALE_PROMETHEUS)" >> .$@
 
 	# This is where we build the final Docker Image, including all the version labels
-	echo "FROM $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)-$(POSTFIX)-wip" | docker build --tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)-$(POSTFIX) - \
+	echo "FROM $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX)-wip" | docker build --tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)-$(POSTFIX) - \
 		$$(awk -F '=' '{printf "--label com.timescaledb.image."$$1".version="$$2" "}' .$@) --label com.timescaledb.image.install_method=$(INSTALL_METHOD)
 
-	docker tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)-$(POSTFIX) $(TIMESCALEDB_LATEST_URL)-pg$(PG_MAJOR)$(POSTFIX)
+	docker tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX) $(TIMESCALEDB_LATEST_URL)-pg$(PG_MAJOR)$(POSTFIX)
 
 .PHONY: build-all
 build-all:
-	$(MAKE) build-all-11 build-all-12
+	$(MAKE) build-all-11
+	$(MAKE) build-all-12
 
 .PHONY: build-all-11 build-all-12
 build-all-11 build-all-12: build build-oss
 
-# To speed up most builds, having .builder be an actual target is very useful
-.builder-11 .builder-12: Dockerfile $(shell find . -type f ! -path '*.git*' ! -name '*build*')
-	$(DOCKER_BUILD_COMMAND) --target builder -t $(TIMESCALEDB_BUILDER_URL)-pg$(PG_MAJOR) --build-arg PG_MAJOR=$(PG_MAJOR) $(BUILDARGS) .
-	touch .builder-$(PG_MAJOR)
-
 .PHONY: builder builder-11 builder-12
-builder-11 builder-12: .builder-$(PG_MAJOR)
+builder-11 builder-12:
+	$(DOCKER_BUILD_COMMAND) --target builder -t $(TIMESCALEDB_BUILDER_URL)-pg$(PG_MAJOR) --build-arg PG_MAJOR=$(PG_MAJOR) $(BUILDARGS) .
+
 builder:
 	$(MAKE) builder-11
 	$(MAKE) builder-12
 
 .PHONY: push-builder
-push-builder: .builder
+push-builder: builder
 	docker push $(TIMESCALEDB_BUILDER_URL)-pg11
 	docker push $(TIMESCALEDB_BUILDER_URL)-pg12
 
 .PHONY: push push-oss
 push push-oss: push% : build%
 	export POSTFIX=$$(echo $@ | cut -c 5-) \
-	&& docker push $(TIMESCALEDB_RELEASE_URL)-pg11-$${POSTFIX} \
-	&& docker push $(TIMESCALEDB_LATEST_URL)-pg11-$${POSTFIX} \
-	&& docker push $(TIMESCALEDB_RELEASE_URL)-pg12-$${POSTFIX} \
-	&& docker push $(TIMESCALEDB_LATEST_URL)-pg12-$${POSTFIX}
+	&& docker push $(TIMESCALEDB_RELEASE_URL)-pg11$${POSTFIX} \
+	&& docker push $(TIMESCALEDB_LATEST_URL)-pg11$${POSTFIX} \
+	&& docker push $(TIMESCALEDB_RELEASE_URL)-pg12$${POSTFIX} \
+	&& docker push $(TIMESCALEDB_LATEST_URL)-pg12$${POSTFIX}
 
 
 .PHONY: push-all
