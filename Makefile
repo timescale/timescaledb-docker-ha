@@ -94,7 +94,7 @@ build build-oss build-tag: builder
 	[ -z "$(TIMESCALE_PROMETHEUS)" ] || echo "timescale_prometheus=$(TIMESCALE_PROMETHEUS)" >> .$@
 
 	# This is where we build the final Docker Image, including all the version labels
-	echo "FROM $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX)-wip" | docker build --tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)-$(POSTFIX) - \
+	echo "FROM $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX)-wip" | docker build --tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX) - \
 		$$(awk -F '=' '{printf "--label com.timescaledb.image."$$1".version="$$2" "}' .$@) --label com.timescaledb.image.install_method=$(INSTALL_METHOD)
 
 	docker tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX) $(TIMESCALEDB_LATEST_URL)-pg$(PG_MAJOR)$(POSTFIX)
