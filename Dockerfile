@@ -177,7 +177,8 @@ RUN if [ ! -z "${CI_JOB_TOKEN}" ]; then \
             cd /build \
             && git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/timescale/protected_roles \
             && for pg in ${PG_VERSIONS}; do \
-                make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
+                cd /build/protected_roles && git reset HEAD --hard && git checkout ${TIMESCALE_PROMETHEUS} \
+                && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
             done; \
         fi; \
     fi
