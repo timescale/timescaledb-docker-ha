@@ -138,7 +138,7 @@ before_script:
     INSTALL_METHOD: ${CUSTOM_INSTALL_METHOD}
     TIMESCALE_TSDB_ADMIN: 0.1.0-alpha.1
     TIMESCALE_PROMETHEUS: 0.1.0-alpha.4
-    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg$(PG_MAJOR)
+    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
 
 build-custom.release-12:
   stage: build
