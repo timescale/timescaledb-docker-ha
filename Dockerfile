@@ -75,7 +75,7 @@ RUN mkdir /build/
 WORKDIR /build/
 
 RUN for pg in ${PG_VERSIONS}; do \
-        apt-get install -y postgresql-${pg} postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} postgresql-${pg}-pgextwlist || exit 1; \
+        apt-get install -y postgresql-${pg} postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} postgresql-${pg}-pgextwlist || exit 1; \
     done
 
 # We put Postgis in first, so these layers can be reused
@@ -125,7 +125,7 @@ RUN TS_VERSIONS=$(curl "https://api.github.com/repos/${GITHUB_REPO}/releases" \
             if [ ${pg} -ge 12 ] && dpkg --compare-versions ${ts} lt 1.7.0; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
             && cd /build/timescaledb && git reset HEAD --hard && git checkout ${ts} \
             && rm -rf build \
-            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
+            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
             && cd build && make -j 6 install || exit 1; \
         done; \
     done \
