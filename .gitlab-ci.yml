@@ -22,6 +22,7 @@ services:
 # `script` keyword). Pipelines are formed by creating jobs which are executed as part
 # of specific stages.
 stages:
+  - builder
   - build
   - tests.system
   - tests.load
@@ -52,16 +53,25 @@ before_script:
   - apk add make jq
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
+# The builder Docker image is only built from scratch if we tag a release. This ensures
+# most pipelines (master, PR's) are going to be fast, as they use a stale builder Docker image,
+# however for the release we really want to ensure we get the latest greatest, so we run this
+# one first
+builder:
+  only: [ "tags" ]
+  script:
+  - PG_MAJOR=11 make push-builder
+  - PG_MAJOR=12 make push-builder
+
 .build.feature-branch:
   stage: build
   except: [ "master", "release", "tags" ]
   tags: [ "docker" ]
   variables:
     PG_MAJOR: "12"
-    DOCKER_IMAGE_CACH: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
+    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
   script:
-    - docker pull registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg${PG_MAJOR} || true
-    - make push-builder
+    - docker pull ${DOCKER_IMAGE_CACHE} || true
     - make test
     - make push
     - docker image ls
@@ -70,13 +80,13 @@ before_script:
   extends: .build.feature-branch
   variables:
     PG_MAJOR: "12"
-    DOCKER_IMAGE_CACH: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
+    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
 
 .build.feature-branch-11:
   extends: .build.feature-branch
   variables:
     PG_MAJOR: "11"
-    DOCKER_IMAGE_CACH: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
+    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
 
 .build.master-branch:
   stage: build
@@ -110,7 +120,7 @@ before_script:
     TAG: ${CI_COMMIT_TAG}
     GIT_REV: ${CI_COMMIT_TAG}
   script:
-    # Remove the next line before merging, this line should not exist after 2020-05-27
+    # Remove the next line before merging, this line should not exist after 2020-06-10
     - env | sort
     - docker pull ${DOCKER_IMAGE_CACHE} || true
     - make test
@@ -145,11 +155,12 @@ build-custom.release-12:
   extends: .build-custom.release
   variables:
     PG_MAJOR: "12"
+    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
   script:
+  - docker pull ${DOCKER_IMAGE_CACHE} || true
   - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/timescale/protected_roles
   - make build
   - make push-builder
-
 
 .build-custom.release-11:
   stage: build
