@@ -93,6 +93,7 @@ build.release-11: &build_release
   variables:
     PG_MAJOR: "11"
   variables:
+    ENABLE_INSTALL_CHECK: "1"
     TAG: ${CI_COMMIT_TAG}
     GIT_REV: ${CI_COMMIT_TAG}
   script:

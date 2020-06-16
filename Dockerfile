@@ -115,7 +115,16 @@ RUN mkdir -p /build \
 ARG INSTALL_METHOD=docker-ha
 
 # If a specific GITHUB_TAG is provided, we will build that tag only. Otherwise
-# we build all the public (recent) releases
+# we build all the public (recent) releases. We build the software as the
+# postgres user, as if we need to run an installcheck, we cannot do so as the root
+# user, as PostgreSQL does not allow initdb or the postmaster to run as root
+#
+# Running installcheck takes a significant amount of time, therefore we put
+# the running of the installcheck behind a feature flag.
+# We have to run installcheck inside this loop, we cannot separate it into a different
+# RUN instruction, as installcheck issues CREATE EXTENSION TIMESCALEDB; (without any version info),
+# which means we need to run installcheck for *this* version immediately after installing *this* version.
+ARG ENABLE_INSTALL_CHECK=0
 RUN TS_VERSIONS=$(curl "https://api.github.com/repos/${GITHUB_REPO}/releases" \
         | jq -r '.[] | select(.draft == false) | select(.created_at > "2020-01-01") | .tag_name' | sort -V) \
     && if [ "${GITHUB_TAG}" != "" ]; then TS_VERSIONS="${GITHUB_TAG}"; fi \
@@ -124,12 +133,34 @@ RUN TS_VERSIONS=$(curl "https://api.github.com/repos/${GITHUB_REPO}/releases" \
         for ts in ${TS_VERSIONS}; do \
             if [ ${pg} -ge 12 ] && dpkg --compare-versions ${ts} lt 1.7.0; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
             && cd /build/timescaledb && git reset HEAD --hard && git checkout ${ts} \
+            && install -o postgres -g postgres -d /build/timescaledb/${pg}/${ts} \
             && rm -rf build \
+            && git checkout-index -a -f --prefix=/build/timescaledb/${pg}/${ts}/ \
+            && cd /build/timescaledb/${pg}/${ts} \
             && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
-            && cd build && make -j 6 install || exit 1; \
+            && chown postgres:postgres -R . && cd build && runuser postgres -c 'make -j 6' \
+            && make install && if [ "${ENABLE_INSTALL_CHECK}" != "0" ]; then \
+                echo "Running installcheck for Timescale ${ts} on PostgreSQL ${pg}"; \
+                # If this installcheck fails, we do not fail this Dockerfile instruction,
+                # to allow us to display the actual failure later on
+                runuser -l postgres -c "cd /build/timescaledb/${pg}/${ts}/build; export PATH=/usr/lib/postgresql/${pg}/bin:${PATH}; make installcheck || true"; \
+            fi; \
         done; \
-    done \
-    && cd / && rm -rf /build
+    done
+
+# If there were any installcheck failures, we now have a record of them in /build/timescaledb,
+# so we bail out if we find anything in there, echoing the diffs for debugging
+RUN if [ "$(find /build/timescaledb/ -name 'regression.diffs' -size +0 | wc -l)" != "0" ]; then \
+        for file in $(find /build/timescaledb/ -name 'regression.diffs' -size +0); do \
+            echo "ERROR: installcheck failed for $file, details:"; \
+            cat "$file"; \
+        done; \
+        # There was an actual build failure, so we exit
+        exit 1; \
+    fi
+
+RUN cd / && rm -rf /build
+
 
 # if PG_PROMETHEUS is set to an empty string, the pg_prometheus extension will not be added to the db
 ARG PG_PROMETHEUS=

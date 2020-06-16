@@ -38,6 +38,7 @@ PUBLISH_REPOSITORY?=docker.io/timescaledev/timescaledb-ha
 BUILDARGS=
 POSTFIX=
 INSTALL_METHOD?=docker-ha
+ENABLE_INSTALL_CHECK?=0
 
 build-oss:     POSTFIX   = -oss
 build-oss:	   BUILDARGS = --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"
@@ -56,6 +57,7 @@ DOCKER_BUILD_COMMAND=docker build --build-arg PG_MAJOR=$(PG_MAJOR) \
 					 --build-arg TIMESCALE_PROMETHEUS=$(TIMESCALE_PROMETHEUS) \
 					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) $(DOCKER_IMAGE_CACHE) \
+					 --build-arg ENABLE_INSTALL_CHECK=$(ENABLE_INSTALL_CHECK) \
 					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
