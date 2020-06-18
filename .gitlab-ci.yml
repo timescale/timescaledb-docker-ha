@@ -119,11 +119,13 @@ builder:
     DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
     TAG: ${CI_COMMIT_TAG}
     GIT_REV: ${CI_COMMIT_TAG}
+    RELEASE_TAG: ${CI_COMMIT_TAG}
   script:
     # Remove the next line before merging, this line should not exist after 2020-06-10
     - env | sort
     - docker pull ${DOCKER_IMAGE_CACHE} || true
     - make test
+    - make publish-oss
     - "false" # debugging, breaking early ;-)
     - make push-all
     - docker image ls
@@ -156,11 +158,13 @@ build-custom.release-12:
   variables:
     PG_MAJOR: "12"
     DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
+    PUBLISH_REPOSITORY: registry.gitlab.com/timescale/timescaledb-docker-ha
   script:
   - docker pull ${DOCKER_IMAGE_CACHE} || true
   - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/timescale/protected_roles
   - make build
   - make push-builder
+  - make publish-oss
 
 .build-custom.release-11:
   stage: build
