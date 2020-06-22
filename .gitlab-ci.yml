@@ -59,6 +59,7 @@ before_script:
 # one first
 builder:
   only: [ "tags" ]
+  stage: builder
   script:
   - PG_MAJOR=11 make push-builder
   - PG_MAJOR=12 make push-builder
