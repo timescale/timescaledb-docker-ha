@@ -13,6 +13,7 @@ These are changes that will probably be included in the next release.
  * Include custom timescaledb scripts for pgextwlist
  * `lz4` support, which can be used by pgBackRest
  * `tsdb_admin` can be included in the image
+ * `timescale_prometheus` is now included in the image
 ### Changed
 ### Removed
 ### Fixed
