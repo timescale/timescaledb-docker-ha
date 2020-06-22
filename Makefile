@@ -22,6 +22,10 @@ GITHUB_TOKEN?=""
 GITHUB_REPO?="timescale/timescaledb"
 GITHUB_TAG?="master"
 
+# This variable is set when running in gitlab CI/CD, and allows us to clone
+# private repositories.
+CI_JOB_TOKEN?=""
+
 TAG?=$(subst /,_,$(GIT_BRANCH)-$(GIT_COMMIT))
 REGISTRY?=localhost:5000
 TIMESCALEDB_REPOSITORY?=timescale/timescaledb-docker-ha
@@ -31,6 +35,7 @@ TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)-$(PGVERSION)
 TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
 PG_PROMETHEUS?=
 TIMESCALE_PROMETHEUS?=master
+TIMESCALE_TSDB_ADMIN?=
 
 CICD_REPOSITORY?=registry.gitlab.com/timescale/timescaledb-docker-ha
 PUBLISH_REPOSITORY?=docker.io/timescaledev/timescaledb-ha
@@ -51,12 +56,14 @@ build-tag: 	   BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GI
 # for all the version information. In that way, we are sure we never tag the Docker images with the wrong
 # versions.
 # I'm using $$(jq) instead of $(shell), as we need to evaluate these variables for every new image build
-DOCKER_BUILD_COMMAND=docker build --build-arg PG_MAJOR=$(PG_MAJOR) \
+DOCKER_BUILD_COMMAND=docker build  \
 					 --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS) \
 					 --build-arg TIMESCALE_PROMETHEUS=$(TIMESCALE_PROMETHEUS) \
 					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) $(DOCKER_IMAGE_CACHE) \
 					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
+					 --build-arg TIMESCALE_TSDB_ADMIN="$(TIMESCALE_TSDB_ADMIN)" \
+					 --build-arg CI_JOB_TOKEN="$(CI_JOB_TOKEN)" \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
 					 --label org.opencontainers.image.vendor=Timescale \
