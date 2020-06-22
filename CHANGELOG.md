@@ -15,6 +15,7 @@ These are changes that will probably be included in the next release.
  * `tsdb_admin` can be included in the image
  * `timescale_prometheus` is now included in the image
 ### Changed
+ * GitLab CI/CD will now publish Docker images to Docker hub on version tags
 ### Removed
 ### Fixed
 
