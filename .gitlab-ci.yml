@@ -65,8 +65,8 @@ builder:
   only: [ "tags" ]
   stage: builder
   script:
-  - true || PG_MAJOR=11 make push-builder
-  - true || PG_MAJOR=12 make push-builder
+  - PG_MAJOR=11 make push-builder
+  - PG_MAJOR=12 make push-builder
 
 .build.feature-branch:
   stage: build
@@ -133,13 +133,13 @@ builder:
     - make publish-oss
     - docker ls
 
-.publish.release-12:
+publish.release-12:
   extends: .publish.release
   variables:
     PG_MAJOR: "12"
     DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
 
-.publish.release-11:
+publish.release-11:
   extends: .publish.release
   variables:
     PG_MAJOR: "11"
