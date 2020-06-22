@@ -34,7 +34,7 @@ TIMESCALEDB_BUILDER_URL?=$(TIMESCALEDB_IMAGE):builder-$(PGVERSION)
 TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)-$(PGVERSION)
 TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
 PG_PROMETHEUS?=
-TIMESCALE_PROMETHEUS?=master
+TIMESCALE_PROMETHEUS?=0.1.0-alpha.4
 TIMESCALE_TSDB_ADMIN?=
 
 CICD_REPOSITORY?=registry.gitlab.com/timescale/timescaledb-docker-ha
@@ -88,9 +88,12 @@ build build-oss build-tag: builder
 	cat scripts/version_info.sql | docker exec -i dummy$(PG_MAJOR)$(POSTFIX) psql -AtXq | tee .$@
 	docker stop dummy$(PG_MAJOR)$(POSTFIX)
 
+	[ -z "$(TIMESCALE_TSDB_ADMIN)" ] || echo "tsdb_admin=$(TIMESCALE_TSDB_ADMIN)" >> .$@
+	[ -z "$(TIMESCALE_PROMETHEUS)" ] || echo "timescale_prometheus=$(TIMESCALE_PROMETHEUS)" >> .$@
+
 	# This is where we build the final Docker Image, including all the version labels
-	echo "FROM $(TIMESCALEDB_RELEASE_URL)$(POSTFIX)-wip" | docker build --tag $(TIMESCALEDB_RELEASE_URL)$(POSTFIX) - \
-		$$(jq 'to_entries | map("--label com.timescaledb.image.\(.key).version=\(.value)") | join(" ")' -r .$@)
+	echo "FROM $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX)-wip" | docker build --tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX) - \
+		$$(awk -F '=' '{printf "--label com.timescaledb.image."$$1".version="$$2" "}' .$@) --label com.timescaledb.image.install_method=$(INSTALL_METHOD)
 
 	docker tag $(TIMESCALEDB_RELEASE_URL)$(POSTFIX) $(TIMESCALEDB_LATEST_URL)$(POSTFIX)
 
