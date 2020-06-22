@@ -181,7 +181,7 @@ test: build
 	#
 	# TODO: Create a good test-suite. For now, it's nice to have this target in CI/CD,
 	# and have it do something worthwhile
-	docker run --rm --tty $(TIMESCALEDB_RELEASE_URL)-$(PG_MAJOR) /bin/bash -c "initdb -D test && grep timescaledb test/postgresql.conf"
+	docker run --rm --tty $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR) /bin/bash -c "initdb -D test && grep timescaledb test/postgresql.conf"
 
 clean:
 	rm -f .builder

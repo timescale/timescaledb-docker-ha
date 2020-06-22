@@ -63,12 +63,11 @@ builder:
   only: [ "tags" ]
   stage: builder
   script:
-  - PG_MAJOR=11 make push-builder
-  - PG_MAJOR=12 make push-builder
+  - true || PG_MAJOR=11 make push-builder
+  - true || PG_MAJOR=12 make push-builder
 
 .build.feature-branch:
   stage: build
-  except: [ "master", "release", "tags" ]
   tags: [ "docker" ]
   variables:
     PG_MAJOR: "12"
@@ -127,8 +126,9 @@ builder:
     - docker pull registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg${PG_MAJOR} || true
     - make test
     - make push-all
+    - make publish-oss
 
-build.release-12:
+.build.release-12:
   extends: .build.release
   variables:
     PG_MAJOR: "12"
