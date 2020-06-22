@@ -46,6 +46,8 @@ variables:
   DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
   #
   CUSTOM_INSTALL_METHOD: ${CUSTOM_INSTALL_METHOD}
+  TIMESCALE_TSDB_ADMIN: 0.1.0-alpha.1
+  TIMESCALE_PROMETHEUS: 0.1.0-alpha.4
 
 before_script:
   # NOTE: these credentials are created by the GitlabCI system, and are ephemeral. They are only
@@ -126,49 +128,17 @@ builder:
     - env | sort
     - docker pull ${DOCKER_IMAGE_CACHE} || true
     - make test
-    - make publish-oss
-    - "false" # debugging, breaking early ;-)
-    - make push-all
     - docker image ls
+    - "false" # debugging, breaking early ;-)
 
-.build.release-12:
+build.release-12:
   extends: .build.release
   variables:
     PG_MAJOR: "12"
     DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
 
-.build.release-11:
+build.release-11:
   extends: .build.release
   variables:
     PG_MAJOR: "11"
     DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
-
-.build-custom.release:
-  stage: build
-  extends: .build.release
-  variables:
-    PG_MAJOR: "12"
-    INSTALL_METHOD: ${CUSTOM_INSTALL_METHOD}
-    TIMESCALE_TSDB_ADMIN: 0.1.0-alpha.1
-    TIMESCALE_PROMETHEUS: 0.1.0-alpha.4
-    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
-
-build-custom.release-12:
-  stage: build
-  extends: .build-custom.release
-  variables:
-    PG_MAJOR: "12"
-    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
-    PUBLISH_REPOSITORY: registry.gitlab.com/timescale/timescaledb-docker-ha
-  script:
-  - docker pull ${DOCKER_IMAGE_CACHE} || true
-  - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/timescale/protected_roles
-  - make build
-  - make push-builder
-  - make publish-oss
-
-.build-custom.release-11:
-  stage: build
-  extends: .build-custom.release
-  variables:
-    PG_MAJOR: "11"
