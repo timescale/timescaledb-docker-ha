@@ -69,20 +69,18 @@ to apply or backport fixes. Patch releases will be based on tagged commits on th
 Major and minor releases should tag commits in the `master` branch. Patch releases should tag commits in a release branch.
 
 ## Publish the images to Docker Hub
-Publishing images to Docker Hub currently requires the following:
+Docker Images will be automatically published to Docker Hub for git tags starting with a `v`.
 
-- pull the images from GitLab
-- add annotations about versions
-- pushes the images to Docker Hub
+They will be written under quite a few aliases, for example, for PostgreSQL 12.3 and Timescale 1.7.1, the following images will be built and pushed/overwritten:
 
-We may at some point automate this further, for now there is a Makefile target that does this for you.
-To publish, you need to point to a tagged release that was successfully built by GitLab CI/CD.
+- timescaledev/timescaledb-ha:pg12
+- timescaledev/timescaledb-ha:pg12-ts1.7
+- timescaledev/timescaledb-ha:pg12.3-ts1.7
 
-> NOTE: You need to be logged in to docker hub as well as gitlab registry for this Makefile target to succeed
+The following image will only be pushed if it does not yet exist, this tag is immutable and is therefore the best candidate
+for production deployments:
 
-```console
-RELEASE_TAG=v0.2.9 make publish-all
-```
+- timescaledev/timescaledb-ha:pg12.3-ts1.7.1
 
 ## Patch process
 

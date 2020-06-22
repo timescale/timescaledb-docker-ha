@@ -1,8 +1,7 @@
-PG_MAJOR?=11
+PG_MAJOR?=12
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
 PG_VERSIONS?=12 11
-PGVERSION=pg$(PG_MAJOR)
 POSTGIS_VERSIONS?="2.5 3"
 
 # CI/CD can benefit from specifying a specific apt packages mirror
@@ -30,9 +29,9 @@ TAG?=$(subst /,_,$(GIT_BRANCH)-$(GIT_COMMIT))
 REGISTRY?=localhost:5000
 TIMESCALEDB_REPOSITORY?=timescale/timescaledb-docker-ha
 TIMESCALEDB_IMAGE?=$(REGISTRY)/$(TIMESCALEDB_REPOSITORY)
-TIMESCALEDB_BUILDER_URL?=$(TIMESCALEDB_IMAGE):builder-$(PGVERSION)
-TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)-$(PGVERSION)
-TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest-$(PGVERSION)
+TIMESCALEDB_BUILDER_URL?=$(TIMESCALEDB_IMAGE):builder
+TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)
+TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest
 PG_PROMETHEUS?=
 TIMESCALE_PROMETHEUS?=0.1.0-alpha.4
 TIMESCALE_TSDB_ADMIN?=
@@ -44,6 +43,10 @@ BUILDARGS=
 POSTFIX=
 INSTALL_METHOD?=docker-ha
 
+builder-11:    PG_MAJOR  = 11
+builder-12:    PG_MAJOR  = 12
+build-all-11:  PG_MAJOR  = 11
+build-all-12:  PG_MAJOR  = 12
 build-oss:     POSTFIX   = -oss
 build-oss:	   BUILDARGS = --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"
 build-tag: 	   POSTFIX   = -$(GITHUB_TAG)
@@ -73,8 +76,7 @@ default: build
 
 .PHONY: build build-oss build-tag
 build build-oss build-tag: builder
-	$(DOCKER_BUILD_COMMAND) --tag $(TIMESCALEDB_RELEASE_URL)$(POSTFIX)-wip --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" $(BUILDARGS) .
-
+	$(DOCKER_BUILD_COMMAND) --tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX)-wip --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" --build-arg PG_MAJOR=$(PG_MAJOR) $(BUILDARGS) .
 	# In these steps we do some introspection to find out some details of the versions
 	# that are inside the Docker image. As we use the Debian packages, we do not know until
 	# after we have built the image, what patch version of PostgreSQL, or PostGIS is installed.
@@ -82,7 +84,7 @@ build build-oss build-tag: builder
 	# We will then attach this information as OCI labels to the final Docker image
 	# https://github.com/opencontainers/image-spec/blob/master/annotations.md
 	docker stop dummy$(PG_MAJOR)$(POSTFIX) || true
-	docker run -d --rm --name dummy$(PG_MAJOR)$(POSTFIX) -e PGDATA=/tmp/pgdata --user=postgres $(TIMESCALEDB_RELEASE_URL)$(POSTFIX)-wip \
+	docker run -d --rm --name dummy$(PG_MAJOR)$(POSTFIX) -e PGDATA=/tmp/pgdata --user=postgres $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX)-wip \
 		sh -c 'initdb && timeout 30 postgres'
 	docker exec -i dummy$(PG_MAJOR)$(POSTFIX) sh -c 'while ! pg_isready; do sleep 1; done'
 	cat scripts/version_info.sql | docker exec -i dummy$(PG_MAJOR)$(POSTFIX) psql -AtXq | tee .$@
@@ -95,27 +97,31 @@ build build-oss build-tag: builder
 	echo "FROM $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX)-wip" | docker build --tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX) - \
 		$$(awk -F '=' '{printf "--label com.timescaledb.image."$$1".version="$$2" "}' .$@) --label com.timescaledb.image.install_method=$(INSTALL_METHOD)
 
-	docker tag $(TIMESCALEDB_RELEASE_URL)$(POSTFIX) $(TIMESCALEDB_LATEST_URL)$(POSTFIX)
+	docker tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX) $(TIMESCALEDB_LATEST_URL)-pg$(PG_MAJOR)$(POSTFIX)
 
 .PHONY: build-all
-build-all: build build-oss
+build-all:
+	$(MAKE) build-all-$(PG_MAJOR)
 
-# To speed up most builds, having .builder be an actual target is very useful
-.builder: Dockerfile $(shell find . -type f ! -path '*.git*' ! -name '*build*')
-	$(DOCKER_BUILD_COMMAND) --target builder -t $(TIMESCALEDB_BUILDER_URL) $(BUILDARGS) .
-	touch .builder
-.PHONY: builder
-builder: .builder
+.PHONY: build-all-11 build-all-12
+build-all-11 build-all-12: build build-oss
+
+.PHONY: builder builder-11 builder-12
+builder-11 builder-12:
+	$(DOCKER_BUILD_COMMAND) --target builder -t $(TIMESCALEDB_BUILDER_URL)-pg$(PG_MAJOR) --build-arg PG_MAJOR=$(PG_MAJOR) $(BUILDARGS) .
+
+builder:
+	$(MAKE) builder-$(PG_MAJOR)
 
 .PHONY: push-builder
-push-builder: .builder
-	docker push $(TIMESCALEDB_BUILDER_URL)
+push-builder: builder
+	docker push $(TIMESCALEDB_BUILDER_URL)-pg$(PG_MAJOR)
 
 .PHONY: push push-oss
 push push-oss: push% : build%
 	export POSTFIX=$$(echo $@ | cut -c 5-) \
-	&& docker push $(TIMESCALEDB_RELEASE_URL)$${POSTFIX} \
-	&& docker push $(TIMESCALEDB_LATEST_URL)$${POSTFIX}
+	&& docker push $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$${POSTFIX} \
+	&& docker push $(TIMESCALEDB_LATEST_URL)-pg$(PG_MAJOR)$${POSTFIX}
 
 .PHONY: push-all
 push-all: push push-oss
@@ -169,7 +175,7 @@ test: build
 	#
 	# TODO: Create a good test-suite. For now, it's nice to have this target in CI/CD,
 	# and have it do something worthwhile
-	docker run --rm --tty $(TIMESCALEDB_RELEASE_URL) /bin/bash -c "initdb -D test && grep timescaledb test/postgresql.conf"
+	docker run --rm --tty $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR) /bin/bash -c "initdb -D test && grep timescaledb test/postgresql.conf"
 
 clean:
 	rm -f .builder
