@@ -112,10 +112,10 @@ builder:
   variables:
     PG_MAJOR: "11"
 
-.build.release:
+.publish.release:
   only: [ "tags" ]
   tags: [ "docker" ]
-  stage: build
+  stage: publish
   variables:
     PG_MAJOR: "12"
     DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
@@ -128,14 +128,14 @@ builder:
     - make push-all
     - make publish-oss
 
-.build.release-12:
-  extends: .build.release
+.publish.release-12:
+  extends: .publish.release
   variables:
     PG_MAJOR: "12"
     DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
 
 build.release-11:
-  extends: .build.release
+  extends: .publish.release
   variables:
     PG_MAJOR: "11"
     DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11

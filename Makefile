@@ -1,4 +1,4 @@
-PG_MAJOR?=11
+PG_MAJOR?=12
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
 PG_VERSIONS?=12 11
@@ -101,8 +101,7 @@ build build-oss build-tag: builder
 
 .PHONY: build-all
 build-all:
-	$(MAKE) build-all-11
-	$(MAKE) build-all-12
+	$(MAKE) build-all-$(PG_MAJOR)
 
 .PHONY: build-all-11 build-all-12
 build-all-11 build-all-12: build build-oss
@@ -112,22 +111,17 @@ builder-11 builder-12:
 	$(DOCKER_BUILD_COMMAND) --target builder -t $(TIMESCALEDB_BUILDER_URL)-pg$(PG_MAJOR) --build-arg PG_MAJOR=$(PG_MAJOR) $(BUILDARGS) .
 
 builder:
-	$(MAKE) builder-11
-	$(MAKE) builder-12
+	$(MAKE) builder-$(PG_MAJOR)
 
 .PHONY: push-builder
 push-builder: builder
-	docker push $(TIMESCALEDB_BUILDER_URL)-pg11
-	docker push $(TIMESCALEDB_BUILDER_URL)-pg12
+	docker push $(TIMESCALEDB_BUILDER_URL)-pg$(PG_MAJOR)
 
 .PHONY: push push-oss
 push push-oss: push% : build%
 	export POSTFIX=$$(echo $@ | cut -c 5-) \
-	&& docker push $(TIMESCALEDB_RELEASE_URL)-pg11$${POSTFIX} \
-	&& docker push $(TIMESCALEDB_LATEST_URL)-pg11$${POSTFIX} \
-	&& docker push $(TIMESCALEDB_RELEASE_URL)-pg12$${POSTFIX} \
-	&& docker push $(TIMESCALEDB_LATEST_URL)-pg12$${POSTFIX}
-
+	&& docker push $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$${POSTFIX} \
+	&& docker push $(TIMESCALEDB_LATEST_URL)-pg$(PG_MAJOR)$${POSTFIX}
 
 .PHONY: push-all
 push-all: push push-oss
