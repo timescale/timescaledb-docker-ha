@@ -22,10 +22,12 @@ services:
 # `script` keyword). Pipelines are formed by creating jobs which are executed as part
 # of specific stages.
 stages:
+  - builder
   - build
   - tests.system
   - tests.load
   - release
+  - publish
 
 variables:
   # Use an allegedly faster FS option for docker builds.
@@ -53,32 +55,48 @@ before_script:
   - apk add make jq
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
-build.feature-branch-11: &build_feature-branch
+# The builder Docker image is only built from scratch if we tag a release. This ensures
+# most pipelines (master, PR's) are going to be fast, as they use a stale builder Docker image,
+# however for the release we really want to ensure we get the latest greatest, so we run this
+# one first
+builder:
+  only: [ "tags" ]
+  stage: builder
+  script:
+  - PG_MAJOR=11 make push-builder
+  - PG_MAJOR=12 make push-builder
+
+
+.build.feature-branch:
   stage: build
-  except: [ "master", "release", "tags" ]
   tags: [ "docker" ]
   variables:
-    PG_MAJOR: "11"
-    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
+    PG_MAJOR: "12"
+    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
   script:
-    - docker pull registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg${PG_MAJOR} || true
-    - make push-builder
+    - docker pull ${DOCKER_IMAGE_CACHE} || true
     - make test
     - make push
     - docker image ls
 
 build.feature-branch-12:
-  << : *build_feature-branch
+  extends: .build.feature-branch
   variables:
     PG_MAJOR: "12"
-    DOCKER_IMAGE_CACHE: --cache-from registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
+    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
 
-build.master-branch-11: &build_master-branch
+build.feature-branch-11:
+  extends: .build.feature-branch
+  variables:
+    PG_MAJOR: "11"
+    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
+
+.build.master-branch:
   stage: build
   only: [ "master" ]
   tags: [ "docker" ]
   variables:
-    PG_MAJOR: "11"
+    PG_MAJOR: "12"
   script:
     - make push-builder
     - make test
@@ -86,26 +104,44 @@ build.master-branch-11: &build_master-branch
     - docker image ls
 
 build.master-branch-12:
-  << : *build_master-branch
+  extends: .build.master-branch
   variables:
     PG_MAJOR: "12"
 
-build.release-11: &build_release
-  stage: build
-  only: [ "tags" ]
-  tags: [ "docker" ]
+build.master-branch-11:
+  extends: .build.master-branch
   variables:
     PG_MAJOR: "11"
-  variables:
-    TAG: ${CI_COMMIT_TAG}
-    GIT_REV: ${CI_COMMIT_TAG}
-  script:
-    - make test
-    - make push-all
-    - docker image ls
 
-build.release-12:
-  << : *build_release
+.publish.release:
+  only: [ "tags" ]
+  tags: [ "docker" ]
+  stage: publish
   variables:
     PG_MAJOR: "12"
+    DOCKER_IMAGE_CACHE: debian:buster-slim
+    TAG: ${CI_COMMIT_TAG}
+    GIT_REV: ${CI_COMMIT_TAG}
+    RELEASE_TAG: ${CI_COMMIT_TAG}
+  script:
+    # We only want to publish if the tag starts with v, other tags should not publish
+    - '[ "${TAG#\v}"x == "${TAG}x" ] || exit 0'
+    - docker login -u $DH_REGISTRY_USER -p $DH_REGISTRY_PASSWORD $DH_REGISTRY
+    - docker pull registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg${PG_MAJOR} || true
+    - make test
+    - make push-all
+    - make publish
+    - make publish-oss
+    - docker image ls
 
+publish.release-12:
+  extends: .publish.release
+  variables:
+    PG_MAJOR: "12"
+    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
+
+publish.release-11:
+  extends: .publish.release
+  variables:
+    PG_MAJOR: "11"
+    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
