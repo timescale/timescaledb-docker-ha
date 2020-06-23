@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 These are changes that will probably be included in the next release.
 
 ### Added
+### Changed
+### Removed
+
+## [v0.2.13] - 2020-06-23
+
+### Added
  * Include `psutils` to allow some process troubleshooting inside the container
  * Include custom timescaledb scripts for pgextwlist
  * `lz4` support, which can be used by pgBackRest
@@ -16,8 +22,6 @@ These are changes that will probably be included in the next release.
  * `timescale_prometheus` is now included in the image
 ### Changed
  * GitLab CI/CD will now publish Docker images to Docker hub on version tags
-### Removed
-### Fixed
 
 ## [v0.2.12] - 2020-05-19
 ### Changed
