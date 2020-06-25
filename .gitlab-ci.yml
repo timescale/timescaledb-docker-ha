@@ -129,6 +129,7 @@ build.master-branch-11:
     - docker login -u $DH_REGISTRY_USER -p $DH_REGISTRY_PASSWORD $DH_REGISTRY
     - docker pull registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg${PG_MAJOR} || true
     - make test
+    - make test-oss
     - make push-all
     - make publish
     - make publish-oss
