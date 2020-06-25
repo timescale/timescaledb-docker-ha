@@ -36,7 +36,6 @@ PG_PROMETHEUS?=
 TIMESCALE_PROMETHEUS?=0.1.0-alpha.4
 TIMESCALE_TSDB_ADMIN?=
 
-IMMUTABLE_TAG=$(PUBLISH_REPOSITORY):$(RELEASE_TAG)$(POSTFIX)
 CICDIMAGE=$(CICD_REPOSITORY):$(RELEASE_TAG)-pg$(PG_MAJOR)$(POSTFIX)
 WIPTAG=$(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX)-wip
 
@@ -53,10 +52,14 @@ builder-11:    PG_MAJOR  = 11
 builder-12:    PG_MAJOR  = 12
 build-all-11:  PG_MAJOR  = 11
 build-all-12:  PG_MAJOR  = 12
-build-oss:     POSTFIX   = -oss
 build-oss:	   BUILDARGS = --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"
-build-tag: 	   POSTFIX   = -$(GITHUB_TAG)
 build-tag: 	   BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GITHUB_USER=$(GITHUB_USER) --build-arg GITHUB_TOKEN=$(GITHUB_TOKEN) --build-arg GITHUB_TAG=$(GITHUB_TAG)
+
+build-tag: 	   POSTFIX   = -$(GITHUB_TAG)
+build-oss:     POSTFIX   = -oss
+test-oss:      POSTFIX   = -oss
+push-oss:      POSTFIX   = -oss
+publish-oss:   POSTFIX   = -oss
 
 
 # We label all the Docker Images with the versions of PostgreSQL, TimescaleDB and other extensions
@@ -97,8 +100,8 @@ build build-oss build-tag: builder
 	cat scripts/version_info.sql | docker exec -i dummy$(PG_MAJOR)$(POSTFIX) psql -AtXq | tee .$@
 	docker stop dummy$(PG_MAJOR)$(POSTFIX)
 
-	[ -z "$(TIMESCALE_TSDB_ADMIN)" ] || echo "tsdb_admin=$(TIMESCALE_TSDB_ADMIN)" >> .$@
-	[ -z "$(TIMESCALE_PROMETHEUS)" ] || echo "timescale_prometheus=$(TIMESCALE_PROMETHEUS)" >> .$@
+	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin=$(TIMESCALE_TSDB_ADMIN)" >> .$@; fi
+	if [ ! -z "$(TIMESCALE_PROMETHEUS)" ]; then echo "timescale_prometheus=$(TIMESCALE_PROMETHEUS)" >> .$@; fi
 
 	# This is where we build the final Docker Image, including all the version labels
 	echo "FROM $(WIPTAG)" | docker build --tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX) - \
@@ -126,9 +129,8 @@ push-builder: builder
 
 .PHONY: push push-oss
 push push-oss: push% : build%
-	export POSTFIX=$$(echo $@ | cut -c 5-) \
-	&& docker push $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$${POSTFIX} \
-	&& docker push $(TIMESCALEDB_LATEST_URL)-pg$(PG_MAJOR)$${POSTFIX}
+	docker push $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX) \
+	&& docker push $(TIMESCALEDB_LATEST_URL)-pg$(PG_MAJOR)$(POSTFIX)
 
 .PHONY: push-all
 push-all: push push-oss
@@ -140,25 +142,33 @@ push-all: push push-oss
 #  2. timescaledev/timescaledb-ha:pg12-ts1.7-latest
 #  3. timescaledev/timescaledb-ha:pg12.3-ts1.7-latest
 #  4. timescaledev/timescaledb-ha:pg12.3-ts1.7.1-latest
-#  5. timescaledev/timescaledb-ha:v0.2.15
+#  5. timescaledev/timescaledb-ha:pg12.3-ts1.7.1-pN
 #
-# Tag 5 is immutable, and we will only push that one iff it does not yet exist.
-# 5. would therefore be most suitable for production environments. This tag is only
-# created for the latest PostgreSQL version.
+# Tag 5 is immutable, and for every time we publish that image, we increase N by 1,
+# we start with N=0
+#
+# Our method of finding a patch version is quite brute force (`docker pull image`), 
+# however, this should not happen that often.
 .PHONY: publish publish-oss
 publish publish-oss:
 	export PGVERSION=$$(docker inspect $(CICDIMAGE) | jq '.[0]."ContainerConfig"."Labels"."com.timescaledb.image.postgresql.version"' -r) \
 	&& export TSPATCH=$$(docker inspect $(CICDIMAGE) | jq '.[0]."ContainerConfig"."Labels"."com.timescaledb.image.timescaledb.version"' -r) \
 	&& export TSMINOR=$${TSPATCH%.*} \
-	&& for variant in pg$(PG_MAJOR)$${POSTFIX}-latest pg$(PG_MAJOR)-ts$${TSMINOR}$${POSTFIX}-latest pg$${PGVERSION}-ts$${TSMINOR}$${POSTFIX}-latest pg$${PGVERSION}-ts$${TSPATCH}$${POSTFIX}-latest; \
+	&& for variant in pg$(PG_MAJOR)$(POSTFIX)-latest pg$(PG_MAJOR)-ts$${TSMINOR}$(POSTFIX)-latest pg$${PGVERSION}-ts$${TSMINOR}$(POSTFIX)-latest pg$${PGVERSION}-ts$${TSPATCH}$(POSTFIX)-latest; \
 		do \
 			docker tag $(CICDIMAGE) $(PUBLISH_REPOSITORY):$${variant} \
 			&& docker push $(PUBLISH_REPOSITORY):$${variant} || exit 1; \
 		done \
-	&& if test $(PG_MAJOR) -eq 12; then \
-		docker tag $(CICDIMAGE) $(IMMUTABLE_TAG) \
-		&& docker pull $(IMMUTABLE_TAG) &> /dev/null && echo "Not pushing $(IMMUTABLE_TAG) as it already exists" || docker push $(IMMUTABLE_TAG) || exit 1; \
-	   fi
+	&& for i in $$(seq 0 100); do \
+		export IMMUTABLE_TAG=$(PUBLISH_REPOSITORY):pg$${PGVERSION}-ts$${TSPATCH}$(POSTFIX)-p$${i} \
+		&& if docker pull $${IMMUTABLE_TAG}; \
+			then \
+				echo "$${IMMUTABLE_TAG} already exists"; \
+			else \
+				docker tag $(CICDIMAGE) $${IMMUTABLE_TAG}; \
+				docker push $${IMMUTABLE_TAG} && exit 0 || exit 1; \
+			fi; \
+	   done
 
 .PHONY: publish
 publish-all:
@@ -181,8 +191,7 @@ test test-oss: test%: build%
 	#
 	# TODO: Create a good test-suite. For now, it's nice to have this target in CI/CD,
 	# and have it do something worthwhile
-	docker run --rm --tty $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR) /bin/bash -c "initdb -D test && grep timescaledb test/postgresql.conf"
-	docker run --rm --tty $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)-oss /bin/bash -c "initdb -D test && grep timescaledb test/postgresql.conf"
+	docker run --rm --tty $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX) /bin/bash -c "initdb -D test && grep timescaledb test/postgresql.conf"
 
 clean:
 	rm -f .builder
