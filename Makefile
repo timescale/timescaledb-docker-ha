@@ -131,13 +131,15 @@ push-all: push push-oss
 # The purpose of publishing the images under many tags, is to provide
 # some choice to the user as to their appetite for volatility.
 #
-#  1. timescaledev/timescaledb-ha:pg11
-#  2. timescaledev/timescaledb-ha:pg11-ts1.6
-#  3. timescaledev/timescaledb-ha:pg11.7-ts1.6
-#  4. timescaledev/timescaledb-ha:pg11.7-ts1.6.0
+#  1. timescaledev/timescaledb-ha:pg12-latest
+#  2. timescaledev/timescaledb-ha:pg12-ts1.7-latest
+#  3. timescaledev/timescaledb-ha:pg12.3-ts1.7-latest
+#  4. timescaledev/timescaledb-ha:pg12.3-ts1.7.1-latest
+#  5. timescaledev/timescaledb-ha:v0.2.15
 #
-# Tag 4 is immutable, and we will only push that one iff it does not yet exist.
-# 4. would therefore be most suitable for production environments
+# Tag 5 is immutable, and we will only push that one iff it does not yet exist.
+# 5. would therefore be most suitable for production environments. This tag is only
+# created for the latest PostgreSQL version.
 .PHONY: publish publish-oss
 publish publish-oss:
 	export POSTFIX=$$(echo $@ | cut -c 8-) \
@@ -146,15 +148,16 @@ publish publish-oss:
 	&& export PGVERSION=$$(docker inspect $${CICDIMAGE} | jq '.[0]."ContainerConfig"."Labels"."com.timescaledb.image.postgresql.version"' -r) \
 	&& export TSPATCH=$$(docker inspect $${CICDIMAGE} | jq '.[0]."ContainerConfig"."Labels"."com.timescaledb.image.timescaledb.version"' -r) \
 	&& export TSMINOR=$${TSPATCH%.*} \
-	&& for variant in pg$(PG_MAJOR)$${POSTFIX} pg$(PG_MAJOR)-ts$${TSMINOR}$${POSTFIX} pg$${PGVERSION}-ts$${TSMINOR}$${POSTFIX}; \
+	&& for variant in pg$(PG_MAJOR)$${POSTFIX}-latest pg$(PG_MAJOR)-ts$${TSMINOR}$${POSTFIX}-latest pg$${PGVERSION}-ts$${TSMINOR}$${POSTFIX}-latest pg$${PGVERSION}-ts$${TSPATCH}$${POSTFIX}-latest; \
 		do \
 			docker tag $${CICDIMAGE} $(PUBLISH_REPOSITORY):$${variant} \
 			&& docker push $(PUBLISH_REPOSITORY):$${variant} || exit 1; \
 		done \
-	&& export variant=pg$${PGVERSION}-ts$${TSPATCH}$${POSTFIX} \
-	&& docker tag $${CICDIMAGE} $(PUBLISH_REPOSITORY):$${variant} \
-	&& docker pull $(PUBLISH_REPOSITORY):$${variant} > /dev/null && echo "Not pushing $(PUBLISH_REPOSITORY):$${variant} as it already exists" \
-	   || docker push $(PUBLISH_REPOSITORY):$${variant}
+	&& if test $(PG_MAJOR) -eq 12; then \
+		docker tag $${CICDIMAGE} $(PUBLISH_REPOSITORY):$(RELEASE_TAG) \
+		&& docker pull $(PUBLISH_REPOSITORY):$(RELEASE_TAG) &> /dev/null && echo "Not pushing $(PUBLISH_REPOSITORY):$(RELEASE_TAG) as it already exists" \
+		|| docker push $(PUBLISH_REPOSITORY):$(RELEASE_TAG); \
+	   fi
 
 .PHONY: publish
 publish-all:
