@@ -172,15 +172,13 @@ RUN if [ ! -z "${TIMESCALE_PROMETHEUS}" ]; then \
 # It is a private timescale project and is therefore not included/built by default
 ARG TIMESCALE_TSDB_ADMIN=
 ARG CI_JOB_TOKEN=
-RUN if [ ! -z "${CI_JOB_TOKEN}" ]; then \
-        if [ ! -z "${TIMESCALE_TSDB_ADMIN}" ]; then \
-            cd /build \
-            && git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/timescale/protected_roles \
-            && for pg in ${PG_VERSIONS}; do \
-                cd /build/protected_roles && git reset HEAD --hard && git checkout ${TIMESCALE_TSDB_ADMIN} \
-                && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
-            done; \
-        fi; \
+RUN if [ ! -z "${CI_JOB_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TSDB_ADMIN}" ]; then \
+        cd /build \
+        && git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/timescale/protected_roles \
+        && for pg in ${PG_VERSIONS}; do \
+            cd /build/protected_roles && git reset HEAD --hard && git checkout ${TIMESCALE_TSDB_ADMIN} \
+            && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
+        done; \
     fi
 
 ## Cleanup
