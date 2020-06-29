@@ -11,3 +11,16 @@ REVOKE EXECUTE ON FUNCTION @extschema@.timescaledb_post_restore() FROM public;
 GRANT EXECUTE ON FUNCTION @extschema@.timescaledb_pre_restore() TO @database_owner@;
 GRANT EXECUTE ON FUNCTION @extschema@.timescaledb_post_restore() TO @database_owner@;
 
+-- To reduce the errors seen on pg_restore we grant access to timescaledb internal tables
+DO $$DECLARE r record;
+BEGIN
+    FOR r IN SELECT tsch from unnest(ARRAY['_timescaledb_internal', '_timescaledb_config', '_timescaledb_catalog', '_timescaledb_cache']) tsch
+        LOOP
+            EXECUTE 'ALTER DEFAULT PRIVILEGES IN SCHEMA ' ||  quote_ident(r.tsch) || ' GRANT ALL PRIVILEGES ON TABLES TO @database_owner@';
+            EXECUTE 'ALTER DEFAULT PRIVILEGES IN SCHEMA ' ||  quote_ident(r.tsch) || ' GRANT ALL PRIVILEGES ON SEQUENCES TO @database_owner@';
+            EXECUTE 'GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA ' ||  quote_ident(r.tsch) || ' TO @database_owner@';
+            EXECUTE 'GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ' ||  quote_ident(r.tsch) || ' TO @database_owner@';
+            EXECUTE 'GRANT USAGE, CREATE ON SCHEMA ' ||  quote_ident(r.tsch) || ' TO @database_owner@';
+        END LOOP;
+END$$;
+
