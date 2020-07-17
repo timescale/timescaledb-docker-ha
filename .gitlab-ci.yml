@@ -46,7 +46,7 @@ variables:
   DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
   #
   CUSTOM_INSTALL_METHOD: ${CUSTOM_INSTALL_METHOD}
-  TIMESCALE_TSDB_ADMIN: 0.1.0
+  TIMESCALE_TSDB_ADMIN: 0.1.1
   TIMESCALE_PROMETHEUS: 0.1.0-alpha.4
 
 before_script:
