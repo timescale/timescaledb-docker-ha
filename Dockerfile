@@ -41,7 +41,7 @@ RUN apt-get update && apt-get install -y less jq strace procps
 RUN apt-get update && apt-get install -y dumb-init daemontools
 
 RUN apt-get update \
-    && apt-get install -y postgresql-common pgbackrest lz4 libpq-dev libpq5 \
+    && apt-get install -y postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 \
     # forbid creation of a main cluster when package is installed
     && sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
 
