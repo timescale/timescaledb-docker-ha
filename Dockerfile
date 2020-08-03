@@ -156,7 +156,7 @@ ARG TIMESCALE_PROMETHEUS=
 # build and install the pg_prometheus extension
 RUN if [ ! -z "${TIMESCALE_PROMETHEUS}" ]; then \
         curl https://sh.rustup.rs -sSf | bash -s -- -y \
-        && echo 'source $HOME/.cargo/env' >> $HOME/.bashrc \
+        && PATH="/root/.cargo/bin:${PATH}" \
         && mkdir -p /build \
         && git clone https://github.com/timescale/timescale-prometheus /build/timescale_prometheus \
         && set -e \
