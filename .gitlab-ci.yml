@@ -47,7 +47,7 @@ variables:
   #
   CUSTOM_INSTALL_METHOD: ${CUSTOM_INSTALL_METHOD}
   TIMESCALE_TSDB_ADMIN: 0.1.1
-  TIMESCALE_PROMETHEUS: 0.1.0-alpha.4
+  TIMESCALE_PROMETHEUS: 0.1.0-beta.1
 
 before_script:
   # NOTE: these credentials are created by the GitlabCI system, and are ephemeral. They are only
