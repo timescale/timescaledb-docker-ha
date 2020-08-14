@@ -13,6 +13,10 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.2.20] - 2020-08-14
+### Changed
+ * PostgreSQL 11.9 and 12.4 are released
+
 ## [v0.2.19] - 2020-08-03
 ### Added
  * Upgrade `timescale_prometheus` to version `0.1.0-beta.1`
