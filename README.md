@@ -73,14 +73,14 @@ Docker Images will be automatically published to Docker Hub for git tags startin
 
 They will be written under quite a few aliases, for example, for PostgreSQL 12.3 and Timescale 1.7.1, the following images will be built and pushed/overwritten:
 
-- timescaledev/timescaledb-ha:pg12
-- timescaledev/timescaledb-ha:pg12-ts1.7
-- timescaledev/timescaledb-ha:pg12.3-ts1.7
+- timescaledev/timescaledb-ha:pg12-latest
+- timescaledev/timescaledb-ha:pg12-ts1.7-latest
+- timescaledev/timescaledb-ha:pg12.4-ts1.7-latest
+- timescaledev/timescaledb-ha:pg12.4-ts1.7.2-latest
 
-The following image will only be pushed if it does not yet exist, this tag is immutable and is therefore the best candidate
-for production deployments:
-
-- timescaledev/timescaledb-ha:pg12.3-ts1.7.1
+In addition, for every build, an immutable image will be created and pushed, which will carry a patch version at the end. These are most suited for production releases, for example:
+- timescaledev/timescaledb-ha:pg12.4-ts1.7.2-p0
+- timescaledev/timescaledb-ha:pg11.9-ts1.7.2-p3
 
 ## Patch process
 
