@@ -9,10 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 These are changes that will probably be included in the next release.
 
 ### Added
- * Include [hll](https://github.com/citusdata/postgresql-hll) extension
 ### Changed
 ### Removed
 ### Fixed
+
+## [v0.2.21] - 2020-08-28
+### Added
+ * Include [hll](https://github.com/citusdata/postgresql-hll) extension
+### Changed
+ * TimescaleDB [1.7.3](https://github.com/timescale/timescaledb/releases/tag/1.7.3) was released
+ * Timescale-Prometheus [0.1.0-beta.3](https://github.com/timescale/timescale-prometheus/releases/tag/0.1.0-beta.3) was released
 
 ## [v0.2.20] - 2020-08-14
 ### Changed
