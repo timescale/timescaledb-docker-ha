@@ -13,7 +13,7 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
-## [v0.2.23] - 2020-09-07
+## [v0.2.24] - 2020-09-07
 ### Changed
  * TimescaleDB [1.7.4](https://github.com/timescale/timescaledb/releases/tag/1.7.4) was released
 
