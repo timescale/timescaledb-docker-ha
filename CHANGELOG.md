@@ -9,11 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 These are changes that will probably be included in the next release.
 
 ### Added
+### Changed
+### Removed
+### Fixed
+
+## [v0.2.22] - 2020-09-07
+### Added
  * Include [pgrouting](https://pgrouting.org/) in the Docker Image
 ### Changed
  * Timescale-Prometheus [0.1.0-beta.4](https://github.com/timescale/timescale-prometheus/releases/tag/0.1.0-beta.4) was released
-### Removed
-### Fixed
 
 ## [v0.2.21] - 2020-08-28
 ### Added
