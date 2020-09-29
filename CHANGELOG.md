@@ -11,7 +11,12 @@ These are changes that will probably be included in the next release.
 ### Added
 ### Changed
 ### Removed
-### Fixed
+
+## [v0.2.25] - 2020-09-29
+### Added
+ * Include [promscale](https://github.com/timescale/promscale_extension) extension
+### Removed
+ * Remove Rust build directories from the final image
 
 ## [v0.2.24] - 2020-09-07
 ### Changed
