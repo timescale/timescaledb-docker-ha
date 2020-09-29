@@ -153,6 +153,7 @@ RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
     fi
 
 ARG TIMESCALE_PROMETHEUS=
+# DEPRECATED, to be removed from 2020-11 from this Docker Image
 # build and install the pg_prometheus extension
 RUN if [ ! -z "${TIMESCALE_PROMETHEUS}" ]; then \
         curl https://sh.rustup.rs -sSf | bash -s -- -y \
@@ -165,6 +166,23 @@ RUN if [ ! -z "${TIMESCALE_PROMETHEUS}" ]; then \
                 cd /build/timescale_prometheus && git reset HEAD --hard && git checkout ${TIMESCALE_PROMETHEUS} \
                 && git clean -f -x \
                 && cd /build/timescale_prometheus/extension \
+                && PATH=/usr/lib/postgresql/${pg}/bin:${PATH} PG_VER=pg${pg} make install || exit 1; \
+            fi; \
+        done; \
+    fi
+
+ARG TIMESCALE_PROMSCALE_EXTENSION=
+# build and install the promscale_extension extension
+RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" ]; then \
+        curl https://sh.rustup.rs -sSf | bash -s -- -y \
+        && PATH="/root/.cargo/bin:${PATH}" \
+        && mkdir -p /build \
+        && git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
+        && set -e \
+        && for pg in ${PG_VERSIONS}; do \
+            if [ "${pg}" = "12" ]; then \
+                cd /build/promscale_extension && git reset HEAD --hard && git checkout ${TIMESCALE_PROMSCALE_EXTENSION} \
+                && git clean -f -x \
                 && PATH=/usr/lib/postgresql/${pg}/bin:${PATH} PG_VER=pg${pg} make install || exit 1; \
             fi; \
         done; \
