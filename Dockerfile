@@ -212,6 +212,8 @@ RUN apt-get autoremove -y \
             /usr/share/locale/?? \
             /usr/share/locale/??_?? \
             /build/ \
+            /root/.rustup \
+            /root/.cargo \
     && find /var/log -type f -exec truncate --size 0 {} \;
 
 ## Create a smaller Docker image from the builder image
