@@ -74,6 +74,8 @@ RUN for pg in ${PG_VERSIONS}; do \
 RUN mkdir /build/
 WORKDIR /build/
 
+RUN true
+
 RUN for pg in ${PG_VERSIONS}; do \
         apt-get install -y postgresql-${pg} postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} \
             postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting || exit 1; \
