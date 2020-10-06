@@ -88,4 +88,3 @@ When a patch needs to be applied to an existing release, first create a feature 
 for review as normal. Create a separate PR for applying the patch to master. Both of these changes should update CHANGELOG.md with
 information about the bugfix or patch. Once both pull requests are approved, merge to the feature branch and tag the release branch with the
 patch number. Draft a new release as described above.
-
