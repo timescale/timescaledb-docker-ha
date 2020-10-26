@@ -12,6 +12,10 @@ These are changes that will probably be included in the next release.
 ### Changed
 ### Removed
 
+## [v0.2.26] - 2020-10-28
+### Added
+ * Include libraries for Timescale 2.0.0-rc2
+
 ## [v0.2.25] - 2020-09-29
 ### Added
  * Include [promscale](https://github.com/timescale/promscale_extension) extension
