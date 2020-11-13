@@ -12,6 +12,10 @@ These are changes that will probably be included in the next release.
 ### Changed
 ### Removed
 
+## [v0.2.28] - 2020-11-13
+### Changed
+ * Include (but not default to) Timescale 2.0.0-rc3
+
 ## [v0.2.27] - 2020-11-13
 ### Changed
  * PostgreSQL 11.10 and 12.5 [have been released](https://www.postgresql.org/about/news/postgresql-131-125-1110-1015-9620-and-9524-released-2111/)
