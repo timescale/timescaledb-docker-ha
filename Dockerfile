@@ -117,7 +117,7 @@ ARG INSTALL_METHOD=docker-ha
 
 # If a specific GITHUB_TAG is provided, we will build that tag only. Otherwise
 # we build all the public (recent) releases
-RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 2.0.0-rc4 1.7.4" \
+RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 2.0.0-rc4 ef644770 1.7.4" \
     && if [ "${GITHUB_TAG}" != "" ]; then TS_VERSIONS="${GITHUB_TAG}"; fi \
     && cd /build/timescaledb && git pull \
     && set -e \
