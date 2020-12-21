@@ -12,6 +12,10 @@ These are changes that will probably be included in the next release.
 ### Changed
 ### Removed
 
+## [v0.2.30] - 2020-12-21
+### Changed
+ * Include (but not default to) Timescale 2.0.0
+
 ## [v0.2.29] - 2020-12-13
 ### Changed
  * Include (but not default to) Timescale 2.0.0-rc4
