@@ -123,7 +123,7 @@ RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 2.0.0-rc4 1.7.4" \
     && set -e \
     && for pg in ${PG_VERSIONS}; do \
         for ts in ${TS_VERSIONS}; do \
-            if [ ${pg} -ge 12 ] && dpkg --compare-versions ${ts} lt 1.7.0; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
+            if [ ${pg} -ge 12 ] && [ "$(expr substr ${ts} 1 3)" = "1.6" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
             && cd /build/timescaledb && git reset HEAD --hard && git checkout ${ts} \
             && rm -rf build \
             && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
