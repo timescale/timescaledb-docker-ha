@@ -42,7 +42,7 @@ WIPTAG=$(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX)-wip
 
 
 CICD_REPOSITORY?=registry.gitlab.com/timescale/timescaledb-docker-ha
-PUBLISH_REPOSITORY?=docker.io/timescaledev/timescaledb-ha
+PUBLISH_REPOSITORY?=docker.io/timescale/timescaledb-ha
 
 BUILDARGS=
 POSTFIX=
