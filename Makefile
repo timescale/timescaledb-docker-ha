@@ -40,6 +40,7 @@ PG_PROMETHEUS?=
 TIMESCALE_PROMETHEUS?=0.1.0-beta.4
 TIMESCALE_PROMSCALE_EXTENSION?=0.1.1
 TIMESCALE_TSDB_ADMIN?=
+TIMESCALE_ANALYTICS?=0.1.0-beta
 
 CICDIMAGE=$(CICD_REPOSITORY):$(RELEASE_TAG)-pg$(PG_MAJOR)$(POSTFIX)
 WIPTAG=$(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX)-wip
@@ -76,6 +77,7 @@ publish-oss:   POSTFIX   = -oss
 DOCKER_BUILD_COMMAND=docker build  \
 					 --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS) \
 					 --build-arg TIMESCALE_PROMETHEUS=$(TIMESCALE_PROMETHEUS) \
+					 --build-arg TIMESCALE_ANALYTICS=$(TIMESCALE_ANALYTICS) \
 					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) \
 					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
@@ -155,7 +157,7 @@ push-all: push push-oss
 # Tag 5 is immutable, and for every time we publish that image, we increase N by 1,
 # we start with N=0
 #
-# Our method of finding a patch version is quite brute force (`docker pull image`), 
+# Our method of finding a patch version is quite brute force (`docker pull image`),
 # however, this should not happen that often.
 .PHONY: publish publish-oss
 publish publish-oss:
