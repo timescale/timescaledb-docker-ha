@@ -189,6 +189,26 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" ]; then \
         done; \
     fi
 
+ARG TIMESCALE_ANALYTICS_EXTENSION=main
+# build and install the promscale_extension extension
+RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" ]; then \
+        curl https://sh.rustup.rs -sSf | bash -s -- -y \
+        && PATH="/root/.cargo/bin:${PATH}" \
+        && mkdir -p /build \
+        && git clone --branch work-in-workspaces https://github.com/JLockerman/pgx.git /build/pgx \
+        && git clone https://github.com/timescale/timescale-analytics /build/timescale-analytics
+        && set -e \
+        && cargo install --path /build/pgx/cargo-pgx 
+        && for pg in ${PG_VERSIONS}; do \
+            if [ "${pg}" = "12" ]; then \
+                cargo pgx init --pg12 /usr/lib/postgresql/${pg}/bin/pg_config
+                && cd /build/timescale-analytics && git reset HEAD --hard && git checkout ${TIMESCALE_PROMSCALE_EXTENSION} \
+                && git clean -f -x \
+                && cargo pgx install; \
+            fi; \
+        done; \
+    fi
+
 # Protected Roles is a library that restricts the CREATEROLE/CREATEDB privileges of non-superusers.
 # It is a private timescale project and is therefore not included/built by default
 ARG TIMESCALE_TSDB_ADMIN=
