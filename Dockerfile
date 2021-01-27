@@ -196,12 +196,12 @@ RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" ]; then \
         && PATH="/root/.cargo/bin:${PATH}" \
         && mkdir -p /build \
         && git clone --branch work-in-workspaces https://github.com/JLockerman/pgx.git /build/pgx \
-        && git clone https://github.com/timescale/timescale-analytics /build/timescale-analytics
+        && git clone https://github.com/timescale/timescale-analytics /build/timescale-analytics \
         && set -e \
-        && cargo install --path /build/pgx/cargo-pgx 
+        && cargo install --path /build/pgx/cargo-pgx \
         && for pg in ${PG_VERSIONS}; do \
             if [ "${pg}" = "12" ]; then \
-                cargo pgx init --pg12 /usr/lib/postgresql/${pg}/bin/pg_config
+                cargo pgx init --pg12 /usr/lib/postgresql/${pg}/bin/pg_config \
                 && cd /build/timescale-analytics && git reset HEAD --hard && git checkout ${TIMESCALE_PROMSCALE_EXTENSION} \
                 && git clean -f -x \
                 && cargo pgx install; \
