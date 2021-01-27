@@ -190,7 +190,7 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" ]; then \
     fi
 
 ARG TIMESCALE_ANALYTICS_EXTENSION=main
-# build and install the promscale_extension extension
+# build and install the timescale-analytics extension
 RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" ]; then \
         curl https://sh.rustup.rs -sSf | bash -s -- -y \
         && PATH="/root/.cargo/bin:${PATH}" \
@@ -202,7 +202,7 @@ RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" ]; then \
         && for pg in ${PG_VERSIONS}; do \
             if [ "${pg}" = "12" ]; then \
                 cargo pgx init --pg12 /usr/lib/postgresql/${pg}/bin/pg_config \
-                && cd /build/timescale-analytics && git reset HEAD --hard && git checkout ${TIMESCALE_PROMSCALE_EXTENSION} \
+                && cd /build/timescale-analytics && git reset HEAD --hard && git checkout ${TIMESCALE_ANALYTICS_EXTENSION} \
                 && git clean -f -x \
                 && cargo pgx install; \
             fi; \
