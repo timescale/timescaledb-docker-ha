@@ -189,7 +189,7 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" ]; then \
         done; \
     fi
 
-ARG TIMESCALE_ANALYTICS_EXTENSION=main
+ARG TIMESCALE_ANALYTICS_EXTENSION=
 # build and install the timescale-analytics extension
 RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" ]; then \
         curl https://sh.rustup.rs -sSf | bash -s -- -y \
