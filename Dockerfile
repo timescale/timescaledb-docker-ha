@@ -204,7 +204,7 @@ RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" ]; then \
                 cargo pgx init --pg12 /usr/lib/postgresql/${pg}/bin/pg_config \
                 && cd /build/timescale-analytics && git reset HEAD --hard && git checkout ${TIMESCALE_ANALYTICS_EXTENSION} \
                 && git clean -f -x \
-                && cargo pgx install; \
+                && cd extension && cargo pgx install; \
             fi; \
         done; \
     fi
