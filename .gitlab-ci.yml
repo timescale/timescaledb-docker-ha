@@ -62,6 +62,7 @@ before_script:
 builder:
   only: [ "tags" ]
   stage: builder
+  tags: [ "docker" ]
   script:
   - PG_MAJOR=11 make push-builder
   - PG_MAJOR=12 make push-builder
