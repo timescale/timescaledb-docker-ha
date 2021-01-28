@@ -12,9 +12,12 @@ These are changes that will probably be included in the next release.
 ### Changed
 ### Removed
 
-## [v0.3.1] - 2021-01-28
+## [v0.3.2] - 2021-01-28
 ### Changed
  * TimescaleDB [2.0.1](https://github.com/timescale/timescaledb/releases/tag/2.0.1) was released
+
+## [v0.3.1] - 2021-01-28
+### This release failed the build and was never published
 
 ## [v0.3.0] - 2021-01-04
 ### Changed
