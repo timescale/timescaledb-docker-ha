@@ -201,7 +201,29 @@ RUN if [ ! -z "${CI_JOB_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TSDB_AD
             && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
         done; \
     fi
-
+# pg_auth_mon is an extension to monitor authentication attempts
+# It is also useful to determine whether the DB is actively used
+# https://github.com/RafiaSabih/pg_auth_mon
+ARG PG_AUTH_MON=
+RUN if [ ! -z "${PG_AUTH_MON}" ]; then \
+        cd /build \
+        && git clone https://github.com/RafiaSabih/pg_auth_mon \
+        && for pg in ${PG_VERSIONS}; do \
+            cd /build/pg_auth_mon && git reset HEAD --hard && git checkout "${PG_AUTH_MON}" \
+            && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
+        done; \
+    fi
+# logerrors is an extension to count the number of errors logged by postgrs, grouped by the error codes
+# https://github.com/munakoiso/logerrors
+ARG PG_LOGERRORS=
+RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
+        cd /build \
+        && git clone https://github.com/munakoiso/logerrors \
+        && for pg in ${PG_VERSIONS}; do \
+            cd /build/pg_auth_mon && git reset HEAD --hard && git checkout "${PG_LOGERRORS}" \
+            && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
+        done; \
+    fi
 ## Cleanup
 RUN apt-get remove -y ${BUILD_PACKAGES}
 RUN apt-get autoremove -y \
