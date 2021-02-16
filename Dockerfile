@@ -220,7 +220,7 @@ RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
         cd /build \
         && git clone https://github.com/munakoiso/logerrors \
         && for pg in ${PG_VERSIONS}; do \
-            cd /build/pg_auth_mon && git reset HEAD --hard && git checkout "${PG_LOGERRORS}" \
+            cd /build/logerrors && git reset HEAD --hard && git checkout "${PG_LOGERRORS}" \
             && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
         done; \
     fi
