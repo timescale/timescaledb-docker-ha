@@ -2,7 +2,11 @@ PG_MAJOR?=12
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
 PG_VERSIONS?=12 11
+
+# Additional PostgreSQL extensions we want to include with specific version/commit tags
 POSTGIS_VERSIONS?="2.5 3"
+PG_AUTH_MON?=a38b2341
+PG_LOGERRORS?=3c55887b
 
 # CI/CD can benefit from specifying a specific apt packages mirror
 DEBIAN_REPO_MIRROR?=""
@@ -77,6 +81,8 @@ DOCKER_BUILD_COMMAND=docker build  \
 					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
 					 --build-arg TIMESCALE_TSDB_ADMIN="$(TIMESCALE_TSDB_ADMIN)" \
 					 --build-arg TIMESCALE_PROMSCALE_EXTENSION="$(TIMESCALE_PROMSCALE_EXTENSION)" \
+					 --build-arg PG_AUTH_MON="$(PG_AUTH_MON)" \
+					 --build-arg PG_LOGERRORS="$(PG_LOGERRORS)" \
 					 --build-arg CI_JOB_TOKEN="$(CI_JOB_TOKEN)" \
 					 --cache-from $(DOCKER_IMAGE_CACHE) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
