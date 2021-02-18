@@ -49,7 +49,6 @@ PUBLISH_REPOSITORY?=docker.io/timescaledev/timescaledb-ha
 BUILDARGS=
 POSTFIX=
 INSTALL_METHOD?=docker-ha
-DOCKER_IMAGE_CACHE?=$(TIMESCALEDB_BUILDER_URL)-pg$(PG_MAJOR)
 
 builder-11:    PG_MAJOR  = 11
 builder-12:    PG_MAJOR  = 12
@@ -80,7 +79,6 @@ DOCKER_BUILD_COMMAND=docker build  \
 					 --build-arg PG_AUTH_MON="$(PG_AUTH_MON)" \
 					 --build-arg PG_LOGERRORS="$(PG_LOGERRORS)" \
 					 --build-arg CI_JOB_TOKEN="$(CI_JOB_TOKEN)" \
-					 --cache-from $(DOCKER_IMAGE_CACHE) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
 					 --label org.opencontainers.image.vendor=Timescale \

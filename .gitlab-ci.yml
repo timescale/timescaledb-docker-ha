@@ -22,7 +22,6 @@ services:
 # `script` keyword). Pipelines are formed by creating jobs which are executed as part
 # of specific stages.
 stages:
-  - builder
   - build
   - tests.system
   - tests.load
@@ -54,25 +53,11 @@ before_script:
   - apk add make jq
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
-# The builder Docker image is only built from scratch if we tag a release. This ensures
-# most pipelines (master, PR's) are going to be fast, as they use a stale builder Docker image,
-# however for the release we really want to ensure we get the latest greatest, so we run this
-# one first
-builder:
-  only: [ "tags" ]
-  stage: builder
-  tags: [ "docker" ]
-  script:
-  - PG_MAJOR=11 make push-builder
-  - PG_MAJOR=12 make push-builder
-
-
 .build.feature-branch:
   stage: build
   tags: [ "docker" ]
   variables:
     PG_MAJOR: "12"
-    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
   script:
     - docker pull ${DOCKER_IMAGE_CACHE} || true
     - make test
@@ -83,13 +68,11 @@ build.feature-branch-12:
   extends: .build.feature-branch
   variables:
     PG_MAJOR: "12"
-    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
 
 build.feature-branch-11:
   extends: .build.feature-branch
   variables:
     PG_MAJOR: "11"
-    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
 
 .build.master-branch:
   stage: build
@@ -98,7 +81,6 @@ build.feature-branch-11:
   variables:
     PG_MAJOR: "12"
   script:
-    - make push-builder
     - make test
     - make push-all
     - docker image ls
@@ -127,7 +109,6 @@ build.master-branch-11:
     # We only want to publish if the tag starts with v, other tags should not publish
     - '[ "${TAG#\v}x" == "${TAG}x" ] && exit 0'
     - docker login -u $DH_REGISTRY_USER -p $DH_REGISTRY_PASSWORD $DH_REGISTRY
-    - docker pull registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg${PG_MAJOR} || true
     - make test
     - make test-oss
     - make push-all
@@ -139,10 +120,8 @@ publish.release-12:
   extends: .publish.release
   variables:
     PG_MAJOR: "12"
-    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg12
 
 publish.release-11:
   extends: .publish.release
   variables:
     PG_MAJOR: "11"
-    DOCKER_IMAGE_CACHE: registry.gitlab.com/timescale/timescaledb-docker-ha:builder-pg11
