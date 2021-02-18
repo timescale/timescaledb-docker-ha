@@ -99,6 +99,7 @@ build build-oss build-tag: builder
 	docker run -d --rm --name dummy$(PG_MAJOR)$(POSTFIX) -e PGDATA=/tmp/pgdata --user=postgres $(WIPTAG) \
 		sh -c 'initdb && timeout 30 postgres'
 	docker exec -i dummy$(PG_MAJOR)$(POSTFIX) sh -c 'while ! pg_isready; do sleep 1; done'
+	cat scripts/install_extensions.sql | docker exec -i dummy$(PG_MAJOR)$(POSTFIX) psql -AtXq --set ON_ERROR_STOP=1
 	cat scripts/version_info.sql | docker exec -i dummy$(PG_MAJOR)$(POSTFIX) psql -AtXq | tee .$@
 	docker stop dummy$(PG_MAJOR)$(POSTFIX)
 
