@@ -61,6 +61,10 @@ ENV BUILD_PACKAGES="git binutils patchutils gcc libc-dev make cmake libssl-dev p
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
+# Include rust compiler for installing rust components
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
 # By including multiple versions of PostgreSQL we can use the same Docker image,
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
 # pg_upgrade from 11 to 12, so we need all the postgres & timescale libraries for all versions
@@ -132,33 +136,10 @@ RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 1.7.4 1.7.5 2.0.0-rc3 2.0.0
     done \
     && cd / && rm -rf /build
 
-# if PG_PROMETHEUS is set to an empty string, the pg_prometheus extension will not be added to the db
-ARG PG_PROMETHEUS=
-# add pg_prometheus to shared_preload_libraries also
-RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
-        for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
-            # We want pg_prometheus to be loaded in this image by every created cluster
-            sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'pg_prometheus,\2'/;s/,'/'/" $file || exit 1; \
-        done; \
-    fi
-# build and install the pg_prometheus extension
-RUN if [ ! -z "${PG_PROMETHEUS}" ]; then \
-        mkdir -p /build \
-        && git clone https://github.com/timescale/pg_prometheus.git /build/pg_prometheus \
-        && set -e \
-        && for pg in ${PG_VERSIONS}; do \
-            cd /build/pg_prometheus && git reset HEAD --hard && git checkout ${PG_PROMETHEUS} \
-            && git clean -f -x \
-            && PATH=/usr/lib/postgresql/${pg}/bin:${PATH} PG_VER=pg${pg} make install || exit 1; \
-        done; \
-    fi
-
 ARG TIMESCALE_PROMSCALE_EXTENSION=
 # build and install the promscale_extension extension
 RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" ]; then \
-        curl https://sh.rustup.rs -sSf | bash -s -- -y \
-        && PATH="/root/.cargo/bin:${PATH}" \
-        && mkdir -p /build \
+        mkdir -p /build \
         && git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
         && set -e \
         && for pg in ${PG_VERSIONS}; do \

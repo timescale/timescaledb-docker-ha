@@ -12,6 +12,8 @@ These are changes that will probably be included in the next release.
 ### Changed
 ### Removed
  * timescale-prometheus (superseeded by (promscale)[https://github.com/timescale/promscale])
+ * [pg\_prometheus](https://github.com/timescale/pg_prometheus): Was already excluded from being built for a long while
+
 ## [v0.3.3] - 2021-02-16
 ### Added
  * Include Extension [pg\_auth\_mon](https://github.com/RafiaSabih/pg_auth_mon)
