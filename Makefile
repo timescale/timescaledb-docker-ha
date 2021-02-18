@@ -37,7 +37,6 @@ TIMESCALEDB_BUILDER_URL?=$(TIMESCALEDB_IMAGE):builder
 TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)
 TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest
 PG_PROMETHEUS?=
-TIMESCALE_PROMETHEUS?=0.1.0-beta.4
 TIMESCALE_PROMSCALE_EXTENSION?=0.1.1
 TIMESCALE_TSDB_ADMIN?=
 
@@ -75,7 +74,6 @@ publish-oss:   POSTFIX   = -oss
 # I'm using $$(jq) instead of $(shell), as we need to evaluate these variables for every new image build
 DOCKER_BUILD_COMMAND=docker build  \
 					 --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS) \
-					 --build-arg TIMESCALE_PROMETHEUS=$(TIMESCALE_PROMETHEUS) \
 					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) \
 					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
@@ -109,7 +107,6 @@ build build-oss build-tag: builder
 	docker stop dummy$(PG_MAJOR)$(POSTFIX)
 
 	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin=$(TIMESCALE_TSDB_ADMIN)" >> .$@; fi
-	if [ ! -z "$(TIMESCALE_PROMETHEUS)" ]; then echo "timescale_prometheus=$(TIMESCALE_PROMETHEUS)" >> .$@; fi
 
 	# This is where we build the final Docker Image, including all the version labels
 	echo "FROM $(WIPTAG)" | docker build --tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX) - \
