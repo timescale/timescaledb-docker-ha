@@ -36,8 +36,6 @@ TIMESCALEDB_IMAGE?=$(REGISTRY)/$(TIMESCALEDB_REPOSITORY)
 TIMESCALEDB_BUILDER_URL?=$(TIMESCALEDB_IMAGE):builder
 TIMESCALEDB_RELEASE_URL?=$(TIMESCALEDB_IMAGE):$(TAG)
 TIMESCALEDB_LATEST_URL?=$(TIMESCALEDB_IMAGE):latest
-PG_PROMETHEUS?=
-TIMESCALE_PROMETHEUS?=0.1.0-beta.4
 TIMESCALE_PROMSCALE_EXTENSION?=0.1.1
 TIMESCALE_TSDB_ADMIN?=
 TIMESCALE_ANALYTICS_EXTENSION?=forge-stable
@@ -52,7 +50,6 @@ PUBLISH_REPOSITORY?=docker.io/timescaledev/timescaledb-ha
 BUILDARGS=
 POSTFIX=
 INSTALL_METHOD?=docker-ha
-DOCKER_IMAGE_CACHE?=$(TIMESCALEDB_BUILDER_URL)-pg$(PG_MAJOR)
 
 builder-11:    PG_MAJOR  = 11
 builder-12:    PG_MAJOR  = 12
@@ -75,8 +72,6 @@ publish-oss:   POSTFIX   = -oss
 # versions.
 # I'm using $$(jq) instead of $(shell), as we need to evaluate these variables for every new image build
 DOCKER_BUILD_COMMAND=docker build  \
-					 --build-arg PG_PROMETHEUS=$(PG_PROMETHEUS) \
-					 --build-arg TIMESCALE_PROMETHEUS=$(TIMESCALE_PROMETHEUS) \
 					 --build-arg TIMESCALE_ANALYTICS_EXTENSION=$(TIMESCALE_ANALYTICS_EXTENSION) \
 					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) \
@@ -86,7 +81,6 @@ DOCKER_BUILD_COMMAND=docker build  \
 					 --build-arg PG_AUTH_MON="$(PG_AUTH_MON)" \
 					 --build-arg PG_LOGERRORS="$(PG_LOGERRORS)" \
 					 --build-arg CI_JOB_TOKEN="$(CI_JOB_TOKEN)" \
-					 --cache-from $(DOCKER_IMAGE_CACHE) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
 					 --label org.opencontainers.image.vendor=Timescale \
@@ -107,11 +101,11 @@ build build-oss build-tag: builder
 	docker run -d --rm --name dummy$(PG_MAJOR)$(POSTFIX) -e PGDATA=/tmp/pgdata --user=postgres $(WIPTAG) \
 		sh -c 'initdb && timeout 30 postgres'
 	docker exec -i dummy$(PG_MAJOR)$(POSTFIX) sh -c 'while ! pg_isready; do sleep 1; done'
+	cat scripts/install_extensions.sql | docker exec -i dummy$(PG_MAJOR)$(POSTFIX) psql -AtXq --set ON_ERROR_STOP=1
 	cat scripts/version_info.sql | docker exec -i dummy$(PG_MAJOR)$(POSTFIX) psql -AtXq | tee .$@
 	docker stop dummy$(PG_MAJOR)$(POSTFIX)
 
 	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin=$(TIMESCALE_TSDB_ADMIN)" >> .$@; fi
-	if [ ! -z "$(TIMESCALE_PROMETHEUS)" ]; then echo "timescale_prometheus=$(TIMESCALE_PROMETHEUS)" >> .$@; fi
 
 	# This is where we build the final Docker Image, including all the version labels
 	echo "FROM $(WIPTAG)" | docker build --tag $(TIMESCALEDB_RELEASE_URL)-pg$(PG_MAJOR)$(POSTFIX) - \
