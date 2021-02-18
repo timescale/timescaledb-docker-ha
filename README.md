@@ -21,8 +21,8 @@ make build
 >
 > For more information about licensing, please read our [blog post](https://blog.timescale.com/blog/how-we-are-building-an-open-source-business-a7701516a480/) about the subject.
 
-By default, the Docker image contains [pg_prometheus](https://github.com/timescale/pg_prometheus) and [PostGIS](https://postgis.net/),
-however you can override many of these defaults by setting environment variables, some examples:
+By default, the Docker image contains many extensions, including [TimescaleDB](https://github.com/timescale/timescaledb) and [PostGIS](https://postgis.net/).
+You can override which version of the extensions are built by setting environment variables, some examples:
 
 ```console
 # Build without any PostGIS

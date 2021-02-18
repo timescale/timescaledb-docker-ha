@@ -11,10 +11,12 @@ These are changes that will probably be included in the next release.
 ### Added
 ### Changed
 ### Removed
+ * timescale-prometheus (superseeded by (promscale)[https://github.com/timescale/promscale])
+ * [pg\_prometheus](https://github.com/timescale/pg_prometheus): Was already excluded from being built for a long while
 
 ## [v0.3.4] - 2021-02-22
 ### Changed
-* Include Timescale 2.0.2 and 2.1.0 and default to 2.1.0
+ * Include Timescale 2.0.2 and 2.1.0 and default to 2.1.0
 
 ## [v0.3.3] - 2021-02-16
 ### Added
