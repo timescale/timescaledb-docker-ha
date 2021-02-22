@@ -12,6 +12,10 @@ These are changes that will probably be included in the next release.
 ### Changed
 ### Removed
 
+## [v0.3.4] - 2021-02-22
+### Changed
+* Include Timescale 2.0.2 and 2.1.0 and default to 2.1.0
+
 ## [v0.3.3] - 2021-02-16
 ### Added
  * Include Extension [pg\_auth\_mon](https://github.com/RafiaSabih/pg_auth_mon)
