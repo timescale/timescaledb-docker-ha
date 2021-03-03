@@ -35,10 +35,9 @@ jobs:
           INSTALL_METHOD: docker-ha
           GITHUB_CICD_TOKEN: ${{ secrets.GITHUB_CICD_TOKEN }}
           DOCKER_REGISTRY: docker.io
-          DOCKER_REPOSITORY: ${{ env.GITHUB_SERVER_URL }}/${{ env.GITHUB_REPOSITORY }}
-          DOCKER_TAG_POSTFIX: ${{ env.GITHUB_ACTION }}
-          DOCKER_ACTOR: ${{ env.GITHUB_ACTOR }}
+          DOCKER_REPOSITORY: timescaledev/timescaledb-ha
           TIMESCALE_TSDB_ADMIN: 0.1.1
           TIMESCALE_PROMETHEUS: 0.1.0-beta.1
         run: |
+          export DOCKER_TAG_POSTFIX=$(printf "%.6s" ${GITHUB_SHA})
           env | grep DOCKER
