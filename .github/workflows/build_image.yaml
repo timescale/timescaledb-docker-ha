@@ -1,6 +1,7 @@
 name: Build image
 
-on: push
+on:
+  push: {}
 
 jobs:
   build-image:
