@@ -1,5 +1,7 @@
 # To avoid duplicate workflows when only tagging, we have a separate
-# workflow file for pushing tags
+# workflow file for pushing tags. This avoids a duplicate run on pushing
+# the new tag to github. It's basically this issue:
+# https://github.community/t/workflow-running-twice-push-push-tags/133314
 name: Publish image
 
 on:
@@ -23,7 +25,7 @@ jobs:
           INSTALL_METHOD: docker-ha
           GITHUB_CICD_TOKEN: ${{ secrets.GITHUB_CICD_TOKEN }}
           DOCKER_REGISTRY: docker.io
-          DOCKER_REPOSITORY: ${{ env.GITHUB_SERVER_URL }}/${{ env.GITHUB_REPOSITORY }}
+          DOCKER_REPOSITORY: ${{ GITHUB_SERVER_URL }}/${{ GITHUB_REPOSITORY }}
           DOCKER_TAG_POSTFIX: ${{ env.GITHUB_ACTION }}
           TIMESCALE_TSDB_ADMIN: 0.1.1
           TIMESCALE_PROMETHEUS: 0.1.0-beta.1
