@@ -37,12 +37,3 @@ jobs:
           TIMESCALE_TSDB_ADMIN: 0.1.1
           TIMESCALE_PROMETHEUS: 0.1.0-beta.1
         run: make build
-  publish-image:
-    needs:
-    - build-image
-    if: github.event_type == 'tag'
-    name: Publish the Docker images
-    steps:
-    - name: Show environment
-      run:
-        env | sort
