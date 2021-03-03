@@ -48,4 +48,4 @@ jobs:
           TIMESCALE_TSDB_ADMIN: 0.1.1
           TIMESCALE_PROMETHEUS: 0.1.0-beta.1
         run: |
-          echo "poind"
+          echo "${DOCKER_REPOSITORY}"
