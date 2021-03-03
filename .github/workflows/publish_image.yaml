@@ -32,6 +32,15 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+      - name: Publish all immutable Docker Images to Docker Hub
+        env:
+          DOCKER_REGISTRY: docker.io
+          DOCKER_REPOSITORY: timescaledev/timescaledb-ha
+          TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
+          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
+        run: |
+          PG_VERSIONS="12 11" make publish
+          PG_VERSIONS="11" PG_MAJOR="11" make publish
       - name: Publish the immutable Docker Images to ECR
         env:
           DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
@@ -39,4 +48,4 @@ jobs:
           TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
         run: |
-          make publish-immutable
+          PG_VERSIONS="12 11" make publish-immutable
