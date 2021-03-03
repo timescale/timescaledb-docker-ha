@@ -60,7 +60,7 @@ jobs:
           TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
         run: |
-          make publish-latest
+          make publish-mutable
           PG_VERSIONS="11" PG_MAJOR="11" make publish
       - name: Publish all -oss Docker Images to Docker Hub
         env:
