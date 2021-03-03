@@ -10,8 +10,6 @@ jobs:
       DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
       INSTALL_METHOD: docker-ha
       DOCKER_REGISTRY: docker.io
-      DOCKER_REPOSITORY: ${{ env.GITHUB_SERVER_URL }}/${{ env.GITHUB_REPOSITORY }}
-      DOCKER_TAG_POSTFIX: ${{ env.GITHUB_ACTION }}
       TIMESCALE_TSDB_ADMIN: 0.1.1
       TIMESCALE_PROMETHEUS: 0.1.0-beta.1
     steps:
