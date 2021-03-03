@@ -16,18 +16,20 @@ jobs:
     env:
       DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
       INSTALL_METHOD: docker-ha
-      DOCKER_REGISTRY: docker.io
-      TIMESCALE_TSDB_ADMIN: 0.1.1
-      TIMESCALE_PROMETHEUS: 0.1.0-beta.1
     steps:
-      - name: Publish the Docker Image
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:  ${{ secrets.AWS_REGION }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Publish the immutable Docker Image to ECR
         env:
-          INSTALL_METHOD: docker-ha
-          GITHUB_CICD_TOKEN: ${{ secrets.GITHUB_CICD_TOKEN }}
-          DOCKER_REGISTRY: docker.io
-          DOCKER_REPOSITORY: ${{ GITHUB_SERVER_URL }}/${{ GITHUB_REPOSITORY }}
-          DOCKER_TAG_POSTFIX: ${{ env.GITHUB_ACTION }}
-          TIMESCALE_TSDB_ADMIN: 0.1.1
-          TIMESCALE_PROMETHEUS: 0.1.0-beta.1
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+          DOCKER_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY }}
+          TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
         run: |
-          echo "${DOCKER_REPOSITORY}"
+          make publish-immutable
