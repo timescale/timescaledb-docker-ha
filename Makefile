@@ -112,7 +112,7 @@ build: $(VAR_VERSION_INFO)
 # we start with N=0
 # Our method of finding a patch version is quite brute force (`docker pull image`), 
 # however, we should not be publishing that often, so we take the hit for now.
-publish: publish-mutable publish-immutable
+publish: publish-mutable publish-next-patch-version
 
 is_ci:
 	@if [ "$${CI}" != "true" ]; then echo "environment variable CI is not set to \"true\", are you running this in Github Actions?"; exit 1; fi
@@ -123,12 +123,13 @@ publish-mutable: is_ci build
 		docker push $(DOCKER_PUBLISH_URL):donotuse-$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1 ; \
 	done
 
-publish-immutable: is_ci build
+publish-next-patch-version: is_ci build
 	for i in $$(seq 0 100); do \
 		export IMMUTABLE_TAG=donotuse-pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR)$(DOCKER_TAG_POSTFIX)-p$${i}; \
 		export DOCKER_HUB_HTTP_CODE="$$(curl -s -o /dev/null -w '%{http_code}' "$(DOCKER_CANONICAL_URL)/tags/$${IMMUTABLE_TAG}")"; \
 		if [ "$${DOCKER_HUB_HTTP_CODE}" = "404" ]; then \
 			docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):$${IMMUTABLE_TAG} || exit 1; \
+			echo ::set-output name=DOCKER_IMMUTABLE_TAG::${IMMUTABLE_TAG} \
 			docker push $(DOCKER_PUBLISH_URL):$${IMMUTABLE_TAG} && exit 0 || exit 1 ; \
 		elif [ "$${DOCKER_HUB_HTTP_CODE}" = "200" ]; then \
 			echo "$${IMMUTABLE_TAG} already exists, incrementing patch number"; \
@@ -137,6 +138,14 @@ publish-immutable: is_ci build
 			exit 1 ;\
 		fi \
 	done
+
+publish-immutable: is_ci
+ifndef DOCKER_IMMUTABLE_TAG
+	$(error DOCKER_IMMUTABLE_TAG is undefined, are you running this in Github Actions?)
+endif
+	docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):$${DOCKER_IMMUTABLE_TAG}
+	docker push $(DOCKER_PUBLISH_URL):$${DOCKER_IMMUTABLE_TAG}
+	docker images ls | grep $${DOCKER_IMMUTABLE_TAG}
 
 build-tag: DOCKER_EXTRA_BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GITHUB_USER=$(GITHUB_USER) --build-arg GITHUB_TOKEN=$(GITHUB_TOKEN) --build-arg GITHUB_TAG=$(GITHUB_TAG)
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
@@ -150,4 +159,4 @@ endif
 	&& docker tag $(DOCKER_TAG_LABELED) $${FULL_TAG} \
 	&& docker push $${FULL_TAG}
 
-.PHONY: fast prepare build release build publish test tag build-tag publish-mutable publish-immutable is_ci
+.PHONY: fast prepare build release build publish test tag build-tag publish-next-patch-version publish-mutable publish-immutable is_ci
