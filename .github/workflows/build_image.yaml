@@ -1,6 +1,7 @@
 name: Build image
 
 on:
+  push: {}
   pull_request: {}
 
 jobs:
