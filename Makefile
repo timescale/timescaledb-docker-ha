@@ -102,7 +102,8 @@ build_ok: $(VAR_VERSION_INFO)
 
 # REMOVE THIS TARGET
 build: prepare
-	touch $(VAR_VERSION_INFO)
+	echo "postgresql=12.6" > $(VAR_VERSION_INFO)
+	echo "timescaledb=2.0.1" >> $(VAR_VERSION_INFO)
 	echo "FROM $(DOCKER_TAG_PREPARE)" | docker build --tag "$(DOCKER_TAG_LABELED)" - \
 	  $$(awk -F '=' '{printf "--label com.timescaledb.image."$$1".version="$$2" "}' $(VAR_VERSION_INFO)) \
 	  --label com.timescaledb.image.install_method=$(INSTALL_METHOD)
@@ -127,13 +128,13 @@ is_ci:
 
 publish-mutable: is_ci build
 	for latest in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR); do \
-		docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1; \
+		docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):donotuse-$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1; \
 		docker push $(DOCKER_PUBLISH_URL):$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1 ; \
 	done
 
 publish-immutable: is_ci build
 	for i in $$(seq 0 100); do \
-		export IMMUTABLE_TAG=pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR)$(DOCKER_TAG_POSTFIX)-p$${i}; \
+		export IMMUTABLE_TAG=donotuse-pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR)$(DOCKER_TAG_POSTFIX)-p$${i}; \
 		export DOCKER_HUB_HTTP_CODE="$$(curl -s -o /dev/null -w '%{http_code}' "$(DOCKER_CANONICAL_URL)/tags/$${IMMUTABLE_TAG}")"; \
 		if [ "$${DOCKER_HUB_HTTP_CODE}" = "404" ]; then \
 			docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):$${IMMUTABLE_TAG} || exit 1; \
@@ -158,4 +159,4 @@ endif
 	&& docker tag $(DOCKER_TAG_LABELED) $${FULL_TAG} \
 	&& docker push $${FULL_TAG}
 
-.PHONY: fast prepare build release build publish test tag build-tag publish-mutable publish-immutable
+.PHONY: fast prepare build release build publish test tag build-tag publish-mutable publish-immutable is_ci

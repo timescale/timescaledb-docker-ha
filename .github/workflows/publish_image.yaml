@@ -19,6 +19,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Get tag name
+        id: tag_name
+        run:
+          echo ::set-output name=GIT_TAG::${GITHUB_REF#refs/tags/}
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -28,11 +32,11 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      - name: Publish the immutable Docker Image to ECR
+      - name: Publish the immutable Docker Images to ECR
         env:
           DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
           DOCKER_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY }}
           TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
-          CICD_RELEASE: "1"
+          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
         run: |
           make publish-immutable
