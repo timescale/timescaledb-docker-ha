@@ -112,16 +112,16 @@ build: $(VAR_VERSION_INFO)
 # however, we should not be publishing that often, so we take the hit for now.
 publish: publish-mutable publish-immutable
 
-publish-mutable:
+publish-mutable: build
 ifndef GIT_RELEASE_TAG
 	$(error GIT_RELEASE_TAG is undefined, please set it to a tag that was succesfully built)
 endif
 	for latest in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR); do \
 		docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1; \
-		docker push $(DOCKER_PUBLISH_URL):$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1 ; \make 
+		docker push $(DOCKER_PUBLISH_URL):$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1 ; \
 	done
 
-publish-immutable:
+publish-immutable: build
 ifndef GIT_RELEASE_TAG
 	$(error GIT_RELEASE_TAG is undefined, please set it to a tag that was succesfully built)
 endif
@@ -139,8 +139,8 @@ endif
 		fi \
 	done
 
-.PHONY: fast prepare build release build publish test tag build-tag publish-mutable publish-immutable
-
 build-tag: DOCKER_EXTRA_BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GITHUB_USER=$(GITHUB_USER) --build-arg GITHUB_TOKEN=$(GITHUB_TOKEN) --build-arg GITHUB_TAG=$(GITHUB_TAG)
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
 build-tag: build
+
+.PHONY: fast prepare build release build publish test tag build-tag publish-mutable publish-immutable
