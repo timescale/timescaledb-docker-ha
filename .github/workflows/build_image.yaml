@@ -21,6 +21,18 @@ jobs:
           env | sort
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Build the Docker Image
+        env:
+          INSTALL_METHOD: docker-ha
+          GITHUB_CICD_TOKEN: ${{ secrets.GITHUB_CICD_TOKEN }}
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+          DOCKER_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY }}
+          TIMESCALE_TSDB_ADMIN: 0.1.1
+          TIMESCALE_PROMETHEUS: 0.1.0-beta.1
+        run: |
+          export DOCKER_TAG_POSTFIX=$(printf "%.6s" ${GITHUB_SHA})
+          env | grep DOCKER
+          false
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -30,14 +42,6 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      - name: Build the Docker Image
-        env:
-          INSTALL_METHOD: docker-ha
-          GITHUB_CICD_TOKEN: ${{ secrets.GITHUB_CICD_TOKEN }}
-          DOCKER_REGISTRY: docker.io
-          DOCKER_REPOSITORY: timescaledev/timescaledb-ha
-          TIMESCALE_TSDB_ADMIN: 0.1.1
-          TIMESCALE_PROMETHEUS: 0.1.0-beta.1
+      - name: Push to Amazon ECR
         run: |
-          export DOCKER_TAG_POSTFIX=$(printf "%.6s" ${GITHUB_SHA})
-          env | grep DOCKER
+          true
