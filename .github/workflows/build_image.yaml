@@ -1,12 +1,9 @@
 name: Build image
 
 on:
+  pull_request:
   push:
-    branches:
-    - '*'
-    tags:
-    - donotuse*
-
+    tags: '^donotuse*'
 jobs:
   build-image:
     name: Build the default Docker Image
