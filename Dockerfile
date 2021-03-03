@@ -1,3 +1,3 @@
 # THIS SHOULD BE REVERTED AND IS ONLY TO SPEED UP CI/CD iterations
-FROM scratch
+FROM alpine
 USER postgres
