@@ -129,7 +129,7 @@ is_ci:
 publish-mutable: is_ci build
 	for latest in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR); do \
 		docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):donotuse-$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1; \
-		docker push $(DOCKER_PUBLISH_URL):$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1 ; \
+		docker push $(DOCKER_PUBLISH_URL):donotuse-$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1 ; \
 	done
 
 publish-immutable: is_ci build
