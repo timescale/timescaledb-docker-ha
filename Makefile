@@ -14,6 +14,7 @@ DOCKER_EXTRA_BUILDARGS?=
 DOCKER_REGISTRY?=localhost:5000
 DOCKER_REPOSITORY?=timescale/timescaledb-ha
 DOCKER_PUBLISH_URL?=$(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY)
+DOCKER_TAG_POSTFIX?=
 DOCKER_TAG_PREPARE=donotuse-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
 DOCKER_TAG_LABELED=donotuse-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-labeled
 
@@ -25,6 +26,8 @@ DOCKER_CANONICAL_URL?=https://index.docker.io/v1/repositories/timescale/timescal
 GIT_REMOTE=$(shell git config --get remote.origin.url | sed 's/.*@//g')
 GIT_STATUS=$(shell git status --porcelain | paste -sd "," -)
 GIT_REV?=$(shell git rev-parse HEAD)
+
+INSTALL_METHOD?=docker-ha
 
 # These variables have to do with what software we pull in from github for timescaledb
 GITHUB_USER?=
