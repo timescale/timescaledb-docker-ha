@@ -1,10 +1,7 @@
 name: Build image
 
-on:
-  pull_request:
-  push:
-    tags:
-    - '^donotuse*'
+on: push
+
 jobs:
   build-image:
     name: Build the default Docker Image
