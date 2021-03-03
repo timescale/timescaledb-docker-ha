@@ -123,18 +123,14 @@ build: prepare
 publish: publish-mutable publish-immutable
 
 publish-mutable: build
-ifndef GIT_RELEASE_TAG
-	$(error GIT_RELEASE_TAG is undefined, please set it to a tag that was succesfully built)
-endif
+	if [ "$${CI}" != "true" ]; then echo "CI is not true, are you running this in Github Actions?"; exit 1; fi
 	for latest in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR); do \
 		docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1; \
 		docker push $(DOCKER_PUBLISH_URL):$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1 ; \
 	done
 
 publish-immutable: build
-ifndef GIT_RELEASE_TAG
-	$(error GIT_RELEASE_TAG is undefined, please set it to a tag that was succesfully built)
-endif
+	if [ "$${CI}" != "true" ]; then echo "CI is not true, are you running this in Github Actions?"; exit 1; fi
 	for i in $$(seq 0 100); do \
 		export IMMUTABLE_TAG=pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR)$(DOCKER_TAG_POSTFIX)-p$${i}; \
 		export DOCKER_HUB_HTTP_CODE="$$(curl -s -o /dev/null -w '%{http_code}' "$(DOCKER_CANONICAL_URL)/tags/$${IMMUTABLE_TAG}")"; \
