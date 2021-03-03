@@ -25,6 +25,7 @@ jobs:
           TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
         run: |
           make build
+          docker images
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
