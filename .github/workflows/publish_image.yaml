@@ -58,6 +58,7 @@ jobs:
           make publish-latest
           PG_VERSIONS="11" PG_MAJOR="11" make publish
       - name: Publish all -oss Docker Images to Docker Hub
+        env:
           TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
           DOCKER_EXTRA_BUILDARGS: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
