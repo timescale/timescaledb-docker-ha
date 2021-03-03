@@ -30,9 +30,7 @@ jobs:
           TIMESCALE_TSDB_ADMIN: 0.1.1
           TIMESCALE_PROMETHEUS: 0.1.0-beta.1
         run: |
-          export DOCKER_TAG_POSTFIX=$(printf "%.6s" ${GITHUB_SHA})
-          env | grep DOCKER
-          false
+          make build
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -44,4 +42,4 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       - name: Push to Amazon ECR
         run: |
-          true
+          make push-sha

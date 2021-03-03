@@ -77,7 +77,6 @@ fast: prepare
 # The prepare step does not build the final image, as we need to use introspection
 # to find out what versions of software are installed in this image
 prepare:
-	echo "$(DOCKER_EXTRA_BUILDARGS)$(FEIKU)"
 	$(DOCKER_BUILD_COMMAND) --tag $(DOCKER_TAG_PREPARE)
 
 version_info-%.log: prepare
@@ -95,10 +94,12 @@ version_info-%.log: prepare
 	docker stop $(DOCKER_TAG_PREPARE) || true
 	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin=$(TIMESCALE_TSDB_ADMIN)" >> $(VAR_VERSION_INFO); fi
 
-build: $(VAR_VERSION_INFO)
+build_ok: $(VAR_VERSION_INFO)
 	echo "FROM $(DOCKER_TAG_PREPARE)" | docker build --tag "$(DOCKER_TAG_LABELED)" - \
 	  $$(awk -F '=' '{printf "--label com.timescaledb.image."$$1".version="$$2" "}' $(VAR_VERSION_INFO)) \
 	  --label com.timescaledb.image.install_method=$(INSTALL_METHOD)
+
+build: prepare
 
 # The purpose of publishing the images under many tags, is to provide
 # some choice to the user as to their appetite for volatility.
@@ -129,7 +130,7 @@ ifndef GIT_RELEASE_TAG
 	$(error GIT_RELEASE_TAG is undefined, please set it to a tag that was succesfully built)
 endif
 	for i in $$(seq 0 100); do \
-		export IMMUTABLE_TAG=pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR)-p$${i}; \
+		export IMMUTABLE_TAG=pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR)$(DOCKER_TAG_POSTFIX)-p$${i}; \
 		export DOCKER_HUB_HTTP_CODE="$$(curl -s -o /dev/null -w '%{http_code}' "$(DOCKER_CANONICAL_URL)/tags/$${IMMUTABLE_TAG}")"; \
 		if [ "$${DOCKER_HUB_HTTP_CODE}" = "404" ]; then \
 			docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):$${IMMUTABLE_TAG} || exit 1; \
@@ -145,5 +146,13 @@ endif
 build-tag: DOCKER_EXTRA_BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GITHUB_USER=$(GITHUB_USER) --build-arg GITHUB_TOKEN=$(GITHUB_TOKEN) --build-arg GITHUB_TAG=$(GITHUB_TAG)
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
 build-tag: build
+
+push-sha:
+ifndef GITHUB_SHA
+	$(error GITHUB_SHA is undefined, are you running this in Github Actions?)
+endif
+	export FULL_TAG=$(DOCKER_PUBLISH_URL):cicd-$$(printf "%.8s" $${GITHUB_SHA}) \
+	&& docker tag $(DOCKER_TAG_LABELED) $${FULL_TAG} \
+	&& docker push $${FULL_TAG}
 
 .PHONY: fast prepare build release build publish test tag build-tag publish-mutable publish-immutable
