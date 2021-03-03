@@ -3,6 +3,9 @@ name: Build image
 on:
   push: {}
   pull_request: {}
+  create:
+    tags:
+    - donotuse*
 
 jobs:
   build-image:
