@@ -122,15 +122,16 @@ build: prepare
 # however, we should not be publishing that often, so we take the hit for now.
 publish: publish-mutable publish-immutable
 
-publish-mutable: build
-	if [ "$${CI}" != "true" ]; then echo "CI is not true, are you running this in Github Actions?"; exit 1; fi
+is_ci:
+	@if [ "$${CI}" != "true" ]; then echo "environment variable CI is not set to \"true\", are you running this in Github Actions?"; exit 1; fi
+
+publish-mutable: is_ci build
 	for latest in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR); do \
 		docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1; \
 		docker push $(DOCKER_PUBLISH_URL):$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1 ; \
 	done
 
-publish-immutable: build
-	if [ "$${CI}" != "true" ]; then echo "CI is not true, are you running this in Github Actions?"; exit 1; fi
+publish-immutable: is_ci build
 	for i in $$(seq 0 100); do \
 		export IMMUTABLE_TAG=pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR)$(DOCKER_TAG_POSTFIX)-p$${i}; \
 		export DOCKER_HUB_HTTP_CODE="$$(curl -s -o /dev/null -w '%{http_code}' "$(DOCKER_CANONICAL_URL)/tags/$${IMMUTABLE_TAG}")"; \
@@ -149,7 +150,7 @@ build-tag: DOCKER_EXTRA_BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --bui
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
 build-tag: build
 
-push-sha:
+push-sha: is_ci
 ifndef GITHUB_SHA
 	$(error GITHUB_SHA is undefined, are you running this in Github Actions?)
 endif
