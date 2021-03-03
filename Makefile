@@ -94,16 +94,7 @@ version_info-%.log: prepare
 	docker stop $(DOCKER_TAG_PREPARE) || true
 	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin=$(TIMESCALE_TSDB_ADMIN)" >> $(VAR_VERSION_INFO); fi
 
-# RENAME TO build
-build_ok: $(VAR_VERSION_INFO)
-	echo "FROM $(DOCKER_TAG_PREPARE)" | docker build --tag "$(DOCKER_TAG_LABELED)" - \
-	  $$(awk -F '=' '{printf "--label com.timescaledb.image."$$1".version="$$2" "}' $(VAR_VERSION_INFO)) \
-	  --label com.timescaledb.image.install_method=$(INSTALL_METHOD)
-
-# REMOVE THIS TARGET
-build: prepare
-	echo "postgresql=12.6" > $(VAR_VERSION_INFO)
-	echo "timescaledb=2.0.1" >> $(VAR_VERSION_INFO)
+build: $(VAR_VERSION_INFO)
 	echo "FROM $(DOCKER_TAG_PREPARE)" | docker build --tag "$(DOCKER_TAG_LABELED)" - \
 	  $$(awk -F '=' '{printf "--label com.timescaledb.image."$$1".version="$$2" "}' $(VAR_VERSION_INFO)) \
 	  --label com.timescaledb.image.install_method=$(INSTALL_METHOD)

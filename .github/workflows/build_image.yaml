@@ -38,3 +38,8 @@ jobs:
           DOCKER_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY }}
         run: |
           make push-sha
+      - name: List Docker Image information
+        env:
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+        run: |
+          docker images | grep "${DOCKER_REGISTRY}"
