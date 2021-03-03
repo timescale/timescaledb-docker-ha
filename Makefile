@@ -15,8 +15,8 @@ DOCKER_REGISTRY?=localhost:5000
 DOCKER_REPOSITORY?=timescale/timescaledb-ha
 DOCKER_PUBLISH_URL?=$(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY)
 DOCKER_TAG_POSTFIX?=
-DOCKER_TAG_PREPARE=donotuse-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
-DOCKER_TAG_LABELED=donotuse-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-labeled
+DOCKER_TAG_PREPARE=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
+DOCKER_TAG_LABELED=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-labeled
 
 # We add a patch increment to all our immutable Docker Images. To figure out which patch number
 # to assign, we need 1 repository that is the canonical source of truth
