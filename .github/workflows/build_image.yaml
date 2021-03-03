@@ -1,9 +1,9 @@
 name: Build image
 
 on:
-  push: {}
-  pull_request: {}
-  create:
+  push:
+    branches:
+    - '*'
     tags:
     - donotuse*
 
