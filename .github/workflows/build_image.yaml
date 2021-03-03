@@ -1,9 +1,8 @@
 name: Build image
 
 on:
-  push:
-    branches:
-    - '*'
+  push: {}
+  create:
     tags:
     - donotuse*
 
