@@ -17,6 +17,8 @@ jobs:
       DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
       INSTALL_METHOD: docker-ha
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:

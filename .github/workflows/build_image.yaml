@@ -13,9 +13,6 @@ jobs:
       DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
       INSTALL_METHOD: docker-ha
     steps:
-      - name: Show environment
-        run: |
-          env | sort
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Build the Docker Image
