@@ -82,9 +82,9 @@ jobs:
           PG_MAJOR: "11"
           PG_VERSIONS: "11"
         # We only publish latest images to docker hub, as other registries only allow immutable tags
-        run:
+        run: |
           make publish-immutable
           DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
       - name: List docker Images
-        run:
+        run: |
           make list-images
