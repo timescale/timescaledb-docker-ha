@@ -18,8 +18,6 @@ jobs:
       INSTALL_METHOD: docker-ha
       DOCKER_REGISTRY: docker.io
       DOCKER_REPOSITORY: timescaledev/timescaledb-ha
-      PG_VERSIONS: "12 11"
-      PG_MAJOR: "12"
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -41,35 +39,44 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      - name: Publish the default immutable Docker Image to Docker Hub
+      - name: Publish PostgreSQL 12 Docker Images to their registries
         id: publish_latest_default
         env:
           TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
-        run: |
-          make publish-next-patch-version
-      - name: Publish the default immutable Docker Image to ECR
-        env:
-          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
-          DOCKER_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY }}
-          TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
-          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
-          DOCKER_IMMUTABLE_TAG: ${{ steps.publish_latest_default.outputs.DOCKER_IMMUTABLE_TAG }}
-        run: |
-          make publish-immutable
-      - name: Publish all default Docker Images to Docker Hub
+          DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha {{ secrets.DOCKER_REGISTRY }}/{{ secrets.DOCKER_REPOSITORY}}
+          PG_VERSIONS: "12 11"
+          PG_MAJOR: "12"
+        run: make publish
+      - name: Publish PostgreSQL 11 Docker Images to their registries
+        id: publish_latest_default
         env:
           TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
-        run: |
-          make publish-mutable
-          PG_VERSIONS="11" PG_MAJOR="11" make publish
-      - name: Publish all -oss Docker Images to Docker Hub
+          DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha {{ secrets.DOCKER_REGISTRY }}/{{ secrets.DOCKER_REPOSITORY}}
+          PG_MAJOR: "11"
+          PG_VERSIONS: "11"
+        run: make publish
+      - name: Publish PostgreSQL 12 -oss Docker Images to Docker Hub
         env:
-          TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
+          TIMESCALE_TSDB_ADMIN: ""
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
           DOCKER_EXTRA_BUILDARGS: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
           DOCKER_TAG_POSTFIX: '-oss'
-        run: |
-          make publish
-          PG_VERSIONS="11" PG_MAJOR="11" make publish
+          DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha
+          PG_VERSIONS: "12 11"
+          PG_MAJOR: "12"
+        run: make publish
+      - name: Publish PostgreSQL 11 -oss Docker Images to Docker Hub
+        env:
+          TIMESCALE_TSDB_ADMIN: ""
+          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
+          DOCKER_EXTRA_BUILDARGS: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
+          DOCKER_TAG_POSTFIX: '-oss'
+          DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha
+          PG_MAJOR: "11"
+          PG_VERSIONS: "11"
+        run: make publish
+      - name: List docker Images
+        run:
+          make list-images

@@ -13,7 +13,7 @@ TIMESCALE_TSDB_ADMIN?=
 DOCKER_EXTRA_BUILDARGS?=
 DOCKER_REGISTRY?=localhost:5000
 DOCKER_REPOSITORY?=timescale/timescaledb-ha
-DOCKER_PUBLISH_URL?=$(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY)
+DOCKER_PUBLISH_URLS?=$(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY)
 DOCKER_TAG_POSTFIX?=
 DOCKER_TAG_PREPARE=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
 DOCKER_TAG_LABELED=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-labeled
@@ -59,6 +59,7 @@ DOCKER_BUILD_COMMAND=docker build  \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
 					 --label org.opencontainers.image.source="$(GIT_REMOTE)" \
 					 --label org.opencontainers.image.vendor=Timescale \
+					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
 					 $(DOCKER_EXTRA_BUILDARGS) \
 					 .
 
@@ -96,8 +97,7 @@ version_info-%.log: prepare
 
 build: $(VAR_VERSION_INFO)
 	echo "FROM $(DOCKER_TAG_PREPARE)" | docker build --tag "$(DOCKER_TAG_LABELED)" - \
-	  $$(awk -F '=' '{printf "--label com.timescaledb.image."$$1".version="$$2" "}' $(VAR_VERSION_INFO)) \
-	  --label com.timescaledb.image.install_method=$(INSTALL_METHOD)
+	  $$(awk -F '=' '{printf "--label com.timescaledb.image."$$1".version="$$2" "}' $(VAR_VERSION_INFO))
 
 # The purpose of publishing the images under many tags, is to provide
 # some choice to the user as to their appetite for volatility.
@@ -119,18 +119,23 @@ is_ci:
 
 publish-mutable: is_ci build
 	for latest in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR); do \
-		docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):donotuse-$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1; \
-		docker push $(DOCKER_PUBLISH_URL):donotuse-$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1 ; \
+		for url in $(DOCKER_PUBLISH_URLS); do \
+			docker tag $(DOCKER_TAG_LABELED) $${url}:donotuse-$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1; \
+			docker push $${url}:donotuse-$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1 ; \
+		done \
 	done
 
-publish-next-patch-version: is_ci build
+
+publish-immutable: is_ci
 	for i in $$(seq 0 100); do \
 		export IMMUTABLE_TAG=donotuse-pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR)$(DOCKER_TAG_POSTFIX)-p$${i}; \
 		export DOCKER_HUB_HTTP_CODE="$$(curl -s -o /dev/null -w '%{http_code}' "$(DOCKER_CANONICAL_URL)/tags/$${IMMUTABLE_TAG}")"; \
 		if [ "$${DOCKER_HUB_HTTP_CODE}" = "404" ]; then \
-			docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):$${IMMUTABLE_TAG} || exit 1; \
-			echo ::set-output name=DOCKER_IMMUTABLE_TAG::${IMMUTABLE_TAG} \
-			docker push $(DOCKER_PUBLISH_URL):$${IMMUTABLE_TAG} && exit 0 || exit 1 ; \
+			for url in $(DOCKER_PUBLISH_URLS); do \
+				docker tag $(DOCKER_TAG_LABELED) $${url}:$${IMMUTABLE_TAG} || exit 1; \
+				docker push $${url}:$${IMMUTABLE_TAG} || exit 1 ; \
+			done; \
+			exit 0; \
 		elif [ "$${DOCKER_HUB_HTTP_CODE}" = "200" ]; then \
 			echo "$${IMMUTABLE_TAG} already exists, incrementing patch number"; \
 		else \
@@ -139,13 +144,8 @@ publish-next-patch-version: is_ci build
 		fi \
 	done
 
-publish-immutable: is_ci
-ifndef DOCKER_IMMUTABLE_TAG
-	$(error DOCKER_IMMUTABLE_TAG is undefined, are you running this in Github Actions?)
-endif
-	docker tag $(DOCKER_TAG_LABELED) $(DOCKER_PUBLISH_URL):$${DOCKER_IMMUTABLE_TAG}
-	docker push $(DOCKER_PUBLISH_URL):$${DOCKER_IMMUTABLE_TAG}
-	docker images ls | grep $${DOCKER_IMMUTABLE_TAG}
+list-images:
+	docker images --filter "label=org.opencontainers.image.revision=$(GIT_REV)" --filter "dangling=false" --filter "label=com.timescaledb.image.postgresql.version"
 
 build-tag: DOCKER_EXTRA_BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GITHUB_USER=$(GITHUB_USER) --build-arg GITHUB_TOKEN=$(GITHUB_TOKEN) --build-arg GITHUB_TAG=$(GITHUB_TAG)
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
@@ -159,4 +159,4 @@ endif
 	&& docker tag $(DOCKER_TAG_LABELED) $${FULL_TAG} \
 	&& docker push $${FULL_TAG}
 
-.PHONY: fast prepare build release build publish test tag build-tag publish-next-patch-version publish-mutable publish-immutable is_ci
+.PHONY: fast prepare build release build publish test tag build-tag publish-next-patch-version publish-mutable publish-immutable is_ci list-images
