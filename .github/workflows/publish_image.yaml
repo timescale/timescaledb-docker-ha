@@ -39,7 +39,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       - name: Publish PostgreSQL 12 Docker Images to their registries
         env:
-          TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
+          TIMESCALE_TSDB_ADMIN:  ${{ secrets.TIMESCALE_TSDB_ADMIN }}
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
           DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_REPOSITORY}}
           PG_VERSIONS: "12 11"
@@ -50,7 +50,7 @@ jobs:
           DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
       - name: Publish PostgreSQL 11 Docker Images to their registries
         env:
-          TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
+          TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALE_TSDB_ADMIN }}
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
           DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_REPOSITORY}}
           PG_MAJOR: "11"

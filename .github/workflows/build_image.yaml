@@ -19,7 +19,7 @@ jobs:
         env:
           DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
           DOCKER_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY }}
-          TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
+          TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALE_TSDB_ADMIN }}
         run: make build
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
