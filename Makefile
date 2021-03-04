@@ -155,8 +155,10 @@ push-sha: is_ci
 ifndef GITHUB_SHA
 	$(error GITHUB_SHA is undefined, are you running this in Github Actions?)
 endif
-	export FULL_TAG=$(DOCKER_PUBLISH_URL):cicd-$$(printf "%.8s" $${GITHUB_SHA}) \
-	&& docker tag $(DOCKER_TAG_LABELED) $${FULL_TAG} \
-	&& docker push $${FULL_TAG}
+	for url in $(DOCKER_PUBLISH_URLS); do \
+		export FULL_TAG=$${url}:cicd-$$(printf "%.8s" $${GITHUB_SHA}) \
+		&& docker tag $(DOCKER_TAG_LABELED) $${FULL_TAG} \
+		&& docker push $${FULL_TAG} || exit 1 ; \
+	done
 
 .PHONY: fast prepare build release build publish test tag build-tag publish-next-patch-version publish-mutable publish-immutable is_ci list-images
