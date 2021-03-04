@@ -126,7 +126,7 @@ publish-mutable: is_ci build
 	done
 
 
-publish-immutable: is_ci
+publish-immutable: is_ci build
 	for i in $$(seq 0 100); do \
 		export IMMUTABLE_TAG=donotuse-pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR)$(DOCKER_TAG_POSTFIX)-p$${i}; \
 		export DOCKER_HUB_HTTP_CODE="$$(curl -s -o /dev/null -w '%{http_code}' "$(DOCKER_CANONICAL_URL)/tags/$${IMMUTABLE_TAG}")"; \
