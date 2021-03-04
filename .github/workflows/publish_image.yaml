@@ -44,7 +44,10 @@ jobs:
           DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_REPOSITORY}}
           PG_VERSIONS: "12 11"
           PG_MAJOR: "12"
-        run: make publish
+        # We only publish latest images to docker hub, as other registries only allow immutable tags
+        run: |
+          make publish-immutable
+          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-latest
       - name: Publish PostgreSQL 11 Docker Images to their registries
         env:
           TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
@@ -52,7 +55,10 @@ jobs:
           DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_REPOSITORY}}
           PG_MAJOR: "11"
           PG_VERSIONS: "11"
-        run: make publish
+        # We only publish latest images to docker hub, as other registries only allow immutable tags
+        run: |
+          make publish-immutable
+          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-latest
       - name: Publish PostgreSQL 12 -oss Docker Images to Docker Hub
         env:
           TIMESCALE_TSDB_ADMIN: ""
@@ -62,7 +68,10 @@ jobs:
           DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha
           PG_VERSIONS: "12 11"
           PG_MAJOR: "12"
-        run: make publish
+        # We only publish latest images to docker hub, as other registries only allow immutable tags
+        run: |
+          make publish-immutable
+          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-latest
       - name: Publish PostgreSQL 11 -oss Docker Images to Docker Hub
         env:
           TIMESCALE_TSDB_ADMIN: ""
@@ -72,6 +81,10 @@ jobs:
           DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha
           PG_MAJOR: "11"
           PG_VERSIONS: "11"
+        # We only publish latest images to docker hub, as other registries only allow immutable tags
+        run:
+          make publish-immutable
+          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-latest
         run: make publish
       - name: List docker Images
         run:
