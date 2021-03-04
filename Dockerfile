@@ -28,6 +28,7 @@ RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/a
 RUN apt-get update && apt-get install -y git
 ARG TIMESCALE_TSDB_ADMIN=
 ARG PRIVATE_REPO_TOKEN=
+RUN mkdir -p /build
 RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TSDB_ADMIN}" ]; then \
         cd /build \
         && git clone https://${PRIVATE_REPO_TOKEN}@github.com/timescale/protected_roles \
