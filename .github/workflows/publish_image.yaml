@@ -85,7 +85,6 @@ jobs:
         run:
           make publish-immutable
           DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-latest
-        run: make publish
       - name: List docker Images
         run:
           make list-images
