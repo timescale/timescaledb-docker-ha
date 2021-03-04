@@ -23,23 +23,6 @@ RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/a
         sed -i "s{http://.*.debian.org{http://${DEBIAN_REPO_MIRROR}{g" /etc/apt/sources.list; \
     fi
 
-# Protected Roles is a library that restricts the CREATEROLE/CREATEDB privileges of non-superusers.
-# It is a private timescale project and is therefore not included/built by default
-RUN apt-get update &&  apt-get install -y git curl ca-certificates locales gnupg1 
-ARG TIMESCALE_TSDB_ADMIN=
-ARG PRIVATE_REPO_TOKEN=
-RUN mkdir -p /build
-RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TSDB_ADMIN}" ]; then \
-        cd /build \
-        && git clone https://${PRIVATE_REPO_TOKEN}:x-oauth-basic@github.com/timescale/protected_roles \
-        && for pg in ${PG_VERSIONS}; do \
-            cd /build/protected_roles && git reset HEAD --hard && git checkout ${TIMESCALE_TSDB_ADMIN} \
-            && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
-        done; \
-    fi
-
-RUN false
-
 # Install the highlest level dependencies, like the PostgreSQL repositories
 RUN apt-get update \
     && apt-get install -y curl ca-certificates locales gnupg1 \
