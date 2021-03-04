@@ -93,11 +93,11 @@ version_info-%.log: prepare
 	cat scripts/install_extensions.sql | $(DOCKER_EXEC_COMMAND) psql -AtXq  --set ON_ERROR_STOP=1
 	cat scripts/version_info.sql | $(DOCKER_EXEC_COMMAND) psql -AtXq > $(VAR_VERSION_INFO)
 	docker stop $(DOCKER_TAG_PREPARE) || true
-	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin=$(TIMESCALE_TSDB_ADMIN)" >> $(VAR_VERSION_INFO); fi
+	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin.version=$(TIMESCALE_TSDB_ADMIN)" >> $(VAR_VERSION_INFO); fi
 
 build: $(VAR_VERSION_INFO)
 	echo "FROM $(DOCKER_TAG_PREPARE)" | docker build --tag "$(DOCKER_TAG_LABELED)" - \
-	  $$(awk -F '=' '{printf "--label com.timescaledb.image."$$1".version="$$2" "}' $(VAR_VERSION_INFO))
+	  $$(awk -F '=' '{printf "--label com.timescaledb.image."$$1"="$$2" "}' $(VAR_VERSION_INFO))
 
 # The purpose of publishing the images under many tags, is to provide
 # some choice to the user as to their appetite for volatility.
