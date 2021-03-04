@@ -31,7 +31,7 @@ ARG PRIVATE_REPO_TOKEN=
 RUN mkdir -p /build
 RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TSDB_ADMIN}" ]; then \
         cd /build \
-        && git clone https://${PRIVATE_REPO_TOKEN:x-oauth-basic@github.com/timescale/protected_roles \
+        && git clone https://${PRIVATE_REPO_TOKEN}:x-oauth-basic@github.com/timescale/protected_roles \
         && for pg in ${PG_VERSIONS}; do \
             cd /build/protected_roles && git reset HEAD --hard && git checkout ${TIMESCALE_TSDB_ADMIN} \
             && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
