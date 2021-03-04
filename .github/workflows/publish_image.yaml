@@ -47,7 +47,7 @@ jobs:
         # We only publish latest images to docker hub, as other registries only allow immutable tags
         run: |
           make publish-immutable
-          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-latest
+          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
       - name: Publish PostgreSQL 11 Docker Images to their registries
         env:
           TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
@@ -58,7 +58,7 @@ jobs:
         # We only publish latest images to docker hub, as other registries only allow immutable tags
         run: |
           make publish-immutable
-          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-latest
+          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
       - name: Publish PostgreSQL 12 -oss Docker Images to Docker Hub
         env:
           TIMESCALE_TSDB_ADMIN: ""
@@ -71,7 +71,7 @@ jobs:
         # We only publish latest images to docker hub, as other registries only allow immutable tags
         run: |
           make publish-immutable
-          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-latest
+          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
       - name: Publish PostgreSQL 11 -oss Docker Images to Docker Hub
         env:
           TIMESCALE_TSDB_ADMIN: ""
@@ -84,7 +84,7 @@ jobs:
         # We only publish latest images to docker hub, as other registries only allow immutable tags
         run:
           make publish-immutable
-          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-latest
+          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
       - name: List docker Images
         run:
           make list-images
