@@ -16,6 +16,7 @@ jobs:
     env:
       DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
       INSTALL_METHOD: docker-ha
+      TIMESCALE_TSDB_ADMIN: "0.1.1"
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -39,29 +40,28 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       - name: Publish PostgreSQL 12 Docker Images to their registries
         env:
-          TIMESCALE_TSDB_ADMIN:  ${{ secrets.TIMESCALE_TSDB_ADMIN }}
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
           DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_REPOSITORY}}
           PG_VERSIONS: "12 11"
           PG_MAJOR: "12"
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         # We only publish latest images to docker hub, as other registries only allow immutable tags
         run: |
           make publish-immutable
           DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
       - name: Publish PostgreSQL 11 Docker Images to their registries
         env:
-          TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALE_TSDB_ADMIN }}
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
           DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_REPOSITORY}}
           PG_MAJOR: "11"
           PG_VERSIONS: "11"
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         # We only publish latest images to docker hub, as other registries only allow immutable tags
         run: |
           make publish-immutable
           DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
       - name: Publish PostgreSQL 12 -oss Docker Images to Docker Hub
         env:
-          TIMESCALE_TSDB_ADMIN: ""
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
           DOCKER_EXTRA_BUILDARGS: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
           DOCKER_TAG_POSTFIX: '-oss'
@@ -74,7 +74,6 @@ jobs:
           DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
       - name: Publish PostgreSQL 11 -oss Docker Images to Docker Hub
         env:
-          TIMESCALE_TSDB_ADMIN: ""
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
           DOCKER_EXTRA_BUILDARGS: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
           DOCKER_TAG_POSTFIX: '-oss'

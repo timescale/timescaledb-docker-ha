@@ -45,7 +45,7 @@ VAR_VERSION_INFO=version_info-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX).log
 # afterwards, by using introspection, as minor versions may differ even when using the same
 # Dockerfile
 DOCKER_BUILD_COMMAND=docker build  \
-					 --build-arg CI_JOB_TOKEN="$(CI_JOB_TOKEN)" \
+					 --build-arg PRIVATE_REPO_TOKEN="$(PRIVATE_REPO_TOKEN)" \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) \
 					 --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" \
 					 --build-arg PG_AUTH_MON="$(PG_AUTH_MON)" \

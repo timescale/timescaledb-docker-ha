@@ -12,14 +12,13 @@ jobs:
     env:
       DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
       INSTALL_METHOD: docker-ha
+      TIMESCALE_TSDB_ADMIN: "0.1.1"
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Build the Docker Image
         env:
-          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
-          DOCKER_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY }}
-          TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALE_TSDB_ADMIN }}
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: make build
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -32,6 +31,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       - name: Push to Amazon ECR
         env:
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
           DOCKER_PUBLISH_URLS: ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_REPOSITORY}}
         run: |
           make push-sha
