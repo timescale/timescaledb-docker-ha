@@ -40,7 +40,6 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: Publish PostgreSQL 12 Docker Images to their registries
-        id: publish_latest_default
         env:
           TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
@@ -49,7 +48,6 @@ jobs:
           PG_MAJOR: "12"
         run: make publish
       - name: Publish PostgreSQL 11 Docker Images to their registries
-        id: publish_latest_default
         env:
           TIMESCALE_TSDB_ADMIN: ${{ secrets.TIMESCALEDB_TSDB_ADMIN }}
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
