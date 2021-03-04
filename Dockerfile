@@ -38,6 +38,8 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_T
         done; \
     fi
 
+RUN false
+
 # Install the highlest level dependencies, like the PostgreSQL repositories
 RUN apt-get update \
     && apt-get install -y curl ca-certificates locales gnupg1 \
