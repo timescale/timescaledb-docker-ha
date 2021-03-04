@@ -25,7 +25,7 @@ RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/a
 
 # Protected Roles is a library that restricts the CREATEROLE/CREATEDB privileges of non-superusers.
 # It is a private timescale project and is therefore not included/built by default
-RUN apt-get update && apt-get install -y git
+RUN apt-get update &&  apt-get install -y git curl ca-certificates locales gnupg1 
 ARG TIMESCALE_TSDB_ADMIN=
 ARG PRIVATE_REPO_TOKEN=
 RUN mkdir -p /build
