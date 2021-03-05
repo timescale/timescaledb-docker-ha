@@ -1,8 +1,9 @@
-# To avoid duplicate workflows when only tagging, we have a separate
-# workflow file for pushing tags. This avoids a duplicate run on pushing
-# the new tag to github. It's basically this issue:
-# https://github.community/t/workflow-running-twice-push-push-tags/133314
 name: Publish image
+
+on:
+  push:
+    tags:
+    - 'donotuse*'
 
 env:
   DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
@@ -10,25 +11,24 @@ env:
   INSTALL_METHOD: docker-ha
   TIMESCALE_TSDB_ADMIN: "0.1.1"
 
-on:
-  push:
-    tags:
-    - 'donotuse*'
-
 jobs:
   publish-image:
     name: Publish the Docker Images
     strategy:
       matrix:
         include:
+        # This is the 'default' image, it contains PostgreSQL 11 and 12, and defaults to PostgreSQL 12 binaries
         - pg_major: "12"
           pg_versions: "12 11"
+        # This is the 11 only image, should probably be retired
         - pg_major: "11"
           pg_versions: "11"
+        # This is the PostgreSQL 12 image containing only oss software
         - pg_major: "12"
           pg_versions: "12 11"
           docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
           docker_tag_postfix: '-oss'
+        # This is the PostgreSQL 11 image containing only oss software, should probably be retired
         - pg_major: "11"
           pg_versions: "11"
           docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
@@ -64,6 +64,8 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           PG_VERSIONS: ${{ matrix.pg_versions }}
           DOCKER_ECR_URL: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha
+        # Note that our ECR registry has immutability guarentees, therefore we do not push
+        # the mutable ('latest') tags to the ECR registry
         run: |
           DOCKER_PUBLISH_URLS="${DOCKER_HUB_URL} ${DOCKER_ECR_URL}" make publish-immutable
           DOCKER_PUBLISH_URLS="${DOCKER_HUB_URL}" make publish-mutable
