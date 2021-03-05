@@ -36,9 +36,9 @@ GITHUB_REPO?=timescale/timescaledb
 GITHUB_TAG?=master
 
 # We need dynamic variables here, that is why we do not use $(shell awk ...)
-VAR_PGMINOR="$$(awk -F '=' '/postgresql=/ {print $$2}' $(VAR_VERSION_INFO))"
-VAR_TSMINOR="$$(awk -F '=' '/timescaledb=/ {print $$2}' $(VAR_VERSION_INFO))"
-VAR_TSMAJOR="$$(awk -F '[.=]' '/timescaledb=/ {print $$2 "." $$3}' $(VAR_VERSION_INFO))"
+VAR_PGMINOR="$$(awk -F '=' '/postgresql.version=/ {print $$2}' $(VAR_VERSION_INFO))"
+VAR_TSMINOR="$$(awk -F '=' '/timescaledb.version=/ {print $$2}' $(VAR_VERSION_INFO))"
+VAR_TSMAJOR="$$(awk -F '[.=]' '/timescaledb.version=/ {print $$2 "." $$3}' $(VAR_VERSION_INFO))"
 VAR_VERSION_INFO=version_info-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX).log
 
 # We label all the Docker Images with the versions of PostgreSQL, TimescaleDB and some other extensions
@@ -149,7 +149,7 @@ publish-immutable: is_ci build
 	done
 
 list-images:
-	docker images | grep timescale
+	docker images --filter "label=org.opencontainers.image.revision=$(GIT_REV)" --filter "dangling=false" --filter "label=com.timescaledb.image.postgresql.version"
 
 build-tag: DOCKER_EXTRA_BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GITHUB_USER=$(GITHUB_USER) --build-arg GITHUB_TOKEN=$(GITHUB_TOKEN) --build-arg GITHUB_TAG=$(GITHUB_TAG)
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
@@ -165,4 +165,4 @@ endif
 		&& docker push $${FULL_TAG} || exit 1 ; \
 	done
 
-.PHONY: fast prepare build build-oss release build publish test tag build-tag publish-next-patch-version publish-mutable publish-immutable is_ci list-images
+.PHONY: fast prepare build-oss release build publish test tag build-tag publish-next-patch-version publish-mutable publish-immutable is_ci list-images

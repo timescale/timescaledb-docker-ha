@@ -71,4 +71,4 @@ jobs:
           DOCKER_PUBLISH_URLS="${DOCKER_HUB_URL}" make publish-mutable
       - name: List docker Images
         run: |
-          echo make list-images
+          make list-images
