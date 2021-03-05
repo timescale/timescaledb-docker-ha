@@ -6,8 +6,19 @@ on:
     - '**'
 
 jobs:
+  test-matrix:
+    strategy:
+      matrix:
+        node: [6, 8, 10]
+    steps:
+    - name: test
+      env:
+        MYVAR: ${{ matrix.node }}
+      run:
+        echo "=>${MYVAR}<="
   build-image:
     name: Build the default Docker Image
+    if: "false" # While hacking
     runs-on: ubuntu-latest
     env:
       DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
