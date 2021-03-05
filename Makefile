@@ -149,7 +149,7 @@ publish-immutable: is_ci build
 	done
 
 list-images:
-	docker images --filter "label=org.opencontainers.image.revision=$(GIT_REV)" --filter "dangling=false" --filter "label=com.timescaledb.image.postgresql.version"
+	docker images | grep timescale
 
 build-tag: DOCKER_EXTRA_BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GITHUB_USER=$(GITHUB_USER) --build-arg GITHUB_TOKEN=$(GITHUB_TOKEN) --build-arg GITHUB_TAG=$(GITHUB_TAG)
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
