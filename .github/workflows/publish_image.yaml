@@ -64,7 +64,7 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           PG_VERSIONS: ${{ matrix.pg_versions }}
           DOCKER_ECR_URL: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha
-        # Note that our ECR registry has immutability guarentees, therefore we do not push
+        # Note that our ECR registry has immutability guarantees, therefore we do not push
         # the mutable ('latest') tags to the ECR registry
         run: |
           DOCKER_PUBLISH_URLS="${DOCKER_HUB_URL} ${DOCKER_ECR_URL}" make publish-immutable

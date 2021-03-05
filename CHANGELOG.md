@@ -10,6 +10,8 @@ These are changes that will probably be included in the next release.
 
 ### Added
 ### Changed
+ * CI/CD has moved from gitlab to GitHub actions
+ * Images now get pushed to `timescale/timescaledb-ha` (used to be `timescaledev/timescaledb-ha`)
 ### Removed
  * timescale-prometheus (superseeded by (promscale)[https://github.com/timescale/promscale])
  * [pg\_prometheus](https://github.com/timescale/pg_prometheus): Was already excluded from being built for a long while

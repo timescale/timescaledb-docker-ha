@@ -99,6 +99,10 @@ build: $(VAR_VERSION_INFO)
 	echo "FROM $(DOCKER_TAG_PREPARE)" | docker build --tag "$(DOCKER_TAG_LABELED)" - \
 	  $$(awk -F '=' '{printf "--label com.timescaledb.image."$$1"="$$2" "}' $(VAR_VERSION_INFO))
 
+build-oss: DOCKER_EXTRA_BUILDARGS= --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"
+build-oss: DOCKER_TAG_POSTFIX=-oss
+build-oss: build
+
 # The purpose of publishing the images under many tags, is to provide
 # some choice to the user as to their appetite for volatility.
 #
@@ -161,4 +165,4 @@ endif
 		&& docker push $${FULL_TAG} || exit 1 ; \
 	done
 
-.PHONY: fast prepare build release build publish test tag build-tag publish-next-patch-version publish-mutable publish-immutable is_ci list-images
+.PHONY: fast prepare build build-oss release build publish test tag build-tag publish-next-patch-version publish-mutable publish-immutable is_ci list-images
