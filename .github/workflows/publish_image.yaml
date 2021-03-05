@@ -1,0 +1,77 @@
+name: Publish image
+
+on:
+  push:
+    tags:
+    - 'test*'
+    - 'v*'
+
+env:
+  DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
+  DOCKER_HUB_URL: docker.io/timescale/timescaledb-ha
+  INSTALL_METHOD: docker-ha
+  TIMESCALE_TSDB_ADMIN: "0.1.1"
+
+jobs:
+  publish-image:
+    name: Publish the Docker Images
+    strategy:
+      matrix:
+        include:
+        # This is the 'default' image, it contains PostgreSQL 11 and 12, and defaults to PostgreSQL 12 binaries
+        - pg_major: "12"
+          pg_versions: "12 11"
+        # This is the 11 only image, should probably be retired
+        - pg_major: "11"
+          pg_versions: "11"
+        # This is the PostgreSQL 12 image containing only oss software
+        - pg_major: "12"
+          pg_versions: "12 11"
+          docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
+          docker_tag_postfix: '-oss'
+        # This is the PostgreSQL 11 image containing only oss software, should probably be retired
+        - pg_major: "11"
+          pg_versions: "11"
+          docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
+          docker_tag_postfix: '-oss'
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Get tag name
+        id: tag_name
+        run:
+          echo ::set-output name=GIT_TAG::${GITHUB_REF#refs/tags/}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Publish PostgreSQL Docker Images to their registries
+        env:
+          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          DOCKER_EXTRA_BUILDARGS: ${{ matrix.docker_extra_buildargs }}
+          DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
+          PG_MAJOR: ${{ matrix.pg_major }}
+          PG_VERSIONS: ${{ matrix.pg_versions }}
+          DOCKER_ECR_URL: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha
+        # Note that our ECR registry has immutability guarantees, therefore we do not push
+        # the mutable ('latest') tags to the ECR registry
+        run: |
+          DOCKER_PUBLISH_URLS="${DOCKER_HUB_URL} ${DOCKER_ECR_URL}" make publish-immutable
+          DOCKER_PUBLISH_URLS="${DOCKER_HUB_URL}" make publish-mutable
+      - name: List docker Images
+        env:
+          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
+        run: |
+          make list-images
