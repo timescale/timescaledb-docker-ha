@@ -151,7 +151,7 @@ build-tag: DOCKER_EXTRA_BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --bui
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
 build-tag: build
 
-push-sha: is_ci
+push-sha: is_ci build
 ifndef GITHUB_SHA
 	$(error GITHUB_SHA is undefined, are you running this in Github Actions?)
 endif

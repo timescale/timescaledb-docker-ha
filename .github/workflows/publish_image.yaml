@@ -6,6 +6,7 @@ name: Publish image
 
 env:
   DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
+  DOCKER_HUB_URL: docker.io/timescaledev/timescaledb-ha
   INSTALL_METHOD: docker-ha
   TIMESCALE_TSDB_ADMIN: "0.1.1"
 
@@ -17,7 +18,22 @@ on:
 jobs:
   publish-image:
     name: Publish the Docker Images
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+        - pg_major: "12"
+          pg_versions: "12 11"
+        - pg_major: "11"
+          pg_versions: "11"
+        - pg_major: "12"
+          pg_versions: "12 11"
+          docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
+          docker_tag_postfix: '-oss'
+        - pg_major: "11"
+          pg_versions: "11"
+          docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
+          docker_tag_postfix: '-oss'
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -39,52 +55,18 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      - name: Publish PostgreSQL 12 Docker Images to their registries
+      - name: Publish PostgreSQL Docker Images to their registries
         env:
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
-          DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_REPOSITORY}}
-          PG_VERSIONS: "12 11"
-          PG_MAJOR: "12"
           PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
-        # We only publish latest images to docker hub, as other registries only allow immutable tags
+          DOCKER_EXTRA_BUILDARGS: ${{ matrix.docker_extra_buildargs }}
+          DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
+          PG_MAJOR: ${{ matrix.pg_major }}
+          PG_VERSIONS: ${{ matrix.pg_versions }}
+          DOCKER_ECR_URL: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha
         run: |
-          make publish-immutable
-          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
-      - name: Publish PostgreSQL 11 Docker Images to their registries
-        env:
-          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
-          DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha ${{ secrets.DOCKER_REGISTRY }}/${{ secrets.DOCKER_REPOSITORY}}
-          PG_MAJOR: "11"
-          PG_VERSIONS: "11"
-          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
-        # We only publish latest images to docker hub, as other registries only allow immutable tags
-        run: |
-          make publish-immutable
-          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
-      - name: Publish PostgreSQL 12 -oss Docker Images to Docker Hub
-        env:
-          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
-          DOCKER_EXTRA_BUILDARGS: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
-          DOCKER_TAG_POSTFIX: '-oss'
-          DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha
-          PG_VERSIONS: "12 11"
-          PG_MAJOR: "12"
-        # We only publish latest images to docker hub, as other registries only allow immutable tags
-        run: |
-          make publish-immutable
-          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
-      - name: Publish PostgreSQL 11 -oss Docker Images to Docker Hub
-        env:
-          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
-          DOCKER_EXTRA_BUILDARGS: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
-          DOCKER_TAG_POSTFIX: '-oss'
-          DOCKER_PUBLISH_URLS: docker.io/timescaledev/timescaledb-ha
-          PG_MAJOR: "11"
-          PG_VERSIONS: "11"
-        # We only publish latest images to docker hub, as other registries only allow immutable tags
-        run: |
-          make publish-immutable
-          DOCKER_PUBLISH_URLS=docker.io/timescaledev/timescaledb-ha make publish-mutable
+          DOCKER_PUBLISH_URLS="${DOCKER_HUB_URL} ${DOCKER_ECR_URL}" make publish-immutable
+          DOCKER_PUBLISH_URLS="${DOCKER_HUB_URL}" make publish-mutable
       - name: List docker Images
         run: |
-          make list-images
+          echo make list-images
