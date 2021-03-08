@@ -40,6 +40,51 @@ POSTGIS_VERSIONS="" make build
 
 For further environment variables that can be set, we point you to the [Makefile](Makefile) itself.
 
+# Verify your work
+
+For every pushed commit to this repository, a Docker Image will be built and is available at a private
+Amazon Elastic Container Registry (ECR).
+
+## Find the image tag for your commit
+
+> Replace *** with the AWS Account ID.
+
+Once your commit is pushed, a Docker Image will be built, and if successful, will be pushed.
+The tag of this Docker Image will be `cicd-<first 8 chars of commit sha>`, for example, for commit `baddcafe...`, the tag will look like:
+
+    ***.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha:cicd-deadbeef
+
+### Find out tag using commandline
+Assuming your current working directory is on the same commit as the one you pushed
+```console
+echo "***.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha:cicd-$(git rev-parse HEAD | cut -c 1-8)"
+```
+
+### Find tag using GitHub Web interface
+
+- Actions
+- Click on the **Build Image** Workflow for your commit/branch
+- Expand **List docker Images**
+
+*Example output*
+```
+Run make list-images
+docker images --filter [...]
+REPOSITORY                                           TAG             IMAGE ID       CREATED          SIZE
+***.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha   cicd-d20dc5c5   2c81b58b4a59   54 seconds ago   1.06GB
+```
+
+In the above example, your Docker tag is `cicd-d20dc5c5` and your full image url is:
+
+    ***.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha:cicd-d20dc5c5
+
+
+## Test your Docker Image
+```console
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ***.dkr.ecr.us-east-1.amazonaws.com
+docker run --rm -ti -e POSTGRES_PASSWORD=smoketest ***.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha:cicd-baddcafe
+```
+
 # Versioning and Releases
 
 ## Release Process
