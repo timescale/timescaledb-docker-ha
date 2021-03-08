@@ -23,14 +23,14 @@ RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/a
         sed -i "s{http://.*.debian.org{http://${DEBIAN_REPO_MIRROR}{g" /etc/apt/sources.list; \
     fi
 
-# Install the highlest level dependencies, like the PostgreSQL repositories
+# Install the highlest level dependencies
 RUN apt-get update \
-    && apt-get install -y curl ca-certificates locales gnupg1 \
-    && VERSION_CODENAME=$(awk -F '=' '/VERSION_CODENAME/ {print $2}' < /etc/os-release) \
-    && for t in deb deb-src; do \
-    echo "$t http://apt.postgresql.org/pub/repos/apt/ ${VERSION_CODENAME}-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
-    done \
-    && curl -s -o - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+    && apt-get install -y curl ca-certificates locales gnupg1 lsb-release
+
+RUN for t in deb deb-src; do \
+        echo "$t http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -s -c)-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
+    done
+RUN curl -s -o - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 
 # Some tools that are not strictly required for running PostgreSQL, but have a tiny
 # footprint and can be very valuable when troubleshooting a running container,
@@ -57,7 +57,7 @@ RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-ku
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="git binutils patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev"
+ENV BUILD_PACKAGES="lsb-release git binutils patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
@@ -135,6 +135,11 @@ RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 1.7.4 1.7.5 2.0.0-rc3 2.0.0
         done; \
     done \
     && cd / && rm -rf /build
+
+# timescaledb-tune, as well as timescaledb-parallel-copy
+RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -s -c) main" > /etc/apt/sources.list.d/timescaledb.list
+RUN curl -L -s -o - https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add -
+RUN apt-get update && apt-get install -y timescaledb-tools
 
 ARG TIMESCALE_PROMSCALE_EXTENSION=
 # build and install the promscale_extension extension
@@ -231,11 +236,6 @@ ARG PG_MAJOR=11
 ## for this Docker images as for our other Docker images
 COPY --from=timescale/timescaledb:latest-pg11 /docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
 COPY --from=timescale/timescaledb:latest-pg11 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY --from=timescale/timescaledb:latest-pg11 /usr/local/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
-
-# timescaledb-tune does not support PostgreSQL 12 yet, however the (global) pg_config shipped by Debian
-# is PostgreSQL 12. Therefore we need to explicitly pass on the PostgreSQL version to timescaledb-tune
-RUN sed -i "s/timescaledb-tune/timescaledb-tune --pg-version=11/g" /docker-entrypoint-initdb.d/*.sh
 
 RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
