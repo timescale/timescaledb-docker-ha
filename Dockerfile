@@ -210,6 +210,20 @@ RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
             && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
         done; \
     fi
+
+## Entrypoints as they are from the Timescale image and its default alpine upstream repositories.
+## This ensures the default interface (entrypoint) equals the one of the github.com/timescale/timescaledb-docker one,
+## which allows this Docker Image to be a drop-in replacement for those Docker Images.
+ARG GITHUB_TIMESCALEDB_DOCKER_REF=master
+ARG GITHUB_DOCKERLIB_POSTGRES_REF=master
+RUN cd /build && git clone https://github.com/timescale/timescaledb-docker && cd /build/timescaledb-docker && git checkout ${GITHUB_TIMESCALEDB_DOCKER_REF}
+RUN cp -a /build/timescaledb-docker/docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/
+RUN curl -s -o /usr/local/bin/docker-entrypoint.sh https://raw.githubusercontent.com/docker-library/postgres/${GITHUB_DOCKERLIB_POSTGRES_REF}/13/alpine/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Satisfy assumptions of the entrypoint scripts
+RUN ln -s /usr/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
+RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
+
 ## Cleanup
 RUN apt-get remove -y ${BUILD_PACKAGES}
 RUN apt-get autoremove -y \
@@ -230,14 +244,6 @@ FROM scratch
 COPY --from=builder / /
 
 ARG PG_MAJOR=11
-
-## Entrypoints as they are from the Timescale image
-## We may want to reconsider this, for now this means we have the exact same interface
-## for this Docker images as for our other Docker images
-COPY --from=timescale/timescaledb:latest-pg11 /docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
-COPY --from=timescale/timescaledb:latest-pg11 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-
-RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["postgres"]
 

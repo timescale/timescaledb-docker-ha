@@ -19,6 +19,10 @@ DOCKER_TAG_POSTFIX?=
 DOCKER_TAG_PREPARE=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
 DOCKER_TAG_LABELED=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-labeled
 
+# These parameters control which entrypoints we add to the scripts
+GITHUB_DOCKERLIB_POSTGRES_REF=master
+GITHUB_TIMESCALEDB_DOCKER_REF=master
+
 # We add a patch increment to all our immutable Docker Images. To figure out which patch number
 # to assign, we need 1 repository that is the canonical source of truth
 DOCKER_CANONICAL_URL?=https://index.docker.io/v1/repositories/timescale/timescaledb-ha
@@ -47,6 +51,8 @@ VAR_VERSION_INFO=version_info-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX).log
 # Dockerfile
 DOCKER_BUILD_COMMAND=docker build  \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) \
+					 --build-arg GITHUB_DOCKERLIB_POSTGRES_REF="$(GITHUB_DOCKERLIB_POSTGRES_REF)" \
+					 --build-arg GITHUB_TIMESCALEDB_DOCKER_REF="$(GITHUB_TIMESCALEDB_DOCKER_REF)" \
 					 --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" \
 					 --build-arg PG_AUTH_MON="$(PG_AUTH_MON)" \
 					 --build-arg PG_LOGERRORS="$(PG_LOGERRORS)" \
