@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 These are changes that will probably be included in the next release.
 
 ### Added
+ * Allow additional extensions to be added to a running container
+
+   If enabled, this allows one to create new extension libraries and new supporting files
+   in their respective directories.
+   Files that are part of the Docker Image are guarded against mutations, so only *new* files
+   can be added.
 ### Changed
  * CI/CD has moved from gitlab to GitHub actions
  * Images now get pushed to `timescale/timescaledb-ha` (used to be `timescaledev/timescaledb-ha`)

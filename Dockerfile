@@ -224,6 +224,21 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 RUN ln -s /usr/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
 RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 
+# Allow Adding Extensions allows *new* files to be created, so that extensions can be added to a running container.
+# Existing files are still owned by root and have their sticky bit (the 1 in the 1775 permission mode) set,
+# and therefore cannot be overwritten or removed by the unprivileged (postgres) user.
+# This ensures the following:
+# - libraries and supporting files for extensions that are part of this Docker Image are immutable
+# - new libraries/files can be added to the container and updated by the postgres user
+ARG ALLOW_ADDING_EXTENSIONS=true
+RUN if [ "${ALLOW_ADDING_EXTENSIONS}" = "true" ]; then \
+        for pg in ${PG_VERSIONS}; do \
+            for dir in "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
+                install --directory "${dir}" --group postgres --mode 1775 ; \
+            done; \
+        done ; \
+    fi
+
 ## Cleanup
 RUN apt-get remove -y ${BUILD_PACKAGES}
 RUN apt-get autoremove -y \

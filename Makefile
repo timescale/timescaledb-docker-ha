@@ -23,6 +23,8 @@ DOCKER_TAG_LABELED=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-labeled
 GITHUB_DOCKERLIB_POSTGRES_REF=master
 GITHUB_TIMESCALEDB_DOCKER_REF=master
 
+ALLOW_ADDING_EXTENSIONS?=true
+
 # We add a patch increment to all our immutable Docker Images. To figure out which patch number
 # to assign, we need 1 repository that is the canonical source of truth
 DOCKER_CANONICAL_URL?=https://index.docker.io/v1/repositories/timescale/timescaledb-ha
@@ -50,6 +52,7 @@ VAR_VERSION_INFO=version_info-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX).log
 # afterwards, by using introspection, as minor versions may differ even when using the same
 # Dockerfile
 DOCKER_BUILD_COMMAND=docker build  \
+					 --build-arg ALLOW_ADDING_EXTENSIONS="$(ALLOW_ADDING_EXTENSIONS)" \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) \
 					 --build-arg GITHUB_DOCKERLIB_POSTGRES_REF="$(GITHUB_DOCKERLIB_POSTGRES_REF)" \
 					 --build-arg GITHUB_TIMESCALEDB_DOCKER_REF="$(GITHUB_TIMESCALEDB_DOCKER_REF)" \
@@ -83,6 +86,7 @@ fast: PG_VERSIONS=12
 fast: POSTGIS_VERSIONS=
 fast: TIMESCALE_ANALYTICS_EXTENSION=
 fast: TIMESCALE_PROMSCALE_EXTENSION=
+fast: ALLOW_ADDING_EXTENSIONS=true
 fast: prepare
 
 # The prepare step does not build the final image, as we need to use introspection
