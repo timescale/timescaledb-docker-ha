@@ -61,9 +61,9 @@ ENV BUILD_PACKAGES="lsb-release git binutils patchutils gcc libc-dev make cmake 
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
-# Include rust compiler for installing rust components
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
+RUN mkdir -p /build
+RUN chmod 777 /build
+WORKDIR /build/
 
 # By including multiple versions of PostgreSQL we can use the same Docker image,
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
@@ -75,8 +75,6 @@ RUN for pg in ${PG_VERSIONS}; do \
         mk-build-deps postgresql-${pg} && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
     done
 
-RUN mkdir /build/
-WORKDIR /build/
 
 RUN for pg in ${PG_VERSIONS}; do \
         apt-get install -y postgresql-${pg} postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} \
@@ -109,12 +107,11 @@ ARG GITHUB_TOKEN
 ARG GITHUB_REPO=timescale/timescaledb
 ARG GITHUB_TAG
 
-RUN mkdir -p /build \
-    && if [ "${GITHUB_TOKEN}" != "" ]; then \
-            git clone "https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}" /build/timescaledb; \
-       else \
-            git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
-       fi
+RUN if [ "${GITHUB_TOKEN}" != "" ]; then \
+        git clone "https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}" /build/timescaledb; \
+    else \
+        git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
+    fi
 
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
 ARG INSTALL_METHOD=docker-ha
@@ -133,19 +130,23 @@ RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 1.7.4 1.7.5 2.0.0-rc3 2.0.0
             && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
             && cd build && make -j 6 install || exit 1; \
         done; \
-    done \
-    && cd / && rm -rf /build
+    done
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
 RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -s -c) main" > /etc/apt/sources.list.d/timescaledb.list
 RUN curl -L -s -o - https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add -
 RUN apt-get update && apt-get install -y timescaledb-tools
 
+# Include rust compiler for installing rust components
+ENV CARGO_HOME=/build/.cargo
+ENV RUSTUP_HOME=/build/.rustup
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y --profile=minimal
+ENV PATH="/build/.cargo/bin:${PATH}"
+
 ARG TIMESCALE_PROMSCALE_EXTENSION=
 # build and install the promscale_extension extension
 RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" ]; then \
-        mkdir -p /build \
-        && git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
+        git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
         && set -e \
         && for pg in ${PG_VERSIONS}; do \
             if [ "${pg}" = "12" ]; then \
@@ -250,8 +251,6 @@ RUN apt-get autoremove -y \
             /usr/share/locale/?? \
             /usr/share/locale/??_?? \
             /build/ \
-            /root/.rustup \
-            /root/.cargo \
     && find /var/log -type f -exec truncate --size 0 {} \;
 
 ## Create a smaller Docker image from the builder image
