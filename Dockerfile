@@ -193,6 +193,19 @@ RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
         done; \
     fi
 
+# Foreign Data Wrapper for SQLite
+ARG PG_SQLITE_FDW=
+ENV BUILD_PACKAGES="${BUILD_PACKAGES} libsqlite3-dev"
+RUN if [ ! -z "${PG_SQLITE_FDW}" ]; then \
+        apt-get update && apt-get install -y libsqlite3-0 libsqlite3-dev \
+        && cd /build \
+        && git clone https://github.com/pgspider/sqlite_fdw \
+        && for pg in ${PG_VERSIONS}; do \
+            cd /build/sqlite_fdw && git reset HEAD --hard && git checkout "${PG_SQLITE_FDW}" \
+            && USE_PGXS=1 make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config USE_PGXS=1 make install || exit 1 ; \
+        done; \
+    fi
+
 ## Entrypoints as they are from the Timescale image and its default alpine upstream repositories.
 ## This ensures the default interface (entrypoint) equals the one of the github.com/timescale/timescaledb-docker one,
 ## which allows this Docker Image to be a drop-in replacement for those Docker Images.
