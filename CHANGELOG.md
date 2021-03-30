@@ -16,6 +16,7 @@ These are changes that will probably be included in the next release.
    Files that are part of the Docker Image are guarded against mutations, so only *new* files
    can be added.
 ### Changed
+ * Include and default to Timescale 2.1.1
  * CI/CD has moved from gitlab to GitHub actions
  * Images now get pushed to `timescale/timescaledb-ha` (used to be `timescaledev/timescaledb-ha`)
  * Built images also get labeled with the available TimescaleDB versions in the image, for example:
