@@ -10,7 +10,7 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
-## [v0.3.5] - 2021-03-26
+## [v0.3.6] - 2021-03-26
 
 ### Added
  * Allow additional extensions to be added to a running container
