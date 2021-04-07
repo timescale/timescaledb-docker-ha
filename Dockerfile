@@ -67,8 +67,8 @@ WORKDIR /build/
 
 # By including multiple versions of PostgreSQL we can use the same Docker image,
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
-# pg_upgrade from 11 to 12, so we need all the postgres & timescale libraries for all versions
-ARG PG_VERSIONS="12 11"
+# pg_upgrade from 12 to 13, so we need all the postgres & timescale libraries for all versions
+ARG PG_VERSIONS="13 12"
 
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
 RUN for pg in ${PG_VERSIONS}; do \
@@ -124,7 +124,9 @@ RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 1.7.4 1.7.5 2.0.0-rc3 2.0.0
     && set -e \
     && for pg in ${PG_VERSIONS}; do \
         for ts in ${TS_VERSIONS}; do \
-            if [ ${pg} -ge 12 ] && [ "$(expr substr ${ts} 1 3)" = "1.6" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
+            if [ ${pg} -ge 13 ] && [ "$(expr substr ${ts} 1 1)" = "1" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
+            && if [ ${pg} -ge 13 ] && [ "$(expr substr ${ts} 1 3)" = "2.0" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
+            && if [ ${pg} -ge 12 ] && [ "$(expr substr ${ts} 1 3)" = "1.6" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
             && cd /build/timescaledb && git reset HEAD --hard && git checkout ${ts} \
             && rm -rf build \
             && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREGRESS_CHECKS=OFF -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
@@ -252,6 +254,7 @@ RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
         && git clone https://github.com/timescale/timescale-analytics /build/timescale-analytics \
         && for pg in ${PG_VERSIONS}; do \
             if [ "${pg}" = "12" ] || [ "${pg}" = "13" ]; then \
+            export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
                 cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
                 && cd /build/timescale-analytics && git reset HEAD --hard && git checkout ${TIMESCALE_ANALYTICS_EXTENSION} \
                 && git clean -f -x \
