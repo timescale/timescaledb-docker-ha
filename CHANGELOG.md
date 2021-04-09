@@ -10,6 +10,17 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.4.0] - 2021-04-09
+
+### Added
+ * PostgreSQL 13 images
+ * [pg\_repack](https://github.com/reorg/pg_repack) extension: Reorganize tables in PostgreSQL databases with minimal locks
+ * [hypopg](https://github.com/HypoPG/hypopg) extension: HypoPG is a PostgreSQL extension adding support for hypothetical indexes.
+### Changed
+ * [timescale\_analytics](https://github.com/timescale/timescale-analytics) was upgraded
+### Removed
+ * PostgreSQL 11 images
+
 ## [v0.3.6] - 2021-03-26
 
 ### Added
