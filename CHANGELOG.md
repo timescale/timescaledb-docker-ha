@@ -10,6 +10,10 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.4.1] - 2021-04-12
+### Added
+ * Bump [promscale\_extension](https://github.com/timescale/promscale_extension) to 0.1.2 and build for PostgreSQL 13
+
 ## [v0.4.0] - 2021-04-09
 
 ### Added
