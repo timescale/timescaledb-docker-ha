@@ -151,7 +151,7 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" ]; then \
         git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
         && set -e \
         && for pg in ${PG_VERSIONS}; do \
-            if [ "${pg}" = "12" ]; then \
+            if [ ${pg} -ge "12" ]; then \
                 cd /build/promscale_extension && git reset HEAD --hard && git checkout ${TIMESCALE_PROMSCALE_EXTENSION} \
                 && git clean -f -x \
                 && PATH=/usr/lib/postgresql/${pg}/bin:${PATH} PG_VER=pg${pg} make install || exit 1; \
@@ -253,7 +253,7 @@ RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
         && cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx \
         && git clone https://github.com/timescale/timescale-analytics /build/timescale-analytics \
         && for pg in ${PG_VERSIONS}; do \
-            if [ "${pg}" = "12" ] || [ "${pg}" = "13" ]; then \
+            if [ ${pg} -ge "12" ]; then \
             export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
                 cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
                 && cd /build/timescale-analytics && git reset HEAD --hard && git checkout ${TIMESCALE_ANALYTICS_EXTENSION} \
