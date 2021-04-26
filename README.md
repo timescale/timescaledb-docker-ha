@@ -119,3 +119,4 @@ They will be written under quite a few aliases, for example, for PostgreSQL 12.6
 
 In addition, for every build, an immutable image will be created and pushed, which will carry a patch version at the end. These are most suited for production releases, for example:
 - timescale/timescaledb-ha:pg12.6-ts2.0.1-p0
+
