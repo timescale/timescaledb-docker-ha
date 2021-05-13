@@ -10,6 +10,10 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.4.4] - 2021-05-13
+### Changed
+ * PostgreSQL 12.7 and 13.3 [have been released](https://www.postgresql.org/about/news/postgresql-133-127-1112-1017-and-9622-released-2210/)
+
 ## [v0.4.3] - 2021-05-05
 ### Changed
  * Include and default to Timescale 2.2.1
