@@ -35,6 +35,12 @@ RUN curl -s -o - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key ad
 # Some tools that are not strictly required for running PostgreSQL, but have a tiny
 # footprint and can be very valuable when troubleshooting a running container,
 RUN apt-get update && apt-get install -y less jq strace procps
+
+# For debugging it is very useful if the Docker Image contains gdb(server). Even though it is
+# not expected to be running gdb in a live instance often, it simplifies getting backtraces from
+# containers using this image
+RUN apt-get install -y gdb gdbserver
+
 # These packages allow for a better integration for some containers, for example
 # daemontools provides envdir, which is very convenient for passing backup
 # environment variables around.
