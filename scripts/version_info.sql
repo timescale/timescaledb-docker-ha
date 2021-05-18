@@ -1,5 +1,6 @@
 \set patroni    `patroni --version | awk '{print $2}'`
 \set pgbackrest `pgbackrest version  | awk '{print $2}'`
+\set pgall      `for dir in /usr/lib/postgresql/*; do $dir/bin/psql --version | awk '/psql/ {print $3}'; done`
 
 WITH versions(name, version) AS (
     SELECT
@@ -31,8 +32,15 @@ WITH versions(name, version) AS (
         pg_available_extension_versions
     WHERE
         name = 'timescaledb'
+    UNION ALL
+    SELECT
+        'postgresql.available_versions',
+        string_agg(version, ',' ORDER BY version)
+    FROM
+        regexp_split_to_table(:'pgall', '\n') AS rstt(version)
 )
 SELECT
     format('%s=%s', name, version)
 FROM
     versions;
+
