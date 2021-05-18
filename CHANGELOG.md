@@ -10,6 +10,14 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.4.5] - 2021-05-18
+### Added
+ * `gdb` and `gdbserver` to aid in debugging
+ * [pg\_stat\_kcache](https://github.com/powa-team/pg_stat_kcache) extension: Gathers statistics about real reads and writes done by the filesystem layer
+### Changed
+ * Label Docker Image with all minor PostgreSQL versions
+
+
 ## [v0.4.4] - 2021-05-13
 ### Changed
  * PostgreSQL 12.7 and 13.3 [have been released](https://www.postgresql.org/about/news/postgresql-133-127-1112-1017-and-9622-released-2210/)
