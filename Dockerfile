@@ -61,6 +61,7 @@ RUN find /usr/share/i18n/charmaps/ -type f ! -name UTF-8.gz -delete \
 # Some Patroni prerequisites
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes
 
+
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
 ENV BUILD_PACKAGES="lsb-release git binutils patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev"
@@ -146,6 +147,10 @@ RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 1.7.4 1.7.5 2.0.0-rc3 2.0.0
 RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -s -c) main" > /etc/apt/sources.list.d/timescaledb.list
 RUN curl -L -s -o - https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add -
 RUN apt-get update && apt-get install -y timescaledb-tools
+
+# awscli and boto3, to allow some AWS interaction if needed
+# as these tools share dependencies, including boto3 is cheap if awscli is also included
+RUN apt-get update && apt-get install -y awscli python3-boto3
 
 # Include rust compiler for installing rust components
 ENV CARGO_HOME=/build/.cargo
