@@ -63,7 +63,7 @@ RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-ku
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="lsb-release git binutils patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev"
+ENV BUILD_PACKAGES="lsb-release git binutils patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev rdfind"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
@@ -250,6 +250,7 @@ RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
         done; \
     fi
 
+<<<<<<< HEAD
 ## Cleanup
 USER root
 
@@ -264,6 +265,9 @@ RUN if [ "${ALLOW_ADDING_EXTENSIONS}" != "true" ]; then \
             done ; \
         done ; \
     fi
+
+## Symlink identical files to reduce the Docker Image size
+RUN rdfind -minsize 1 -makesymlinks true $(find / -mindepth 1 -maxdepth 1 -type d ! -name 'sys' ! -name 'proc' ! -name  'build')
 
 RUN apt-get remove -y ${BUILD_PACKAGES}
 RUN apt-get autoremove -y \
@@ -334,3 +338,4 @@ RUN chown postgres:postgres /var/log/pgbackrest/ /var/lib/pgbackrest /var/spool/
 WORKDIR /home/postgres
 EXPOSE 5432 8008 8081
 USER postgres
+
