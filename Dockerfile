@@ -267,7 +267,7 @@ RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
                 && cd /build/timescale-analytics && git reset HEAD --hard && git checkout ${TIMESCALE_ANALYTICS_EXTENSION} \
                 && git clean -f -x \
                 && cd extension && cargo pgx install --release \
-                && cd .. && ./tools/make-upgrade-script.sh /usr/lib/postgresql/${pg}/bin/pg_config 0.1 0.2; \
+                && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
             fi; \
         done; \
     fi
