@@ -208,6 +208,7 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_T
             && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
         done; \
     fi
+
 # pg_auth_mon is an extension to monitor authentication attempts
 # It is also useful to determine whether the DB is actively used
 # https://github.com/RafiaSabih/pg_auth_mon
@@ -220,6 +221,7 @@ RUN if [ ! -z "${PG_AUTH_MON}" ]; then \
             && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
         done; \
     fi
+
 # logerrors is an extension to count the number of errors logged by postgrs, grouped by the error codes
 # https://github.com/munakoiso/logerrors
 ARG PG_LOGERRORS=
@@ -250,8 +252,21 @@ RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
         done; \
     fi
 
-## Cleanup
 USER root
+# hot-forge is a project that allows hot-patching of postgres containers
+# It is currently a private timescale project and is therefore not included/built by default,
+# and never included in the OSS image.
+ARG TIMESCALE_HOT_FORGE=
+RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_HOT_FORGE}" ]; then \
+        cd /build \
+        && git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/hot-forge /build/hot-forge \
+        && cd /build/hot-forge \
+        && git checkout ${TIMESCALE_HOT_FORGE} \
+        && cargo build --release \
+        && install --owner=root --group=root --mode=0755 target/release/hot-forge /usr/local/bin/hot-forge || exit 1; \
+    fi
+
+## Cleanup
 
 # All the tools that were built in the previous steps have their ownership set to postgres
 # to allow mutability. To allow one to build this image with the default privileges (owned by root)
