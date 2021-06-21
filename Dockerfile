@@ -108,12 +108,52 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
         && echo "listen_addresses = '*'" >> $file; \
     done
 
+# timescaledb-tune, as well as timescaledb-parallel-copy
+RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -s -c) main" > /etc/apt/sources.list.d/timescaledb.list
+RUN curl -L -s -o - https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add -
+RUN apt-get update && apt-get install -y timescaledb-tools
+
+## Entrypoints as they are from the Timescale image and its default alpine upstream repositories.
+## This ensures the default interface (entrypoint) equals the one of the github.com/timescale/timescaledb-docker one,
+## which allows this Docker Image to be a drop-in replacement for those Docker Images.
+ARG GITHUB_TIMESCALEDB_DOCKER_REF=master
+ARG GITHUB_DOCKERLIB_POSTGRES_REF=master
+RUN cd /build && git clone https://github.com/timescale/timescaledb-docker && cd /build/timescaledb-docker && git checkout ${GITHUB_TIMESCALEDB_DOCKER_REF}
+RUN cp -a /build/timescaledb-docker/docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/
+RUN curl -s -o /usr/local/bin/docker-entrypoint.sh https://raw.githubusercontent.com/docker-library/postgres/${GITHUB_DOCKERLIB_POSTGRES_REF}/13/alpine/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Satisfy assumptions of the entrypoint scripts
+RUN ln -s /usr/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
+RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
+
+# The following allows *new* files to be created, so that extensions can be added to a running container.
+# Existing files are still owned by root and have their sticky bit (the 1 in the 1775 permission mode) set,
+# and therefore cannot be overwritten or removed by the unprivileged (postgres) user.
+# This ensures the following:
+# - libraries and supporting files that have been installed *before this step* are immutable
+# - libraries and supporting files that have been installed *after this step* are mutable
+# - files owned by postgres can be overwritten in a running container
+# - new files can be added to the directories mentioned here
+RUN for pg in ${PG_VERSIONS}; do \
+        for dir in "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
+            install --directory "${dir}" --group postgres --mode 1775 \
+            && find "${dir}" -type d -exec install --directory {} --group postgres --mode 1775 \; || exit 1 ; \
+        done; \
+    done
+
+USER postgres
+
+# Include rust compiler for installing rust components
+ENV CARGO_HOME=/build/.cargo
+ENV RUSTUP_HOME=/build/.rustup
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y --profile=minimal
+ENV PATH="/build/.cargo/bin:${PATH}"
+
 ARG OSS_ONLY
 ARG GITHUB_USER
 ARG GITHUB_TOKEN
 ARG GITHUB_REPO=timescale/timescaledb
 ARG GITHUB_TAG
-
 RUN if [ "${GITHUB_TOKEN}" != "" ]; then \
         git clone "https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}" /build/timescaledb; \
     else \
@@ -141,17 +181,6 @@ RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 1.7.4 1.7.5 2.0.0-rc3 2.0.0
             && cd build && make -j 6 install || exit 1; \
         done; \
     done
-
-# timescaledb-tune, as well as timescaledb-parallel-copy
-RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -s -c) main" > /etc/apt/sources.list.d/timescaledb.list
-RUN curl -L -s -o - https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add -
-RUN apt-get update && apt-get install -y timescaledb-tools
-
-# Include rust compiler for installing rust components
-ENV CARGO_HOME=/build/.cargo
-ENV RUSTUP_HOME=/build/.rustup
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y --profile=minimal
-ENV PATH="/build/.cargo/bin:${PATH}"
 
 ARG TIMESCALE_PROMSCALE_EXTENSION=
 # build and install the promscale_extension extension
@@ -203,44 +232,6 @@ RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
         done; \
     fi
 
-## Entrypoints as they are from the Timescale image and its default alpine upstream repositories.
-## This ensures the default interface (entrypoint) equals the one of the github.com/timescale/timescaledb-docker one,
-## which allows this Docker Image to be a drop-in replacement for those Docker Images.
-ARG GITHUB_TIMESCALEDB_DOCKER_REF=master
-ARG GITHUB_DOCKERLIB_POSTGRES_REF=master
-RUN cd /build && git clone https://github.com/timescale/timescaledb-docker && cd /build/timescaledb-docker && git checkout ${GITHUB_TIMESCALEDB_DOCKER_REF}
-RUN cp -a /build/timescaledb-docker/docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/
-RUN curl -s -o /usr/local/bin/docker-entrypoint.sh https://raw.githubusercontent.com/docker-library/postgres/${GITHUB_DOCKERLIB_POSTGRES_REF}/13/alpine/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-# Satisfy assumptions of the entrypoint scripts
-RUN ln -s /usr/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
-RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
-
-# Allow Adding Extensions allows *new* files to be created, so that extensions can be added to a running container.
-# Existing files are still owned by root and have their sticky bit (the 1 in the 1775 permission mode) set,
-# and therefore cannot be overwritten or removed by the unprivileged (postgres) user.
-# This ensures the following:
-# - libraries and supporting files for extensions that are part of this Docker Image are immutable
-# - new libraries/files can be added to the container and updated by the postgres user
-ARG ALLOW_ADDING_EXTENSIONS=true
-RUN if [ "${ALLOW_ADDING_EXTENSIONS}" = "true" ]; then \
-        for pg in ${PG_VERSIONS}; do \
-            for dir in "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
-                install --directory "${dir}" --group postgres --mode 1775 ; \
-            done; \
-        done ; \
-    fi
-
-### Cargo tries to reuse many already downloaded libraries and crates registries
-### This does not work well if other users need to use cargo.
-### Therefore we cleanup the cargo directory without totally reinstalling cargo using rustup.
-RUN rm -rf "${CARGO_HOME}/registry" "${CARGO_HOME}/git"
-RUN chown postgres:postgres -R "${CARGO_HOME}"
-
-### The following tools will be installed with their files owned by postgres.
-### This allows the possibility of these files to be overwritten in a running container,
-### Therefore, anything that is installed as a user postgres must be regarded as highly experimental
-USER postgres
 ARG TIMESCALE_ANALYTICS_EXTENSION=
 # build and install the timescale-analytics extension
 RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
@@ -258,9 +249,22 @@ RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
             fi; \
         done; \
     fi
-USER root
 
 ## Cleanup
+USER root
+
+# All the tools that were built in the previous steps have their ownership set to postgres
+# to allow mutability. To allow one to build this image with the default privileges (owned by root)
+# one can set the ALLOW_ADDING_EXTENSIONS argument to anything but "true".
+ARG ALLOW_ADDING_EXTENSIONS=true
+RUN if [ "${ALLOW_ADDING_EXTENSIONS}" != "true" ]; then \
+        for pg in ${PG_VERSIONS}; do \
+            for dir in "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
+                chown root:root "{dir}" -R ; \
+            done ; \
+        done ; \
+    fi
+
 RUN apt-get remove -y ${BUILD_PACKAGES}
 RUN apt-get autoremove -y \
     && apt-get clean \
