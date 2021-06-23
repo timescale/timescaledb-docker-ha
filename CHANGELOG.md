@@ -9,6 +9,15 @@ These are changes that will probably be included in the next release.
 ### Changed
 ### Removed
 ### Fixed
+ 
+## [v0.4.7] - 2021-06-23
+### Added
+ * `hot_forge`: A private Timescale Project allowing hot patching of containers
+### Changed
+ * Bump `timescale_analytics` to 0.3.0
+ * Make all compiled extensions owned by `postgres`: Allows hot-patching
+### Removed
+ * `sqlite_fdw`: The potential use case switched to using `file_fdw`
 
 ## [v0.4.6] - 2021-05-25
 ### Changed
