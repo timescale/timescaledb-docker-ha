@@ -10,7 +10,7 @@ env:
   DOCKER_HUB_URL: docker.io/timescale/timescaledb-ha
   INSTALL_METHOD: docker-ha
   TIMESCALE_TSDB_ADMIN: "0.1.1"
-  TIMESCALE_HOT_FORGE: "v0.1.8"
+  TIMESCALE_HOT_FORGE: "v0.1.13"
 jobs:
   publish-image:
     name: Publish the Docker Images
