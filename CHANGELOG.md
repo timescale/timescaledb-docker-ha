@@ -9,7 +9,11 @@ These are changes that will probably be included in the next release.
 ### Changed
 ### Removed
 ### Fixed
- 
+
+## [v0.4.8] - 2021-06-28
+### Changed
+ * Bump `hot_forge` to 0.1.13
+
 ## [v0.4.7] - 2021-06-23
 ### Added
  * `hot_forge`: A private Timescale Project allowing hot patching of containers
