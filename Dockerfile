@@ -239,12 +239,12 @@ ARG TIMESCALEDB_TOOLKIT_EXTENSION=
 RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
         set -e \
         && cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx \
-        && git clone https://github.com/timescale/timescale-analytics /build/timescale-analytics \
+        && git clone https://github.com/timescale/timescaledb-toolkit /build/timescaledb-toolkit \
         && for pg in ${PG_VERSIONS}; do \
             if [ ${pg} -ge "12" ]; then \
             export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
                 cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
-                && cd /build/timescale-analytics && git reset HEAD --hard && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION} \
+                && cd /build/timescaledb-toolkit && git reset HEAD --hard && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION} \
                 && git clean -f -x \
                 && cd extension && cargo pgx install --release \
                 && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
