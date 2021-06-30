@@ -9,7 +9,7 @@ WITH versions(name, version) AS (
     FROM
         pg_available_extensions
     WHERE
-        name IN ('timescaledb', 'postgis', 'pg_prometheus', 'timescale_prometheus_extra', 'promscale', 'timescale_analytics')
+        name IN ('timescaledb', 'postgis', 'pg_prometheus', 'timescale_prometheus_extra', 'promscale', 'timescaledb_toolkit')
     UNION ALL
     SELECT
         'postgresql.version',
