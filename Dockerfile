@@ -244,16 +244,17 @@ RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
             if [ ${pg} -ge "12" ]; then \
             export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
                 cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
-                && cd /build/timescaledb-toolkit && git reset HEAD --hard && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION} \
-                && git clean -f -x \
-                && cd extension && cargo pgx install --release \
-                && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
-                if [! -z "${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS}" ]; then \
+                # build previous version if one was provided
+                if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS}" ]; then \
                     cd /build/timescaledb-toolkit && git reset HEAD --hard && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS} \
                     && git clean -f -x \
                     && cd extension && cargo pgx install --release \
                     && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
-                fi; \
+                fi \
+                && cd /build/timescaledb-toolkit && git reset HEAD --hard && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION} \
+                && git clean -f -x \
+                && cd extension && cargo pgx install --release \
+                && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
             fi; \
         done; \
     fi
