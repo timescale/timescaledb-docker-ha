@@ -242,10 +242,10 @@ RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
         && git clone https://github.com/timescale/timescaledb-toolkit /build/timescaledb-toolkit \
         && for pg in ${PG_VERSIONS}; do \
             if [ ${pg} -ge "12" ]; then \
-            export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
+                export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
                 cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
                 # build previous version if one was provided
-                if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS}" ]; then \
+                && if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS}" ]; then \
                     cd /build/timescaledb-toolkit && git reset HEAD --hard && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS} \
                     && git clean -f -x \
                     && cd extension && cargo pgx install --release \
