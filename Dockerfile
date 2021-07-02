@@ -32,8 +32,8 @@ RUN for t in deb deb-src; do \
     done
 RUN curl -s -o - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 
-# Some tools that are not strictly required for running PostgreSQL, but have a tiny
-# footprint and can be very valuable when troubleshooting a running container,
+# The following tools are required for some of the processes we (TimescaleDB) regularly
+# run inside the containers that use this Docker Image
 RUN apt-get update && apt-get install -y less jq strace procps
 
 # For debugging it is very useful if the Docker Image contains gdb(server). Even though it is
