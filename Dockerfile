@@ -234,17 +234,31 @@ RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
         done; \
     fi
 
-ARG TIMESCALE_ANALYTICS_EXTENSION=
-# build and install the timescale-analytics extension
-RUN if [ ! -z "${TIMESCALE_ANALYTICS_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
+ARG TIMESCALEDB_TOOLKIT_EXTENSION=
+ARG TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS=
+# build and install the timescaledb-toolkit extension
+RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
         set -e \
         && cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx \
-        && git clone https://github.com/timescale/timescale-analytics /build/timescale-analytics \
+        && git clone https://github.com/timescale/timescaledb-toolkit /build/timescaledb-toolkit \
         && for pg in ${PG_VERSIONS}; do \
             if [ ${pg} -ge "12" ]; then \
-            export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
+                export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
                 cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
-                && cd /build/timescale-analytics && git reset HEAD --hard && git checkout ${TIMESCALE_ANALYTICS_EXTENSION} \
+                # build previous version if one was provided
+                && if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS}" ]; then \
+                    echo "building previous toolkit version ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS} for pg${pg}" \
+                    && cd /build/timescaledb-toolkit \
+                    && git reset HEAD --hard \
+                    && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS} \
+                    && git clean -f -x \
+                    && cd extension && cargo pgx install --release \
+                    && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
+                fi \
+                && echo "building toolkit version ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS} for pg${pg}" \
+                && cd /build/timescaledb-toolkit \
+                && git reset HEAD --hard \
+                && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION} \
                 && git clean -f -x \
                 && cd extension && cargo pgx install --release \
                 && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
