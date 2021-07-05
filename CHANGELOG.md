@@ -10,6 +10,12 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.4.10] - 2021-07-05
+### Changed
+ * Bump `hot_forge` to 0.1.18
+ * Upgrade promscale extension to version 0.2.0
+ * Rename Analytics to Toolkit and up to 1.0.0 (#129)
+
 ## [v0.4.9] - 2021-06-28
 ### Changed
  * Bump `hot_forge` to 0.1.14
