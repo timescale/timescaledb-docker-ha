@@ -184,14 +184,17 @@ RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 1.7.4 1.7.5 2.0.0-rc3 2.0.0
 
 ARG TIMESCALE_PROMSCALE_EXTENSION=
 # build and install the promscale_extension extension
-RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" ]; then \
-        git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
-        && set -e \
+RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
+        set -e \
+        && cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx \
+        && git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
         && for pg in ${PG_VERSIONS}; do \
             if [ ${pg} -ge "12" ]; then \
-                cd /build/promscale_extension && git reset HEAD --hard && git checkout ${TIMESCALE_PROMSCALE_EXTENSION} \
+            export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
+                cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
+                && cd /build/promscale_extension && git reset HEAD --hard && git checkout ${TIMESCALE_PROMSCALE_EXTENSION} \
                 && git clean -f -x \
-                && PATH=/usr/lib/postgresql/${pg}/bin:${PATH} PG_VER=pg${pg} make install || exit 1; \
+                && PG_VER=pg${pg} make install || exit 1; \
             fi; \
         done; \
     fi
