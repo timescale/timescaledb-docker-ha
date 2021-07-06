@@ -10,6 +10,11 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.4.12] - 2021-07-06
+### Changed
+ * Include and default to Timescale 2.3.1
+ * Bump `hot_forge` to 0.1.20
+
 ## [v0.4.10] - 2021-07-05
 ### Changed
  * Bump `hot_forge` to 0.1.18
