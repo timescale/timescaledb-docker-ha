@@ -309,6 +309,11 @@ RUN apt-get autoremove -y \
             /build/ \
     && find /var/log -type f -exec truncate --size 0 {} \;
 
+## rustup inserts a source into .profile, which throws an error
+## when execing into the container afterwards,
+## as we removed all rust tools just before
+RUN sed -i '/.cargo/d' /home/postgres/.profile
+
 ## Create a smaller Docker image from the builder image
 FROM scratch
 COPY --from=builder / /
