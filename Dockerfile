@@ -221,7 +221,7 @@ RUN if [ ! -z "${PG_AUTH_MON}" ]; then \
         && git clone https://github.com/RafiaSabih/pg_auth_mon \
         && for pg in ${PG_VERSIONS}; do \
             cd /build/pg_auth_mon && git reset HEAD --hard && git checkout "${PG_AUTH_MON}" \
-            && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
+            && make clean && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install || exit 1 ; \
         done; \
     fi
 
@@ -233,7 +233,7 @@ RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
         && git clone https://github.com/munakoiso/logerrors \
         && for pg in ${PG_VERSIONS}; do \
             cd /build/logerrors && git reset HEAD --hard && git checkout "${PG_LOGERRORS}" \
-            && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
+            && make clean && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install || exit 1 ; \
         done; \
     fi
 
