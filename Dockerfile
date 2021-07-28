@@ -10,7 +10,7 @@
 ## in relation to the total image size.
 ## By choosing a very basic base image, we do keep full control over every part
 ## of the build steps. This Dockerfile contains every piece of magic we want.
-FROM debian:buster-slim AS builder
+FROM ubuntu:21.10 as builder
 
 # We need full control over the running user, including the UID, therefore we
 # create the postgres user as the first thing on our list
