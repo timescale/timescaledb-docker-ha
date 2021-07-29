@@ -74,7 +74,7 @@ WORKDIR /build/
 # By including multiple versions of PostgreSQL we can use the same Docker image,
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
 # pg_upgrade from 12 to 13, so we need all the postgres & timescale libraries for all versions
-ARG PG_VERSIONS="13 12"
+ARG PG_VERSIONS="12"
 
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
 RUN for pg in ${PG_VERSIONS}; do \
@@ -109,7 +109,7 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
     done
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
-RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -s -c) main" > /etc/apt/sources.list.d/timescaledb.list
+RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ buster main" > /etc/apt/sources.list.d/timescaledb.list
 RUN curl -L -s -o - https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add -
 RUN apt-get update && apt-get install -y timescaledb-tools
 
@@ -120,7 +120,7 @@ ARG GITHUB_TIMESCALEDB_DOCKER_REF=master
 ARG GITHUB_DOCKERLIB_POSTGRES_REF=master
 RUN cd /build && git clone https://github.com/timescale/timescaledb-docker && cd /build/timescaledb-docker && git checkout ${GITHUB_TIMESCALEDB_DOCKER_REF}
 RUN cp -a /build/timescaledb-docker/docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/
-RUN curl -s -o /usr/local/bin/docker-entrypoint.sh https://raw.githubusercontent.com/docker-library/postgres/${GITHUB_DOCKERLIB_POSTGRES_REF}/13/alpine/docker-entrypoint.sh
+RUN curl -s -o /usr/local/bin/docker-entrypoint.sh https://raw.githubusercontent.com/docker-library/postgres/${GITHUB_DOCKERLIB_POSTGRES_REF}/12/alpine/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # Satisfy assumptions of the entrypoint scripts
 RUN ln -s /usr/bin/timescaledb-tune /usr/local/bin/timescaledb-tune

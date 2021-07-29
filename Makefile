@@ -1,7 +1,7 @@
-PG_MAJOR?=13
+PG_MAJOR?=12
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
-PG_VERSIONS?=13 12
+PG_VERSIONS?=12
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 POSTGIS_VERSIONS?="2.5 3"
@@ -86,7 +86,7 @@ DOCKER_EXEC_COMMAND=docker exec -i $(DOCKER_TAG_PREPARE) timeout 60
 fast: DOCKER_EXTRA_BUILDARGS= --build-arg GITHUB_TAG=master
 fast: PG_AUTH_MON=
 fast: PG_LOGERRORS=
-fast: PG_VERSIONS=13
+fast: PG_VERSIONS=12
 fast: POSTGIS_VERSIONS=
 fast: TIMESCALEDB_TOOLKIT_EXTENSION=
 fast: TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS=
@@ -118,9 +118,6 @@ build: $(VAR_VERSION_INFO)
 	echo "FROM $(DOCKER_TAG_PREPARE)" | docker build --tag "$(DOCKER_TAG_LABELED)" - \
 	  $$(awk -F '=' '{printf "--label com.timescaledb.image."$$1"="$$2" "}' $(VAR_VERSION_INFO))
 
-build-oss: DOCKER_EXTRA_BUILDARGS= --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"
-build-oss: DOCKER_TAG_POSTFIX=-oss
-build-oss: build
 
 # The purpose of publishing the images under many tags, is to provide
 # some choice to the user as to their appetite for volatility.
@@ -186,4 +183,4 @@ endif
 		&& docker push $${FULL_TAG} || exit 1 ; \
 	done
 
-.PHONY: fast prepare build-oss release build publish test tag build-tag publish-next-patch-version publish-mutable publish-immutable is_ci list-images
+.PHONY: fast prepare release build publish test tag build-tag publish-next-patch-version publish-mutable publish-immutable is_ci list-images
