@@ -88,13 +88,13 @@ RUN for pg in ${PG_VERSIONS}; do \
             postgresql-${pg}-pg-stat-kcache || exit 1; \
     done
 
-# We put Postgis in first, so these layers can be reused
-ARG POSTGIS_VERSIONS="2.5 3"
-RUN for postgisv in ${POSTGIS_VERSIONS}; do \
-        for pg in ${PG_VERSIONS}; do \
-            apt-get install -y postgresql-${pg}-postgis-${postgisv} || exit 1; \
-        done; \
-    done
+## We put Postgis in first, so these layers can be reused
+#ARG POSTGIS_VERSIONS="2.5 3"
+#RUN for postgisv in ${POSTGIS_VERSIONS}; do \
+#        for pg in ${PG_VERSIONS}; do \
+#            apt-get install -y postgresql-${pg}-postgis-${postgisv} || exit 1; \
+#        done; \
+#    done
 
 # Patroni and Spilo Dependencies
 # This need to be done after the PostgreSQL packages have been installed,
