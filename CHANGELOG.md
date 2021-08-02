@@ -10,6 +10,17 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.4.15] - 2021-08-02
+### Changed
+ * Include and default to Timescale 2.4.0
+### Fixed
+ * Silence warnings about missing Cargo files
+ * Build process
+
+## [v0.4.14] - 2021-07-29
+### Fixed
+ * Fix building some extensions for non-default Postgres version
+
 ## [v0.4.13] - 2021-07-06
 ### Changed
  * Include downgrade scripts if available
