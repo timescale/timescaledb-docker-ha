@@ -11,7 +11,7 @@ These are changes that will probably be included in the next release.
 ### Fixed
 
 
-## [v0.4.16] - 2021-08-02
+## [v0.4.17] - 2021-08-02
 ### Fixed
  * Skip building timescaledb 2.4+ for PostgreSQL 11
 
