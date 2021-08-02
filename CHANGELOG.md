@@ -10,6 +10,11 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+
+## [v0.4.16] - 2021-08-02
+### Fixed
+ * Skip building timescaledb 2.4+ for PostgreSQL 11
+
 ## [v0.4.15] - 2021-08-02
 ### Changed
  * Include and default to Timescale 2.4.0
