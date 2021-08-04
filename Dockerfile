@@ -259,7 +259,7 @@ RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
                     && cd extension && cargo pgx install --release \
                     && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
                 fi \
-                && echo "building toolkit version ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS} for pg${pg}" \
+                && echo "building toolkit version ${TIMESCALEDB_TOOLKIT_EXTENSION} for pg${pg}" \
                 && cd /build/timescaledb-toolkit \
                 && git reset HEAD --hard \
                 && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION} \
