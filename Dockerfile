@@ -250,15 +250,15 @@ RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
                 export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
                 cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
                 # build previous version if one was provided
-                && if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS}" ]; then \
-                    echo "building previous toolkit version ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS} for pg${pg}" \
+                && for tookit in ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS}; do \
+                    echo "building previous toolkit version ${tookit} for pg${pg}" \
                     && cd /build/timescaledb-toolkit \
                     && git reset HEAD --hard \
-                    && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS} \
+                    && git checkout ${tookit} \
                     && git clean -f -x \
                     && cd extension && cargo pgx install --release \
                     && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
-                fi \
+                done \
                 && echo "building toolkit version ${TIMESCALEDB_TOOLKIT_EXTENSION} for pg${pg}" \
                 && cd /build/timescaledb-toolkit \
                 && git reset HEAD --hard \
