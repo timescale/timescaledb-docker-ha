@@ -63,13 +63,23 @@ RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-ku
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="lsb-release git binutils libperl-dev libc6-dev patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev"
+
+ENV BUILD_PACKAGES="lsb-release libperl-dev gawk bison git binutils patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev"
+
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
 RUN mkdir -p /build
 RUN chmod 777 /build
 WORKDIR /build/
+
+RUN ldd --version
+RUN mkdir -p /build/glibc/build
+WORKDIR /build/glibc
+RUN curl -s -o glibc.tar.gz http://mirror.koddos.net/gnu/libc/glibc-2.34.tar.gz
+RUN tar xzfp glibc.tar.gz
+RUN cd glibc-2* && mkdir build && cd build && ../configure --disable-sanity-checks && make && make install
+RUN ldd --version
 
 # By including multiple versions of PostgreSQL we can use the same Docker image,
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
