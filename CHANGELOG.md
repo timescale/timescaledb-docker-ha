@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 These are changes that will probably be included in the next release.
 ### Added
 ### Changed
+ * Use [Debian Bullseye](https://wiki.debian.org/DebianBullseye) as the foundation of our Docker Image
 ### Removed
+ * Support for PostGIS 2.5
 ### Fixed
 
 ## [v0.4.24] - 2021-08-24

@@ -10,7 +10,7 @@
 ## in relation to the total image size.
 ## By choosing a very basic base image, we do keep full control over every part
 ## of the build steps. This Dockerfile contains every piece of magic we want.
-FROM rust:1.54-slim-buster AS builder
+FROM rust:1.54-slim-bullseye AS builder
 
 # We need full control over the running user, including the UID, therefore we
 # create the postgres user as the first thing on our list
@@ -89,7 +89,8 @@ RUN for pg in ${PG_VERSIONS}; do \
     done
 
 # We put Postgis in first, so these layers can be reused
-ARG POSTGIS_VERSIONS="2.5 3"
+RUN apt-cache search postgis | grep postgresql
+ARG POSTGIS_VERSIONS="3"
 RUN for postgisv in ${POSTGIS_VERSIONS}; do \
         for pg in ${PG_VERSIONS}; do \
             apt-get install -y postgresql-${pg}-postgis-${postgisv} || exit 1; \
@@ -109,7 +110,7 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
     done
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
-RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -s -c) main" > /etc/apt/sources.list.d/timescaledb.list
+RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ buster main" > /etc/apt/sources.list.d/timescaledb.list
 RUN curl -L -s -o - https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add -
 RUN apt-get update && apt-get install -y timescaledb-tools
 
@@ -187,7 +188,7 @@ RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 1.7.4 1.7.5 2.0.0-rc3 2.0.0
             && cd /build/timescaledb && git reset HEAD --hard && git clean -f -d -x && git checkout ${ts} \
             && rm -rf build \
             && if [ "${ts}" = "2.2.0" ]; then sed -i 's/RelWithDebugInfo/RelWithDebInfo/g' CMakeLists.txt; fi \
-            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DTAP_CHECKS=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREGRESS_CHECKS=OFF -DGENERATE_DOWNGRADE_SCRIPT=ON -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
+            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DTAP_CHECKS=OFF -DWARNINGS_AS_ERRORS=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREGRESS_CHECKS=OFF -DGENERATE_DOWNGRADE_SCRIPT=ON -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
             && cd build && make -j 6 install || exit 1; \
         done; \
     done
@@ -312,7 +313,7 @@ RUN apt-get autoremove -y \
 FROM scratch
 COPY --from=builder / /
 
-ARG PG_MAJOR=11
+ARG PG_MAJOR=13
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["postgres"]
 
