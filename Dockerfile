@@ -63,7 +63,7 @@ RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-ku
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="lsb-release git binutils patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev"
+ENV BUILD_PACKAGES="lsb-release git binutils libperl-dev libc6-dev patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
@@ -298,7 +298,7 @@ RUN if [ "${ALLOW_ADDING_EXTENSIONS}" != "true" ]; then \
         done ; \
     fi
 
-RUN apt-get remove -y ${BUILD_PACKAGES}
+RUN apt-get purge -y ${BUILD_PACKAGES}
 RUN apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
