@@ -64,6 +64,10 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
       - name: Publish PostgreSQL Docker Images to their registries
         env:
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
