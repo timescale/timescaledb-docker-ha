@@ -9,7 +9,7 @@ env:
   DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
   INSTALL_METHOD: docker-ha
   TIMESCALE_TSDB_ADMIN: "0.1.1"
-  TIMESCALE_HOT_FORGE: "v0.1.25"
+  TIMESCALE_HOT_FORGE: ""
 jobs:
   build-image:
     name: Build the default Docker Image
