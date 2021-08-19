@@ -10,7 +10,7 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
-## [v0.4.20] - 2021-08-19
+## [v0.4.22] - 2021-08-19
 ### Changed
  * Include and default to Timescale 2.4.1
 
