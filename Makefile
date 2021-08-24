@@ -53,7 +53,7 @@ VAR_VERSION_INFO=version_info-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX).log
 # We label all the Docker Images with the versions of PostgreSQL, TimescaleDB and some other extensions
 # afterwards, by using introspection, as minor versions may differ even when using the same
 # Dockerfile
-DOCKER_BUILD_COMMAND=docker build  \
+DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg ALLOW_ADDING_EXTENSIONS="$(ALLOW_ADDING_EXTENSIONS)" \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) \
 					 --build-arg GITHUB_DOCKERLIB_POSTGRES_REF="$(GITHUB_DOCKERLIB_POSTGRES_REF)" \
