@@ -10,6 +10,11 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.4.24] - 2021-08-24
+### Changed
+ * Download precompiled hot-forge instead of building from source
+ * Switch to rust Docker Image base (which is based on Debian itself)
+
 ## [v0.4.22] - 2021-08-19
 ### Changed
  * Include and default to Timescale 2.4.1
