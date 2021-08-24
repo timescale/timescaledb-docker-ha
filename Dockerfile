@@ -126,6 +126,19 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 RUN ln -s /usr/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
 RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 
+# hot-forge is a project that allows hot-patching of postgres containers
+# It is currently a private timescale project and is therefore not included/built by default,
+# and never included in the OSS image.
+ARG TIMESCALE_HOT_FORGE=
+RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_HOT_FORGE}" ]; then \
+        GH_REPO="https://api.github.com/repos/timescale/hot-forge/"; \
+        ASSET_ID="$(curl -sL --header "Authorization: token ${PRIVATE_REPO_TOKEN}" "${GH_REPO}/releases/tags/${TIMESCALE_HOT_FORGE}" | jq '.assets[0].id')"; \
+        curl -sL --header "Authorization: token ${PRIVATE_REPO_TOKEN}" \
+                 --header 'Accept: application/octet-stream' \
+                 "${GH_REPO}/releases/assets/40428091" > /usr/local/bin/hot-forge || exit 1; \
+        chmod 0755 /usr/local/bin/hot-forge ; \
+    fi
+
 # The following allows *new* files to be created, so that extensions can be added to a running container.
 # Existing files are still owned by root and have their sticky bit (the 1 in the 1775 permission mode) set,
 # and therefore cannot be overwritten or removed by the unprivileged (postgres) user.
@@ -271,18 +284,6 @@ RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
     fi
 
 USER root
-# hot-forge is a project that allows hot-patching of postgres containers
-# It is currently a private timescale project and is therefore not included/built by default,
-# and never included in the OSS image.
-ARG TIMESCALE_HOT_FORGE=
-RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_HOT_FORGE}" ]; then \
-        cd /build \
-        && git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/hot-forge /build/hot-forge \
-        && cd /build/hot-forge \
-        && git checkout ${TIMESCALE_HOT_FORGE} \
-        && cargo build --release \
-        && install --owner=root --group=root --mode=0755 target/release/hot-forge /usr/local/bin/hot-forge || exit 1; \
-    fi
 
 ## Cleanup
 
