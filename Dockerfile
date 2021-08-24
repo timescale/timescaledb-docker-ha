@@ -10,7 +10,7 @@
 ## in relation to the total image size.
 ## By choosing a very basic base image, we do keep full control over every part
 ## of the build steps. This Dockerfile contains every piece of magic we want.
-FROM debian:buster-slim AS builder
+FROM rust:1.54-slim-buster AS builder
 
 # We need full control over the running user, including the UID, therefore we
 # create the postgres user as the first thing on our list
@@ -142,12 +142,6 @@ RUN for pg in ${PG_VERSIONS}; do \
     done
 
 USER postgres
-
-# Include rust compiler for installing rust components
-ENV CARGO_HOME=/build/.cargo
-ENV RUSTUP_HOME=/build/.rustup
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y --profile=minimal
-ENV PATH="/build/.cargo/bin:${PATH}"
 
 ARG OSS_ONLY
 ARG GITHUB_USER
@@ -308,12 +302,9 @@ RUN apt-get autoremove -y \
             /usr/share/locale/?? \
             /usr/share/locale/??_?? \
             /build/ \
+            /usr/local/rustup \
+            /usr/local/cargo \
     && find /var/log -type f -exec truncate --size 0 {} \;
-
-## rustup inserts a source into .profile, which throws an error
-## when execing into the container afterwards,
-## as we removed all rust tools just before
-RUN sed -i '/.cargo/d' /home/postgres/.profile
 
 ## Create a smaller Docker image from the builder image
 FROM scratch
