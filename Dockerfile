@@ -135,7 +135,7 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_H
         ASSET_ID="$(curl -sL --header "Authorization: token ${PRIVATE_REPO_TOKEN}" "${GH_REPO}/releases/tags/${TIMESCALE_HOT_FORGE}" | jq '.assets[0].id')"; \
         curl -sL --header "Authorization: token ${PRIVATE_REPO_TOKEN}" \
                  --header 'Accept: application/octet-stream' \
-                 "${GH_REPO}/releases/assets/40428091" > /usr/local/bin/hot-forge || exit 1; \
+                 "${GH_REPO}/releases/assets/${ASSET_ID}" > /usr/local/bin/hot-forge || exit 1; \
         chmod 0755 /usr/local/bin/hot-forge ; \
     fi
 
