@@ -129,14 +129,16 @@ RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 # hot-forge is a project that allows hot-patching of postgres containers
 # It is currently a private timescale project and is therefore not included/built by default,
 # and never included in the OSS image.
+ARG PRIVATE_REPO_TOKEN=
 ARG TIMESCALE_HOT_FORGE=
 RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_HOT_FORGE}" ]; then \
-        GH_REPO="https://api.github.com/repos/timescale/hot-forge/"; \
+        GH_REPO="https://api.github.com/repos/timescale/hot-forge"; \
         ASSET_ID="$(curl -sL --header "Authorization: token ${PRIVATE_REPO_TOKEN}" "${GH_REPO}/releases/tags/${TIMESCALE_HOT_FORGE}" | jq '.assets[0].id')"; \
         curl -sL --header "Authorization: token ${PRIVATE_REPO_TOKEN}" \
                  --header 'Accept: application/octet-stream' \
                  "${GH_REPO}/releases/assets/${ASSET_ID}" > /usr/local/bin/hot-forge || exit 1; \
         chmod 0755 /usr/local/bin/hot-forge ; \
+        hot-forge -V || exit 1 ; \
     fi
 
 # The following allows *new* files to be created, so that extensions can be added to a running container.
@@ -210,7 +212,6 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
 # Protected Roles is a library that restricts the CREATEROLE/CREATEDB privileges of non-superusers.
 # It is a private timescale project and is therefore not included/built by default
 ARG TIMESCALE_TSDB_ADMIN=
-ARG PRIVATE_REPO_TOKEN=
 RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TSDB_ADMIN}" ]; then \
         cd /build \
         && git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/protected_roles \
