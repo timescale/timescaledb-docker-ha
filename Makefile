@@ -4,7 +4,7 @@ PG_MAJOR?=13
 PG_VERSIONS?=13 12
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
-POSTGIS_VERSIONS?="2.5 3"
+POSTGIS_VERSIONS?=3
 PG_AUTH_MON?=v1.0
 PG_LOGERRORS?=3c55887b
 TIMESCALE_PROMSCALE_EXTENSION?=0.2.0
@@ -12,6 +12,10 @@ TIMESCALEDB_TOOLKIT_EXTENSION?=forge-stable-1.1.0
 TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS?=forge-stable-0.3.0 forge-stable-1.0.0
 TIMESCALE_TSDB_ADMIN?=
 TIMESCALE_HOT_FORGE?=
+
+HOT_FORGE_BUCKET?=
+AWS_ACCESS_KEY_ID?=
+AWS_SECRET_ACCESS_KEY?=
 
 DOCKER_EXTRA_BUILDARGS?=
 DOCKER_REGISTRY?=localhost:5000
@@ -55,26 +59,29 @@ VAR_VERSION_INFO=version_info-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX).log
 # Dockerfile
 DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg ALLOW_ADDING_EXTENSIONS="$(ALLOW_ADDING_EXTENSIONS)" \
+					 --build-arg AWS_ACCESS_KEY_ID="$(AWS_ACCESS_KEY_ID)" \
+					 --build-arg AWS_SECRET_ACCESS_KEY="$(AWS_SECRET_ACCESS_KEY)" \
 					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) \
 					 --build-arg GITHUB_DOCKERLIB_POSTGRES_REF="$(GITHUB_DOCKERLIB_POSTGRES_REF)" \
 					 --build-arg GITHUB_TIMESCALEDB_DOCKER_REF="$(GITHUB_TIMESCALEDB_DOCKER_REF)" \
+					 --build-arg HOT_FORGE_BUCKET="$(HOT_FORGE_BUCKET)" \
 					 --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" \
 					 --build-arg PG_AUTH_MON="$(PG_AUTH_MON)" \
 					 --build-arg PG_LOGERRORS="$(PG_LOGERRORS)" \
 					 --build-arg PG_MAJOR=$(PG_MAJOR) \
 					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
-					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
+					 --build-arg POSTGIS_VERSIONS="$(POSTGIS_VERSIONS)" \
 					 --build-arg PRIVATE_REPO_TOKEN="$(PRIVATE_REPO_TOKEN)" \
-					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSION="$(TIMESCALEDB_TOOLKIT_EXTENSION)" \
-					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS="$(TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS)" \
 					 --build-arg TIMESCALE_HOT_FORGE="$(TIMESCALE_HOT_FORGE)" \
 					 --build-arg TIMESCALE_PROMSCALE_EXTENSION="$(TIMESCALE_PROMSCALE_EXTENSION)" \
 					 --build-arg TIMESCALE_TSDB_ADMIN="$(TIMESCALE_TSDB_ADMIN)" \
+					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS="$(TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS)" \
+					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSION="$(TIMESCALEDB_TOOLKIT_EXTENSION)" \
+					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
 					 --label org.opencontainers.image.source="$(GIT_REMOTE)" \
 					 --label org.opencontainers.image.vendor=Timescale \
-					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
 					 $(DOCKER_EXTRA_BUILDARGS) \
 					 .
 

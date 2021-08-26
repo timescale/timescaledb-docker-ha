@@ -10,7 +10,7 @@
 ## in relation to the total image size.
 ## By choosing a very basic base image, we do keep full control over every part
 ## of the build steps. This Dockerfile contains every piece of magic we want.
-FROM rust:1.54-slim-buster AS builder
+FROM rust:1.54-bullseye AS builder
 
 # We need full control over the running user, including the UID, therefore we
 # create the postgres user as the first thing on our list
@@ -44,10 +44,9 @@ RUN apt-get install -y gdb gdbserver
 # These packages allow for a better integration for some containers, for example
 # daemontools provides envdir, which is very convenient for passing backup
 # environment variables around.
-RUN apt-get update && apt-get install -y dumb-init daemontools
+RUN apt-get install -y dumb-init daemontools
 
-RUN apt-get update \
-    && apt-get install -y postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 \
+RUN apt-get install -y postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 \
     # forbid creation of a main cluster when package is installed
     && sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
 
@@ -63,7 +62,7 @@ RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-ku
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="lsb-release git binutils libperl-dev libc6-dev patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev"
+ENV BUILD_PACKAGES="lsb-release git binutils libperl-dev libc6-dev patchutils gcc libc-dev make cmake libssl-dev python3-dev devscripts equivs libkrb5-dev"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
@@ -75,25 +74,19 @@ WORKDIR /build/
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
 # pg_upgrade from 12 to 13, so we need all the postgres & timescale libraries for all versions
 ARG PG_VERSIONS="13 12"
-
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
 RUN for pg in ${PG_VERSIONS}; do \
         mk-build-deps postgresql-${pg} && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
-    done
-
-
-RUN for pg in ${PG_VERSIONS}; do \
         apt-get install -y postgresql-${pg} postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} \
             postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
             postgresql-${pg}-pg-stat-kcache || exit 1; \
     done
 
-# We put Postgis in first, so these layers can be reused
-ARG POSTGIS_VERSIONS="2.5 3"
-RUN for postgisv in ${POSTGIS_VERSIONS}; do \
-        for pg in ${PG_VERSIONS}; do \
-            apt-get install -y postgresql-${pg}-postgis-${postgisv} || exit 1; \
-        done; \
+ARG POSTGIS_VERSIONS="3"
+RUN for pg in ${PG_VERSIONS}; do \
+        for postgisv in ${POSTGIS_VERSIONS}; do \
+            apt-get install -y postgresql-${pg}-postgis-${postgisv} || exit 1 ; \
+        done ; \
     done
 
 # Patroni and Spilo Dependencies
@@ -109,9 +102,10 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
     done
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
-RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -s -c) main" > /etc/apt/sources.list.d/timescaledb.list
+RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ buster main" > /etc/apt/sources.list.d/timescaledb.list
 RUN curl -L -s -o - https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add -
-RUN apt-get update && apt-get install -y timescaledb-tools
+RUN apt-get update
+RUN apt-get install -y timescaledb-tools
 
 ## Entrypoints as they are from the Timescale image and its default alpine upstream repositories.
 ## This ensures the default interface (entrypoint) equals the one of the github.com/timescale/timescaledb-docker one,
@@ -163,60 +157,43 @@ ARG GITHUB_USER
 ARG GITHUB_TOKEN
 ARG GITHUB_REPO=timescale/timescaledb
 ARG GITHUB_TAG
-RUN if [ "${GITHUB_TOKEN}" != "" ]; then \
-        git clone "https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}" /build/timescaledb; \
-    else \
-        git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
-    fi
+ENV HOT_FORGE_ROOT=/build/hot-forge
+ARG HOT_FORGE_BUCKET
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
+
+RUN mkdir -p /build/scripts
+COPY buildscripts /build/scripts
 
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
 ARG INSTALL_METHOD=docker-ha
 
+ENV BUILDDIR=/build/timescaledb
 # If a specific GITHUB_TAG is provided, we will build that tag only. Otherwise
 # we build all the public (recent) releases
 RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 1.7.4 1.7.5 2.0.0-rc3 2.0.0-rc4 2.0.0 2.0.1 2.0.2 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1" \
     && if [ "${GITHUB_TAG}" != "" ]; then TS_VERSIONS="${GITHUB_TAG}"; fi \
-    && cd /build/timescaledb && git pull \
-    && set -e \
-    && for pg in ${PG_VERSIONS}; do \
-        for ts in ${TS_VERSIONS}; do \
-            if [ ${pg} -ge 13 ] && [ "$(expr substr ${ts} 1 1)" = "1" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && if [ ${pg} -ge 13 ] && [ "$(expr substr ${ts} 1 3)" = "2.0" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && if [ ${pg} -ge 12 ] && [ "$(expr substr ${ts} 1 3)" = "1.6" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && if [ ${pg} -lt 12 ] && [ "$(expr substr ${ts} 1 3)" = "2.4" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && cd /build/timescaledb && git reset HEAD --hard && git clean -f -d -x && git checkout ${ts} \
-            && rm -rf build \
-            && if [ "${ts}" = "2.2.0" ]; then sed -i 's/RelWithDebugInfo/RelWithDebInfo/g' CMakeLists.txt; fi \
-            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DTAP_CHECKS=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREGRESS_CHECKS=OFF -DGENERATE_DOWNGRADE_SCRIPT=ON -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
-            && cd build && make -j 6 install || exit 1; \
-        done; \
-    done
+    && mkdir -p "${BUILDDIR}" && cd "${BUILDDIR}" \
+    && export TS_VERSIONS \
+    && /build/scripts/build_all_timescaledb.sh
 
+ENV BUILDDIR=/build/promscale_extension
 ARG TIMESCALE_PROMSCALE_EXTENSION=
 # build and install the promscale_extension extension
 RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
-        set -e \
-        && cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx \
-        && git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
-        && for pg in ${PG_VERSIONS}; do \
-            if [ ${pg} -ge "12" ]; then \
-            export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
-                cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
-                && cd /build/promscale_extension && git reset HEAD --hard && git checkout ${TIMESCALE_PROMSCALE_EXTENSION} \
-                && git clean -f -x \
-                && PG_VER=pg${pg} make install || exit 1; \
-            fi; \
-        done; \
+        mkdir -p "${BUILDDIR}" && cd "${BUILDDIR}" \
+        && /build/scripts/build_promscale.sh || exit 1; \
     fi
 
 # Protected Roles is a library that restricts the CREATEROLE/CREATEDB privileges of non-superusers.
 # It is a private timescale project and is therefore not included/built by default
+ENV BUILDDIR=/build/protected_roles
 ARG TIMESCALE_TSDB_ADMIN=
 RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TSDB_ADMIN}" ]; then \
-        cd /build \
-        && git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/protected_roles \
+        mkdir -p "${BUILDDIR}" && cd "${BUILDDIR}" \
         && for pg in ${PG_VERSIONS}; do \
-            cd /build/protected_roles && git reset HEAD --hard && git checkout ${TIMESCALE_TSDB_ADMIN} \
+            [ -d "${BUILDDIR}/.git" ] || git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/protected_roles "${BUILDDIR}" \
+            && cd "${BUILDDIR}" && git reset HEAD --hard && git checkout ${TIMESCALE_TSDB_ADMIN} \
             && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
         done; \
     fi
@@ -224,58 +201,39 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_T
 # pg_auth_mon is an extension to monitor authentication attempts
 # It is also useful to determine whether the DB is actively used
 # https://github.com/RafiaSabih/pg_auth_mon
+ENV BUILDDIR=/build/pg_auth_mon
 ARG PG_AUTH_MON=
 RUN if [ ! -z "${PG_AUTH_MON}" ]; then \
-        cd /build \
-        && git clone https://github.com/RafiaSabih/pg_auth_mon \
+        mkdir -p "${BUILDDIR}" && cd "${BUILDDIR}" \
         && for pg in ${PG_VERSIONS}; do \
-            cd /build/pg_auth_mon && git reset HEAD --hard && git checkout "${PG_AUTH_MON}" \
+            if /build/scripts/try_hot_forge.sh "${pg}" pg_auth_mon "${PG_AUTH_MON}"; then continue; fi; \
+            [ -d "${BUILDDIR}/.git" ] || git clone https://github.com/RafiaSabih/pg_auth_mon "${BUILDDIR}" \
+            && cd /build/pg_auth_mon && git reset HEAD --hard && git checkout "${PG_AUTH_MON}" \
             && make clean && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install || exit 1 ; \
         done; \
     fi
 
 # logerrors is an extension to count the number of errors logged by postgrs, grouped by the error codes
 # https://github.com/munakoiso/logerrors
+ENV BUILDDIR=/build/logerrors
 ARG PG_LOGERRORS=
 RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
-        cd /build \
-        && git clone https://github.com/munakoiso/logerrors \
+        mkdir -p "${BUILDDIR}" && cd "${BUILDDIR}" \
         && for pg in ${PG_VERSIONS}; do \
-            cd /build/logerrors && git reset HEAD --hard && git checkout "${PG_LOGERRORS}" \
+            if /build/scripts/try_hot_forge.sh "${pg}" logerrors "${PG_LOGERRORS}"; then continue; fi ; \
+            [ -d "${BUILDDIR}/.git" ] || git clone https://github.com/munakoiso/logerrors "${BUILDDIR}" \
+            && cd "${BUILDDIR}" && git reset HEAD --hard && git checkout "${PG_LOGERRORS}" \
             && make clean && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install || exit 1 ; \
         done; \
     fi
 
+ENV BUILDDIR=/build/timescaledb-toolkit
 ARG TIMESCALEDB_TOOLKIT_EXTENSION=
 ARG TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS=
 # build and install the timescaledb-toolkit extension
 RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
-        set -e \
-        && cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx \
-        && git clone https://github.com/timescale/timescaledb-toolkit /build/timescaledb-toolkit \
-        && for pg in ${PG_VERSIONS}; do \
-            if [ ${pg} -ge "12" ]; then \
-                export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
-                cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
-                # build previous version if one was provided
-                && for tookit in ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS}; do \
-                    echo "building previous toolkit version ${tookit} for pg${pg}" \
-                    && cd /build/timescaledb-toolkit \
-                    && git reset HEAD --hard \
-                    && git checkout ${tookit} \
-                    && git clean -f -x \
-                    && cd extension && cargo pgx install --release \
-                    && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
-                done \
-                && echo "building toolkit version ${TIMESCALEDB_TOOLKIT_EXTENSION} for pg${pg}" \
-                && cd /build/timescaledb-toolkit \
-                && git reset HEAD --hard \
-                && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION} \
-                && git clean -f -x \
-                && cd extension && cargo pgx install --release \
-                && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
-            fi; \
-        done; \
+        mkdir -p "${BUILDDIR}" && cd "${BUILDDIR}" \
+        && /build/scripts/build_timescaledb-toolkit.sh || exit 1 ; \
     fi
 
 USER root
@@ -312,7 +270,7 @@ RUN apt-get autoremove -y \
 FROM scratch
 COPY --from=builder / /
 
-ARG PG_MAJOR=11
+ARG PG_MAJOR=13
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["postgres"]
 

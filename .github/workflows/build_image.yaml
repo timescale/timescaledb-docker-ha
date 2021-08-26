@@ -9,7 +9,7 @@ env:
   DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
   INSTALL_METHOD: docker-ha
   TIMESCALE_TSDB_ADMIN: "0.1.1"
-  TIMESCALE_HOT_FORGE: "v0.1.25"
+  TIMESCALE_HOT_FORGE: "v0.1.30"
 jobs:
   build-image:
     name: Build the default Docker Image
@@ -28,8 +28,11 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       - name: Build and push to Amazon ECR
         env:
-          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           DOCKER_PUBLISH_URLS: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha
+          HOT_FORGE_BUCKET: ${{ secrets.HOT_FORGE_BUCKET }}
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: make push-sha
       - name: List docker Images
         run: make list-images
