@@ -78,7 +78,8 @@ RUN mkdir -p /build/glibc/build
 WORKDIR /build/glibc
 RUN curl -s -o glibc.tar.gz http://mirror.koddos.net/gnu/libc/glibc-2.34.tar.gz
 RUN tar xzfp glibc.tar.gz
-RUN cd glibc-2* && mkdir build && cd build && ../configure --disable-sanity-checks && make && make install
+RUN mkdir -p /usr/sam
+RUN cd glibc-2* && mkdir build && cd build && ../configure --disable-sanity-checks --prefix=/usr/sam && make && make install
 RUN ldd --version
 
 # By including multiple versions of PostgreSQL we can use the same Docker image,
