@@ -13,7 +13,7 @@ env:
 jobs:
   build-image:
     name: Build the default Docker Image
-    runs-on: non-prod
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
