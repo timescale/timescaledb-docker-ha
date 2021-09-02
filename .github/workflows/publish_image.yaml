@@ -33,7 +33,7 @@ jobs:
           pg_versions: "12 11"
           docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
           docker_tag_postfix: '-oss'
-    runs-on: ubuntu-20.04
+    runs-on: non-prod
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
