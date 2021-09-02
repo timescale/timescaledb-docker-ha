@@ -6,5 +6,5 @@ SELECT
 FROM
     pg_catalog.pg_available_extensions
 WHERE
-    name IN ('timescaledb', 'postgis')
+    name IN ('timescaledb', 'postgis', 'forge_ext')
 \gexec

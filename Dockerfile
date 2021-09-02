@@ -198,6 +198,21 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_T
         done; \
     fi
 
+# Forge Ext extension is useful for TimescaleDB
+# It is a private timescale project and is therefore not included/built by default, or for the OSS version
+ENV BUILDDIR=/build/forge_ext
+ARG TIMESCALE_FORGE_EXT=
+# build and install the forge_ext extension
+RUN if [ ! -z "${TIMESCALE_FORGE_EXT}" -a -z "${OSS_ONLY}" ]; then \
+        mkdir -p "${BUILDDIR}" && cd "${BUILDDIR}" \
+        && for pg in ${PG_VERSIONS}; do \
+            if /build/scripts/try_hot_forge.sh "${pg}" forge_ext "${TIMESCALE_FORGE_EXT}"; then continue; fi; \
+            [ -d "${BUILDDIR}/.git" ] || git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/forge_ext "${BUILDDIR}" \
+            && cd "${BUILDDIR}" && git reset HEAD --hard && git checkout ${TIMESCALE_FORGE_EXT} \
+            && make clean && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install || exit 1 ; \
+        done; \
+    fi
+
 # pg_auth_mon is an extension to monitor authentication attempts
 # It is also useful to determine whether the DB is actively used
 # https://github.com/RafiaSabih/pg_auth_mon
