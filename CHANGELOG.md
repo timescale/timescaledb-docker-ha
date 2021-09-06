@@ -10,6 +10,12 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.4.25] - 2021-09-06
+### Added
+ * `timescaledb_cloudutils` for non-oss builds
+### Changed
+ * Bump `hot_forge` to 0.1.18
+
 ## [v0.4.24] - 2021-08-24
 ### Changed
  * Download precompiled hot-forge instead of building from source
