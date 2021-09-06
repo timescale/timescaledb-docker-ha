@@ -4,13 +4,20 @@
 ## - spilo to allow the github.com/zalando/postgres-operator to be compatible
 ## - pgBackRest to allow good backups
 
+
+# By including multiple versions of PostgreSQL we can use the same Docker image,
+# regardless of the major PostgreSQL Version. It also allow us to support (eventually)
+# pg_upgrade from 12 to 13, so we need all the postgres & timescale libraries for all versions
+ARG PG_VERSIONS="13 12"
+ARG PG_MAJOR=13
+
 ## We have many base images to choose from, (alpine, bitnami) but as we're adding a lot
 ## of tools to the image anyway, the end result is that we would only
 ## reduce the final Docker image by single digit MB's, which is insignificant
 ## in relation to the total image size.
 ## By choosing a very basic base image, we do keep full control over every part
 ## of the build steps. This Dockerfile contains every piece of magic we want.
-FROM rust:1.54-slim-buster AS builder
+FROM rust:1.54-slim-buster AS compiler
 
 # We need full control over the running user, including the UID, therefore we
 # create the postgres user as the first thing on our list
@@ -71,10 +78,7 @@ RUN mkdir -p /build
 RUN chmod 777 /build
 WORKDIR /build/
 
-# By including multiple versions of PostgreSQL we can use the same Docker image,
-# regardless of the major PostgreSQL Version. It also allow us to support (eventually)
-# pg_upgrade from 12 to 13, so we need all the postgres & timescale libraries for all versions
-ARG PG_VERSIONS="13 12"
+ARG PG_VERSIONS
 
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
 RUN for pg in ${PG_VERSIONS}; do \
@@ -107,6 +111,9 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
         # We need to listen on all interfaces, otherwise PostgreSQL is not accessible
         && echo "listen_addresses = '*'" >> $file; \
     done
+
+FROM compiler as builder
+ARG PG_VERSIONS
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
 RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -s -c) main" > /etc/apt/sources.list.d/timescaledb.list
@@ -295,8 +302,6 @@ RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
 
 USER root
 
-## Cleanup
-
 # All the tools that were built in the previous steps have their ownership set to postgres
 # to allow mutability. To allow one to build this image with the default privileges (owned by root)
 # one can set the ALLOW_ADDING_EXTENSIONS argument to anything but "true".
@@ -308,6 +313,9 @@ RUN if [ "${ALLOW_ADDING_EXTENSIONS}" != "true" ]; then \
             done ; \
         done ; \
     fi
+
+## Cleanup
+FROM builder AS trimmed
 
 RUN apt-get purge -y ${BUILD_PACKAGES}
 RUN apt-get autoremove -y \
@@ -326,9 +334,9 @@ RUN apt-get autoremove -y \
 
 ## Create a smaller Docker image from the builder image
 FROM scratch
-COPY --from=builder / /
+COPY --from=trimmed / /
 
-ARG PG_MAJOR=11
+ARG PG_MAJOR
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["postgres"]
 
