@@ -209,6 +209,19 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
         done; \
     fi
 
+ARG TIMESCALE_CLOUDUTILS=
+# build and install the cloudutils libarary and extension
+RUN if [ ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
+        for pg in ${PG_VERSIONS}; do \
+            if [ ${pg} -ge "12" ]; then \
+                [ -d "/build/timescaledb_cloudutils/.git" ] || git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/timescaledb_cloudutils || exit 1 ; \
+                export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
+                git clean -f -x \
+                && make install || exit 1; \
+            fi; \
+        done; \
+    fi
+
 # Protected Roles is a library that restricts the CREATEROLE/CREATEDB privileges of non-superusers.
 # It is a private timescale project and is therefore not included/built by default
 ARG TIMESCALE_TSDB_ADMIN=
