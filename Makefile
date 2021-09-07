@@ -21,6 +21,9 @@ DOCKER_PUBLISH_URLS?=$(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY)
 DOCKER_TAG_POSTFIX?=
 DOCKER_TAG_PREPARE=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
 DOCKER_TAG_LABELED=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-labeled
+DOCKER_TAG_BUILDER=pg$(PG_MAJOR)-builder
+DOCKER_TAG_COMPILER=pg$(PG_MAJOR)-compiler
+DOCKER_CACHE_FROM?=scratch
 
 # These parameters control which entrypoints we add to the scripts
 GITHUB_DOCKERLIB_POSTGRES_REF=master
@@ -72,6 +75,7 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg TIMESCALE_TSDB_ADMIN="$(TIMESCALE_TSDB_ADMIN)" \
 					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS="$(TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS)" \
 					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSION="$(TIMESCALEDB_TOOLKIT_EXTENSION)" \
+					 --cache-from "$(DOCKER_CACHE_FROM)" \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
 					 --label org.opencontainers.image.source="$(GIT_REMOTE)" \
@@ -96,9 +100,31 @@ fast: TIMESCALE_PROMSCALE_EXTENSION=
 fast: ALLOW_ADDING_EXTENSIONS=true
 fast: prepare
 
+.PHONY: compiler
+compiler:
+	$(DOCKER_BUILD_COMMAND) --target compiler --tag $(DOCKER_TAG_COMPILER)
+
+.PHONY: builder
+builder:
+	$(DOCKER_BUILD_COMMAND) --target builder --tag $(DOCKER_TAG_BUILDER)
+
+.PHONY: publish-builder
+publish-builder: builder
+	for url in $(DOCKER_PUBLISH_URLS); do \
+		docker tag $(DOCKER_TAG_COMPILER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER) || exit 1 ; \
+		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER) || exit 1 ; \
+		docker tag $(DOCKER_TAG_BUILDER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER) || exit 1 ; \
+		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER) || exit 1 ; \
+	done
+
+# This target always succeeds, as it is purely an speed optimization
+.PHONY: pull-cached-image
+pull-cached-image:
+	@if [ "$(DOCKER_CACHE_FROM)" != "scratch" ]; then docker pull "$(DOCKER_CACHE_FROM)" || true ; fi
+
 # The prepare step does not build the final image, as we need to use introspection
 # to find out what versions of software are installed in this image
-prepare:
+prepare: pull-cached-image
 	$(DOCKER_BUILD_COMMAND) --tag $(DOCKER_TAG_PREPARE)
 
 version_info-%.log: prepare
