@@ -10,6 +10,11 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.4.26] - 2021-09-07
+### Fixed
+ * `timescaledb_cloudutils` now actually builds
+### Changed
+
 ## [v0.4.25] - 2021-09-06
 ### Added
  * `timescaledb_cloudutils` for non-oss builds
