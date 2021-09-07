@@ -10,6 +10,10 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.4.27] - 2021-09-07
+### Changed
+ * Bump `hot_forge` to 0.1.31
+
 ## [v0.4.26] - 2021-09-07
 ### Fixed
  * `timescaledb_cloudutils` now actually builds
