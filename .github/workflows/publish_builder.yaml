@@ -1,0 +1,38 @@
+name: Build builder and compiler image layers
+
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '00 00 * * *'
+
+env:
+  DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
+  DOCKER_HUB_URL: docker.io/timescale/timescaledb-ha
+  INSTALL_METHOD: docker-ha
+  TIMESCALE_TSDB_ADMIN: "0.1.1"
+  TIMESCALE_HOT_FORGE: "v0.1.32"
+  TIMESCALE_CLOUDUTILS: "71e27925"
+jobs:
+  build-image:
+    name: Build the builder Docker Image
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Publish Builder Image to Docker Hub
+        env:
+          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
+          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          DOCKER_PUBLISH_URLS="${DOCKER_HUB_URL}" make publish-builder
+      - name: List docker Images
+        env:
+          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
+        run: |
+          make list-images
