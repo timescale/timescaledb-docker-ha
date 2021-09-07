@@ -84,7 +84,7 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 $(DOCKER_EXTRA_BUILDARGS) \
 					 .
 
-DOCKER_EXEC_COMMAND=docker exec -i $(DOCKER_TAG_PREPARE) timeout 60
+DOCKER_EXEC_COMMAND=docker exec -i $(DOCKER_TAG_PREPARE) timeout 90
 
 # We provide the fast target as the first (=default) target, as it will skip installing
 # many optional extensions, and it will only install a single timescaledb (master) version.
@@ -105,7 +105,7 @@ compiler:
 	$(DOCKER_BUILD_COMMAND) --target compiler --tag $(DOCKER_TAG_COMPILER)
 
 .PHONY: builder
-builder:
+builder: compiler
 	$(DOCKER_BUILD_COMMAND) --target builder --tag $(DOCKER_TAG_BUILDER)
 
 .PHONY: publish-builder
@@ -133,13 +133,12 @@ version_info-%.log: prepare
 	# after we have built the image, what patch version of PostgreSQL, or PostGIS is installed.
 	#
 	# We will then attach this information as OCI labels to the final Docker image
-	docker stop $(DOCKER_TAG_PREPARE) || true
-	docker run -d --rm --name $(DOCKER_TAG_PREPARE) -e PGDATA=/tmp/pgdata --user=postgres $(DOCKER_TAG_PREPARE) \
-		sh -c 'initdb && timeout 60 postgres'
-	$(DOCKER_EXEC_COMMAND) sh -c 'while ! pg_isready; do sleep 1; done'
-	cat scripts/install_extensions.sql | $(DOCKER_EXEC_COMMAND) psql -AtXq  --set ON_ERROR_STOP=1
-	cat scripts/version_info.sql | $(DOCKER_EXEC_COMMAND) psql -AtXq > $(VAR_VERSION_INFO)
-	docker stop $(DOCKER_TAG_PREPARE) || true
+	docker rm -f $(DOCKER_TAG_PREPARE) || true
+	docker run -d --name $(DOCKER_TAG_PREPARE) -e PGDATA=/tmp/pgdata --user=postgres $(DOCKER_TAG_PREPARE) sleep 90
+	docker cp ./cicd $(DOCKER_TAG_PREPARE):/cicd/
+	$(DOCKER_EXEC_COMMAND) /cicd/smoketest.sh || (docker logs $(DOCKER_TAG_PREPARE) && exit 1)
+	docker cp $(DOCKER_TAG_PREPARE):/tmp/version_info.log $(VAR_VERSION_INFO)
+	docker kill $(DOCKER_TAG_PREPARE) || true
 	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin.version=$(TIMESCALE_TSDB_ADMIN)" >> $(VAR_VERSION_INFO); fi
 
 build: $(VAR_VERSION_INFO)

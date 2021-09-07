@@ -4,6 +4,9 @@ on:
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron:  '00 00 * * *'
+  push:
+    branches:
+    - '**'
 
 env:
   DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
