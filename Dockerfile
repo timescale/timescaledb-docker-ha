@@ -110,6 +110,7 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
     done
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
+# temporary using buster instead of $(lsb_release -s -c)
 RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ buster main" > /etc/apt/sources.list.d/timescaledb.list
 RUN curl -L -s -o - https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add -
 RUN apt-get update && apt-get install -y timescaledb-tools
