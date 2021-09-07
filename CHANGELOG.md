@@ -10,6 +10,10 @@ These are changes that will probably be included in the next release.
 ### Removed
 ### Fixed
 
+## [v0.4.28] - 2021-09-07
+### Changed
+ * Bump `hot_forge` to 0.1.31 for publishing
+
 ## [v0.4.27] - 2021-09-07
 ### Changed
  * Bump `hot_forge` to 0.1.31
