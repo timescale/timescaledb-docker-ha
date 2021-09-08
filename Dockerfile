@@ -318,6 +318,7 @@ RUN apt-get autoremove -y \
             /usr/share/man \
             /usr/share/locale/?? \
             /usr/share/locale/??_?? \
+            /home/postgres/.pgx \
             /build/ \
             /usr/local/rustup \
             /usr/local/cargo \
