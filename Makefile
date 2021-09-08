@@ -4,7 +4,7 @@ PG_MAJOR?=13
 PG_VERSIONS?=13 12
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
-POSTGIS_VERSIONS?="2.5 3"
+POSTGIS_VERSIONS?="3"
 PG_AUTH_MON?=v1.0
 PG_LOGERRORS?=3c55887b
 TIMESCALE_PROMSCALE_EXTENSION?=0.2.0
@@ -59,7 +59,6 @@ VAR_VERSION_INFO=version_info-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX).log
 # Dockerfile
 DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg ALLOW_ADDING_EXTENSIONS="$(ALLOW_ADDING_EXTENSIONS)" \
-					 --build-arg DEBIAN_REPO_MIRROR=$(DEBIAN_REPO_MIRROR) \
 					 --build-arg GITHUB_DOCKERLIB_POSTGRES_REF="$(GITHUB_DOCKERLIB_POSTGRES_REF)" \
 					 --build-arg GITHUB_TIMESCALEDB_DOCKER_REF="$(GITHUB_TIMESCALEDB_DOCKER_REF)" \
 					 --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" \
@@ -129,7 +128,7 @@ prepare: pull-cached-image
 
 version_info-%.log: prepare
 	# In these steps we do some introspection to find out some details of the versions
-	# that are inside the Docker image. As we use the Debian packages, we do not know until
+	# that are inside the Docker image. As we use the Ubuntu packages, we do not know until
 	# after we have built the image, what patch version of PostgreSQL, or PostGIS is installed.
 	#
 	# We will then attach this information as OCI labels to the final Docker image

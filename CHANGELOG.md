@@ -6,8 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 These are changes that will probably be included in the next release.
 ### Added
+ * Installation of rust compiler inside the Dockerfile
 ### Changed
+ * Base the Docker Image on `ubuntu` (21.04) instead of `rust:debian`
 ### Removed
+ * Support for PostGIS 2.5
 ### Fixed
 
 ## [v0.4.29] - 2021-09-08

@@ -6,7 +6,6 @@ on:
     - 'v*'
 
 env:
-  DEBIAN_REPO_MIRROR: cdn-aws.deb.debian.org
   DOCKER_HUB_URL: docker.io/timescale/timescaledb-ha
   INSTALL_METHOD: docker-ha
   TIMESCALE_TSDB_ADMIN: "0.1.1"
