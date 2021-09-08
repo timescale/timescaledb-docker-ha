@@ -7,6 +7,8 @@ This directory contains everything that allows us to create a Docker image with 
 - pgBackRest
 - scripts to make it all work in a Kubernetes Context
 
+Currently, our base image is Ubuntu, as we require glibc 2.33+.
+
 # Build images
 
 To build an image, run the following make target:

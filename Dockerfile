@@ -1,9 +1,9 @@
 ## The purpose of this Dockerfile is to build an image that contains:
 ## - timescale from (internal) sources
+## - many PostgreSQL extensions
 ## - patroni for High Availability
 ## - spilo to allow the github.com/zalando/postgres-operator to be compatible
 ## - pgBackRest to allow good backups
-
 
 # By including multiple versions of PostgreSQL we can use the same Docker image,
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
@@ -17,36 +17,77 @@ ARG PG_MAJOR=13
 ## in relation to the total image size.
 ## By choosing a very basic base image, we do keep full control over every part
 ## of the build steps. This Dockerfile contains every piece of magic we want.
-FROM rust:1.54-slim-buster AS compiler
+
+## To allow us to use specific glibc 2.33+ features, we need to find a way
+## to run glibc 2.33. Running multiple glibc versions inside the same
+## container is something we'd like to avoid, we've seen multiple glibc
+## related bugs in our lifetime, adding multiple glibc versions in the mix
+## would make debugging harder.
+
+## Debian (and rust:debian) has served us well in the past, however even Debian's
+## latest release (bullseye, August 2021) cannot give us glibc 2.33.
+## Ubuntu however does give us glibc 2.33 - as Ubuntu is based upon Debian
+## the changes required are not that big for this Docker Image. Most of the
+## tools we use will be the same across the board, as most of our tools our
+## installed using external repositories.
+FROM ubuntu:21.04 AS compiler
 
 # We need full control over the running user, including the UID, therefore we
 # create the postgres user as the first thing on our list
 RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" postgres
 
-# CI/CD may benefit a lot from using a specific package mirror
-ARG DEBIAN_REPO_MIRROR=""
-RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > /etc/apt/apt.conf.d/01norecommend \
-    && if [ "${DEBIAN_REPO_MIRROR}" != "" ]; then \
-        sed -i "s{http://.*.debian.org{http://${DEBIAN_REPO_MIRROR}{g" /etc/apt/sources.list; \
-    fi
+RUN echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/01norecommend
+RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 
 # Install the highlest level dependencies
 RUN apt-get update \
-    && apt-get install -y curl ca-certificates locales gnupg1 lsb-release
+    && apt-get install -y ca-certificates curl gnupg1 gpg gpg-agent locales lsb-release wget
 
+RUN mkdir -p /build
+RUN chmod 777 /build
+WORKDIR /build/
+
+RUN wget -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor --output /usr/share/keyrings/postgresql.keyring
 RUN for t in deb deb-src; do \
-        echo "$t http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -s -c)-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
+        echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -s -c)-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
     done
-RUN curl -s -o - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+
+RUN apt-get clean
+RUN apt-get update
 
 # The following tools are required for some of the processes we (TimescaleDB) regularly
 # run inside the containers that use this Docker Image
-RUN apt-get update && apt-get install -y less jq strace procps
+RUN apt-get install -y less jq strace procps
 
 # For debugging it is very useful if the Docker Image contains gdb(server). Even though it is
 # not expected to be running gdb in a live instance often, it simplifies getting backtraces from
 # containers using this image
 RUN apt-get install -y gdb gdbserver
+
+# The next 2 instructions (ENV + RUN) are directly copied from https://github.com/rust-lang/docker-rust/blob/21171fdd92e29acb045a41cd58b0d30d66aeaa7f/1.54.0/bullseye
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH \
+    RUST_VERSION=1.54.0
+RUN set -eux; \
+    dpkgArch="$(dpkg --print-architecture)"; \
+    case "${dpkgArch##*-}" in \
+        amd64) rustArch='x86_64-unknown-linux-gnu'; rustupSha256='3dc5ef50861ee18657f9db2eeb7392f9c2a6c95c90ab41e45ab4ca71476b4338' ;; \
+        armhf) rustArch='armv7-unknown-linux-gnueabihf'; rustupSha256='67777ac3bc17277102f2ed73fd5f14c51f4ca5963adadf7f174adf4ebc38747b' ;; \
+        arm64) rustArch='aarch64-unknown-linux-gnu'; rustupSha256='32a1532f7cef072a667bac53f1a5542c99666c4071af0c9549795bbdb2069ec1' ;; \
+        i386) rustArch='i686-unknown-linux-gnu'; rustupSha256='e50d1deb99048bc5782a0200aa33e4eea70747d49dffdc9d06812fd22a372515' ;; \
+        *) echo >&2 "unsupported architecture: ${dpkgArch}"; exit 1 ;; \
+    esac; \
+    url="https://static.rust-lang.org/rustup/archive/1.24.3/${rustArch}/rustup-init"; \
+    wget "$url"; \
+    echo "${rustupSha256} *rustup-init" | sha256sum -c -; \
+    chmod +x rustup-init; \
+    ./rustup-init -y --no-modify-path --profile minimal --default-toolchain $RUST_VERSION --default-host ${rustArch}; \
+    rm rustup-init; \
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME; \
+    rustup --version; \
+    cargo --version; \
+    rustc --version;
 
 # These packages allow for a better integration for some containers, for example
 # daemontools provides envdir, which is very convenient for passing backup
@@ -70,13 +111,9 @@ RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-ku
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="lsb-release git binutils libperl-dev libc6-dev patchutils gcc libc-dev make cmake libssl-dev python2-dev python3-dev devscripts equivs libkrb5-dev"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
-
-RUN mkdir -p /build
-RUN chmod 777 /build
-WORKDIR /build/
 
 ARG PG_VERSIONS
 
@@ -93,7 +130,7 @@ RUN for pg in ${PG_VERSIONS}; do \
     done
 
 # We put Postgis in first, so these layers can be reused
-ARG POSTGIS_VERSIONS="2.5 3"
+ARG POSTGIS_VERSIONS="3"
 RUN for postgisv in ${POSTGIS_VERSIONS}; do \
         for pg in ${PG_VERSIONS}; do \
             apt-get install -y postgresql-${pg}-postgis-${postgisv} || exit 1; \
@@ -116,8 +153,9 @@ FROM compiler as builder
 ARG PG_VERSIONS
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
-RUN echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -s -c) main" > /etc/apt/sources.list.d/timescaledb.list
-RUN curl -L -s -o - https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add -
+RUN wget -O - https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor --output /usr/share/keyrings/timescaledb.keyring
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/timescaledb.keyring] https://packagecloud.io/timescale/timescaledb/ubuntu/ $(lsb_release -s -c) main" > /etc/apt/sources.list.d/timescaledb.list
+
 RUN apt-get update && apt-get install -y timescaledb-tools
 
 ## Entrypoints as they are from the Timescale image and its default alpine upstream repositories.
@@ -165,6 +203,8 @@ RUN for pg in ${PG_VERSIONS}; do \
 
 USER postgres
 
+ENV MAKEFLAGS=-j8
+
 ARG OSS_ONLY
 ARG GITHUB_USER
 ARG GITHUB_TOKEN
@@ -194,8 +234,8 @@ RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 1.7.4 1.7.5 2.0.0-rc3 2.0.0
             && cd /build/timescaledb && git reset HEAD --hard && git clean -f -d -x && git checkout ${ts} \
             && rm -rf build \
             && if [ "${ts}" = "2.2.0" ]; then sed -i 's/RelWithDebugInfo/RelWithDebInfo/g' CMakeLists.txt; fi \
-            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DTAP_CHECKS=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREGRESS_CHECKS=OFF -DGENERATE_DOWNGRADE_SCRIPT=ON -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
-            && cd build && make -j 6 install || exit 1; \
+            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DTAP_CHECKS=OFF -DWARNINGS_AS_ERRORS=off -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREGRESS_CHECKS=OFF -DGENERATE_DOWNGRADE_SCRIPT=ON -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
+            && cd build && make install || exit 1; \
         done; \
     done
 
