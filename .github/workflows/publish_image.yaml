@@ -11,7 +11,7 @@ env:
   INSTALL_METHOD: docker-ha
   TIMESCALE_TSDB_ADMIN: "0.1.1"
   TIMESCALE_HOT_FORGE: "v0.1.32"
-  TIMESCALE_CLOUDUTILS: "71e27925"
+  TIMESCALE_CLOUDUTILS: "a10f776"
 jobs:
   publish-image:
     name: Publish the Docker Images
