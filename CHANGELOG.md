@@ -5,12 +5,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 These are changes that will probably be included in the next release.
+
+## [future release]
+
 ### Added
- * Installation of rust compiler inside the Dockerfile
+
 ### Changed
- * Base the Docker Image on `ubuntu` (21.04) instead of `rust:debian`
+
 ### Removed
- * Support for PostGIS 2.5
+
+### Fixed
+
+
+## [v1.0.0] - 2021-09-16
+
+This is a major release, as the base Docker Image has changed from Debian to Ubuntu.
+Our tests have not yet shown any issues with this update. We would advice anyone
+that consumes these images to test that the new images also work for them in their
+environment.
+
+As this Docker Image has been in production for a while, it seems awkward to still not
+be on version 1.0.0+, therefore, we mark this occasion with releasing version 1.0.0.
+### Added
+
+* Installation of rust compiler inside the Dockerfile
+
+### Changed
+
+* Base the Docker Image on `ubuntu` (21.04) instead of `rust:debian`
+* Bump `timescaledb_toolkit` to version [1.2.0](https://github.com/timescale/timescaledb-toolkit/releases/tag/1.2.0)
+
+### Removed
+
+* Support for PostGIS 2.5
+
 ### Fixed
 
 ## [v0.4.29] - 2021-09-08
