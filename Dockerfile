@@ -268,7 +268,7 @@ RUN if [ ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
     export PG_CONFIG="/usr/lib/postgresql/${pg}/bin/pg_config"; \
     export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
     git clean -f -x \
-    && make install -j1 || exit 1; \
+    && make clean && make install -j1 || exit 1; \
     fi; \
     done; \
     fi
