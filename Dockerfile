@@ -49,7 +49,7 @@ WORKDIR /build/
 
 RUN wget -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor --output /usr/share/keyrings/postgresql.keyring
 RUN for t in deb deb-src; do \
-        echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -s -c)-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
+    echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -s -c)-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
     done
 
 RUN apt-get clean
@@ -72,11 +72,11 @@ ENV RUSTUP_HOME=/usr/local/rustup \
 RUN set -eux; \
     dpkgArch="$(dpkg --print-architecture)"; \
     case "${dpkgArch##*-}" in \
-        amd64) rustArch='x86_64-unknown-linux-gnu'; rustupSha256='3dc5ef50861ee18657f9db2eeb7392f9c2a6c95c90ab41e45ab4ca71476b4338' ;; \
-        armhf) rustArch='armv7-unknown-linux-gnueabihf'; rustupSha256='67777ac3bc17277102f2ed73fd5f14c51f4ca5963adadf7f174adf4ebc38747b' ;; \
-        arm64) rustArch='aarch64-unknown-linux-gnu'; rustupSha256='32a1532f7cef072a667bac53f1a5542c99666c4071af0c9549795bbdb2069ec1' ;; \
-        i386) rustArch='i686-unknown-linux-gnu'; rustupSha256='e50d1deb99048bc5782a0200aa33e4eea70747d49dffdc9d06812fd22a372515' ;; \
-        *) echo >&2 "unsupported architecture: ${dpkgArch}"; exit 1 ;; \
+    amd64) rustArch='x86_64-unknown-linux-gnu'; rustupSha256='3dc5ef50861ee18657f9db2eeb7392f9c2a6c95c90ab41e45ab4ca71476b4338' ;; \
+    armhf) rustArch='armv7-unknown-linux-gnueabihf'; rustupSha256='67777ac3bc17277102f2ed73fd5f14c51f4ca5963adadf7f174adf4ebc38747b' ;; \
+    arm64) rustArch='aarch64-unknown-linux-gnu'; rustupSha256='32a1532f7cef072a667bac53f1a5542c99666c4071af0c9549795bbdb2069ec1' ;; \
+    i386) rustArch='i686-unknown-linux-gnu'; rustupSha256='e50d1deb99048bc5782a0200aa33e4eea70747d49dffdc9d06812fd22a372515' ;; \
+    *) echo >&2 "unsupported architecture: ${dpkgArch}"; exit 1 ;; \
     esac; \
     url="https://static.rust-lang.org/rustup/archive/1.24.3/${rustArch}/rustup-init"; \
     wget "$url"; \
@@ -119,22 +119,22 @@ ARG PG_VERSIONS
 
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
 RUN for pg in ${PG_VERSIONS}; do \
-        mk-build-deps postgresql-${pg} && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
+    mk-build-deps postgresql-${pg} && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
     done
 
 
 RUN for pg in ${PG_VERSIONS}; do \
-        apt-get install -y postgresql-${pg} postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} \
-            postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
-            postgresql-${pg}-pg-stat-kcache || exit 1; \
+    apt-get install -y postgresql-${pg} postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} \
+    postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
+    postgresql-${pg}-pg-stat-kcache || exit 1; \
     done
 
 # We put Postgis in first, so these layers can be reused
 ARG POSTGIS_VERSIONS="3"
 RUN for postgisv in ${POSTGIS_VERSIONS}; do \
-        for pg in ${PG_VERSIONS}; do \
-            apt-get install -y postgresql-${pg}-postgis-${postgisv} || exit 1; \
-        done; \
+    for pg in ${PG_VERSIONS}; do \
+    apt-get install -y postgresql-${pg}-postgis-${postgisv} || exit 1; \
+    done; \
     done
 
 # Patroni and Spilo Dependencies
@@ -143,10 +143,10 @@ RUN for postgisv in ${POSTGIS_VERSIONS}; do \
 RUN apt-get install -y patroni
 
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
-        # We want timescaledb to be loaded in this image by every created cluster
-        sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" $file \
-        # We need to listen on all interfaces, otherwise PostgreSQL is not accessible
-        && echo "listen_addresses = '*'" >> $file; \
+    # We want timescaledb to be loaded in this image by every created cluster
+    sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" $file \
+    # We need to listen on all interfaces, otherwise PostgreSQL is not accessible
+    && echo "listen_addresses = '*'" >> $file; \
     done
 
 FROM compiler as builder
@@ -177,13 +177,13 @@ RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 ARG PRIVATE_REPO_TOKEN=
 ARG TIMESCALE_HOT_FORGE=
 RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_HOT_FORGE}" ]; then \
-        GH_REPO="https://api.github.com/repos/timescale/hot-forge"; \
-        ASSET_ID="$(curl -sL --header "Authorization: token ${PRIVATE_REPO_TOKEN}" "${GH_REPO}/releases/tags/${TIMESCALE_HOT_FORGE}" | jq '.assets[0].id')"; \
-        curl -sL --header "Authorization: token ${PRIVATE_REPO_TOKEN}" \
-                 --header 'Accept: application/octet-stream' \
-                 "${GH_REPO}/releases/assets/${ASSET_ID}" > /usr/local/bin/hot-forge || exit 1; \
-        chmod 0755 /usr/local/bin/hot-forge ; \
-        hot-forge -V || exit 1 ; \
+    GH_REPO="https://api.github.com/repos/timescale/hot-forge"; \
+    ASSET_ID="$(curl -sL --header "Authorization: token ${PRIVATE_REPO_TOKEN}" "${GH_REPO}/releases/tags/${TIMESCALE_HOT_FORGE}" | jq '.assets[0].id')"; \
+    curl -sL --header "Authorization: token ${PRIVATE_REPO_TOKEN}" \
+    --header 'Accept: application/octet-stream' \
+    "${GH_REPO}/releases/assets/${ASSET_ID}" > /usr/local/bin/hot-forge || exit 1; \
+    chmod 0755 /usr/local/bin/hot-forge ; \
+    hot-forge -V || exit 1 ; \
     fi
 
 # The following allows *new* files to be created, so that extensions can be added to a running container.
@@ -195,10 +195,10 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_H
 # - files owned by postgres can be overwritten in a running container
 # - new files can be added to the directories mentioned here
 RUN for pg in ${PG_VERSIONS}; do \
-        for dir in "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
-            install --directory "${dir}" --group postgres --mode 1775 \
-            && find "${dir}" -type d -exec install --directory {} --group postgres --mode 1775 \; || exit 1 ; \
-        done; \
+    for dir in "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
+    install --directory "${dir}" --group postgres --mode 1775 \
+    && find "${dir}" -type d -exec install --directory {} --group postgres --mode 1775 \; || exit 1 ; \
+    done; \
     done
 
 USER postgres
@@ -211,9 +211,9 @@ ARG GITHUB_TOKEN
 ARG GITHUB_REPO=timescale/timescaledb
 ARG GITHUB_TAG
 RUN if [ "${GITHUB_TOKEN}" != "" ]; then \
-        git clone "https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}" /build/timescaledb; \
+    git clone "https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}" /build/timescaledb; \
     else \
-        git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
+    git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
     fi
 
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
@@ -226,64 +226,63 @@ RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 1.7.4 1.7.5 2.0.0-rc3 2.0.0
     && cd /build/timescaledb && git pull \
     && set -e \
     && for pg in ${PG_VERSIONS}; do \
-        for ts in ${TS_VERSIONS}; do \
-            if [ ${pg} -ge 13 ] && [ "$(expr substr ${ts} 1 1)" = "1" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && if [ ${pg} -ge 13 ] && [ "$(expr substr ${ts} 1 3)" = "2.0" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && if [ ${pg} -ge 12 ] && [ "$(expr substr ${ts} 1 3)" = "1.6" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && if [ ${pg} -lt 12 ] && [ "$(expr substr ${ts} 1 3)" = "2.4" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && cd /build/timescaledb && git reset HEAD --hard && git clean -f -d -x && git checkout ${ts} \
-            && rm -rf build \
-            && if [ "${ts}" = "2.2.0" ]; then sed -i 's/RelWithDebugInfo/RelWithDebInfo/g' CMakeLists.txt; fi \
-            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DTAP_CHECKS=OFF -DWARNINGS_AS_ERRORS=off -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREGRESS_CHECKS=OFF -DGENERATE_DOWNGRADE_SCRIPT=ON -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
-            && cd build && make install || exit 1; \
-        done; \
+    for ts in ${TS_VERSIONS}; do \
+    if [ ${pg} -ge 13 ] && [ "$(expr substr ${ts} 1 1)" = "1" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
+    && if [ ${pg} -ge 13 ] && [ "$(expr substr ${ts} 1 3)" = "2.0" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
+    && if [ ${pg} -ge 12 ] && [ "$(expr substr ${ts} 1 3)" = "1.6" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
+    && if [ ${pg} -lt 12 ] && [ "$(expr substr ${ts} 1 3)" = "2.4" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
+    && cd /build/timescaledb && git reset HEAD --hard && git clean -f -d -x && git checkout ${ts} \
+    && rm -rf build \
+    && if [ "${ts}" = "2.2.0" ]; then sed -i 's/RelWithDebugInfo/RelWithDebInfo/g' CMakeLists.txt; fi \
+    && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DTAP_CHECKS=OFF -DWARNINGS_AS_ERRORS=off -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREGRESS_CHECKS=OFF -DGENERATE_DOWNGRADE_SCRIPT=ON -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
+    && cd build && make install || exit 1; \
+    done; \
     done
 
 ARG TIMESCALE_PROMSCALE_EXTENSION=
 # build and install the promscale_extension extension
 RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
-        set -e \
-        && cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx \
-        && git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
-        && for pg in ${PG_VERSIONS}; do \
-            if [ ${pg} -ge "12" ]; then \
-            export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
-                cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
-                && cd /build/promscale_extension && git reset HEAD --hard && git checkout ${TIMESCALE_PROMSCALE_EXTENSION} \
-                && git clean -f -x \
-                && PG_VER=pg${pg} make install || exit 1; \
-            fi; \
-        done; \
+    set -e \
+    && cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx \
+    && git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
+    && for pg in ${PG_VERSIONS}; do \
+    if [ ${pg} -ge "12" ]; then \
+    export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
+    cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
+    && cd /build/promscale_extension && git reset HEAD --hard && git checkout ${TIMESCALE_PROMSCALE_EXTENSION} \
+    && git clean -f -x \
+    && PG_VER=pg${pg} make install || exit 1; \
+    fi; \
+    done; \
     fi
 
 ENV PATH=/home/postgres/.cargo/bin:${PATH}
 ARG TIMESCALE_CLOUDUTILS=
 # build and install the cloudutils libarary and extension
 RUN if [ ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
-        cd /build ; \
-        cargo install rustfmt && cargo install pgx --version 0.1.21 || exit 1; \
-        for pg in ${PG_VERSIONS}; do \
-            if [ ${pg} -ge "12" ]; then \
-                [ -d "/build/timescaledb_cloudutils/.git" ] || git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/timescaledb_cloudutils || exit 1 ; \
-                cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config ; \
-                cd /build/timescaledb_cloudutils ; \
-                export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
-                git clean -f -x \
-                && make install -j1 || exit 1; \
-            fi; \
-        done; \
+    cd /build ; \
+    for pg in ${PG_VERSIONS}; do \
+    if [ ${pg} -ge "12" ]; then \
+    [ -d "/build/timescaledb_cloudutils/.git" ] || git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/timescaledb_cloudutils || exit 1 ; \
+    cd /build/timescaledb_cloudutils ; \
+    export PG_CONFIG="/usr/lib/postgresql/${pg}/bin/pg_config"; \
+    export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
+    git clean -f -x \
+    && make install -j1 || exit 1; \
+    fi; \
+    done; \
     fi
 
 # Protected Roles is a library that restricts the CREATEROLE/CREATEDB privileges of non-superusers.
 # It is a private timescale project and is therefore not included/built by default
 ARG TIMESCALE_TSDB_ADMIN=
 RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TSDB_ADMIN}" ]; then \
-        cd /build \
-        && git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/protected_roles \
-        && for pg in ${PG_VERSIONS}; do \
-            cd /build/protected_roles && git reset HEAD --hard && git checkout ${TIMESCALE_TSDB_ADMIN} \
-            && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
-        done; \
+    cd /build \
+    && git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/protected_roles \
+    && for pg in ${PG_VERSIONS}; do \
+    cd /build/protected_roles && git reset HEAD --hard && git checkout ${TIMESCALE_TSDB_ADMIN} \
+    && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
+    done; \
     fi
 
 # pg_auth_mon is an extension to monitor authentication attempts
@@ -291,56 +290,56 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_T
 # https://github.com/RafiaSabih/pg_auth_mon
 ARG PG_AUTH_MON=
 RUN if [ ! -z "${PG_AUTH_MON}" ]; then \
-        cd /build \
-        && git clone https://github.com/RafiaSabih/pg_auth_mon \
-        && for pg in ${PG_VERSIONS}; do \
-            cd /build/pg_auth_mon && git reset HEAD --hard && git checkout "${PG_AUTH_MON}" \
-            && make clean && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install || exit 1 ; \
-        done; \
+    cd /build \
+    && git clone https://github.com/RafiaSabih/pg_auth_mon \
+    && for pg in ${PG_VERSIONS}; do \
+    cd /build/pg_auth_mon && git reset HEAD --hard && git checkout "${PG_AUTH_MON}" \
+    && make clean && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install || exit 1 ; \
+    done; \
     fi
 
 # logerrors is an extension to count the number of errors logged by postgrs, grouped by the error codes
 # https://github.com/munakoiso/logerrors
 ARG PG_LOGERRORS=
 RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
-        cd /build \
-        && git clone https://github.com/munakoiso/logerrors \
-        && for pg in ${PG_VERSIONS}; do \
-            cd /build/logerrors && git reset HEAD --hard && git checkout "${PG_LOGERRORS}" \
-            && make clean && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install || exit 1 ; \
-        done; \
+    cd /build \
+    && git clone https://github.com/munakoiso/logerrors \
+    && for pg in ${PG_VERSIONS}; do \
+    cd /build/logerrors && git reset HEAD --hard && git checkout "${PG_LOGERRORS}" \
+    && make clean && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install || exit 1 ; \
+    done; \
     fi
 
 ARG TIMESCALEDB_TOOLKIT_EXTENSION=
 ARG TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS=
 # build and install the timescaledb-toolkit extension
 RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
-        set -e \
-        && cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx \
-        && git clone https://github.com/timescale/timescaledb-toolkit /build/timescaledb-toolkit \
-        && for pg in ${PG_VERSIONS}; do \
-            if [ ${pg} -ge "12" ]; then \
-                export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
-                cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
-                # build previous version if one was provided
-                && for tookit in ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS}; do \
-                    echo "building previous toolkit version ${tookit} for pg${pg}" \
-                    && cd /build/timescaledb-toolkit \
-                    && git reset HEAD --hard \
-                    && git checkout ${tookit} \
-                    && git clean -f -x \
-                    && cd extension && cargo pgx install --release \
-                    && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
-                done \
-                && echo "building toolkit version ${TIMESCALEDB_TOOLKIT_EXTENSION} for pg${pg}" \
-                && cd /build/timescaledb-toolkit \
-                && git reset HEAD --hard \
-                && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION} \
-                && git clean -f -x \
-                && cd extension && cargo pgx install --release \
-                && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
-            fi; \
-        done; \
+    set -e \
+    && cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx \
+    && git clone https://github.com/timescale/timescaledb-toolkit /build/timescaledb-toolkit \
+    && for pg in ${PG_VERSIONS}; do \
+    if [ ${pg} -ge "12" ]; then \
+    export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
+    cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
+    # build previous version if one was provided
+    && for tookit in ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS}; do \
+    echo "building previous toolkit version ${tookit} for pg${pg}" \
+    && cd /build/timescaledb-toolkit \
+    && git reset HEAD --hard \
+    && git checkout ${tookit} \
+    && git clean -f -x \
+    && cd extension && cargo pgx install --release \
+    && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
+    done \
+    && echo "building toolkit version ${TIMESCALEDB_TOOLKIT_EXTENSION} for pg${pg}" \
+    && cd /build/timescaledb-toolkit \
+    && git reset HEAD --hard \
+    && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION} \
+    && git clean -f -x \
+    && cd extension && cargo pgx install --release \
+    && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
+    fi; \
+    done; \
     fi
 
 USER root
@@ -350,11 +349,11 @@ USER root
 # one can set the ALLOW_ADDING_EXTENSIONS argument to anything but "true".
 ARG ALLOW_ADDING_EXTENSIONS=true
 RUN if [ "${ALLOW_ADDING_EXTENSIONS}" != "true" ]; then \
-        for pg in ${PG_VERSIONS}; do \
-            for dir in "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
-                chown root:root "{dir}" -R ; \
-            done ; \
-        done ; \
+    for pg in ${PG_VERSIONS}; do \
+    for dir in "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
+    chown root:root "{dir}" -R ; \
+    done ; \
+    done ; \
     fi
 
 ## Cleanup
@@ -364,15 +363,15 @@ RUN apt-get purge -y ${BUILD_PACKAGES}
 RUN apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-            /var/cache/debconf/* \
-            /usr/share/doc \
-            /usr/share/man \
-            /usr/share/locale/?? \
-            /usr/share/locale/??_?? \
-            /home/postgres/.pgx \
-            /build/ \
-            /usr/local/rustup \
-            /usr/local/cargo \
+    /var/cache/debconf/* \
+    /usr/share/doc \
+    /usr/share/man \
+    /usr/share/locale/?? \
+    /usr/share/locale/??_?? \
+    /home/postgres/.pgx \
+    /build/ \
+    /usr/local/rustup \
+    /usr/local/cargo \
     && find /var/log -type f -exec truncate --size 0 {} \;
 
 ## Create a smaller Docker image from the builder image
