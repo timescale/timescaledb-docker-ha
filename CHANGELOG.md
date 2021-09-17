@@ -17,6 +17,11 @@ These are changes that will probably be included in the next release.
 ### Fixed
 
 
+## [v1.0.1] - 2021-09-17
+
+### Fixed
+* Build of `timescaledb_cloudutils`
+
 ## [v1.0.0] - 2021-09-16
 
 This is a major release, as the base Docker Image has changed from Debian to Ubuntu.
