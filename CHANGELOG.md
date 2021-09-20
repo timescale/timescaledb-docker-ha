@@ -16,6 +16,11 @@ These are changes that will probably be included in the next release.
 
 ### Fixed
 
+## [v1.0.2] - 2021-09-20
+
+### Changed
+ * Include and default to Timescale 2.4.2
+
 
 ## [v1.0.1] - 2021-09-17
 
