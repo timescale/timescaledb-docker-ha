@@ -126,7 +126,7 @@ RUN for pg in ${PG_VERSIONS}; do \
 RUN for pg in ${PG_VERSIONS}; do \
         apt-get install -y postgresql-${pg} postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} \
             postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
-            postgresql-${pg}-pg-stat-kcache || exit 1; \
+            postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron || exit 1; \
     done
 
 # We put Postgis in first, so these layers can be reused
