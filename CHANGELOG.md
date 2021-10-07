@@ -16,6 +16,16 @@ These are changes that will probably be included in the next release.
 
 ### Fixed
 
+## [v1.0.3] - 2021-09-20
+
+### Changed
+ * Include `timescaledb_cloudutils` v1.0.1
+ * Include Hot Forge v0.1.33
+
+### Added
+ * `pg_cron`
+
+
 ## [v1.0.2] - 2021-09-20
 
 ### Changed
