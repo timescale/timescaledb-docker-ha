@@ -267,7 +267,7 @@ RUN if [ ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
         for pg in ${PG_VERSIONS}; do \
             if [ ${pg} -ge "12" ]; then \
                 [ -d "/build/timescaledb_cloudutils/.git" ] || git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/timescaledb_cloudutils || exit 1 ; \
-                cd /build/timescaledb_cloudutils ; \
+                cd /build/timescaledb_cloudutils && git reset HEAD --hard && git checkout ${TIMESCALE_CLOUDUTILS} ; \
                 export PG_CONFIG="/usr/lib/postgresql/${pg}/bin/pg_config"; \
                 export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
                 cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config; \
