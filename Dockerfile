@@ -203,6 +203,11 @@ RUN for pg in ${PG_VERSIONS}; do \
 
 USER postgres
 
+RUN cargo install cargo-pgx
+RUN for pg in ${PG_VERSIONS}; do \
+        cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config || exit 1 ; \
+    done
+
 ENV MAKEFLAGS=-j8
 
 ARG OSS_ONLY
