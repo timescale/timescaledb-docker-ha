@@ -365,8 +365,12 @@ RUN if [ "${ALLOW_ADDING_EXTENSIONS}" != "true" ]; then \
         done ; \
     fi
 
+USER postgres
+
 ## Cleanup
 FROM builder AS trimmed
+
+USER root
 
 RUN apt-get purge -y ${BUILD_PACKAGES}
 RUN apt-get autoremove -y \
@@ -382,6 +386,8 @@ RUN apt-get autoremove -y \
             /usr/local/rustup \
             /usr/local/cargo \
     && find /var/log -type f -exec truncate --size 0 {} \;
+
+USER postgres
 
 ## Create a smaller Docker image from the builder image
 FROM scratch
