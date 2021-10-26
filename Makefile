@@ -109,11 +109,15 @@ builder: compiler
 
 .PHONY: publish-builder
 publish-builder: builder
+	set -e ; \
 	for url in $(DOCKER_PUBLISH_URLS); do \
-		docker tag $(DOCKER_TAG_COMPILER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER) || exit 1 ; \
-		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER) || exit 1 ; \
-		docker tag $(DOCKER_TAG_BUILDER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER) || exit 1 ; \
-		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER) || exit 1 ; \
+		docker tag $(DOCKER_TAG_COMPILER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER); \
+		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER); \
+		docker tag $(DOCKER_TAG_BUILDER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER); \
+		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER); \
+		export LSB_CODENAME="$$(docker run -ti --rm $(DOCKER_TAG_BUILDER) lsb_release -s -c | tr -d '[:space:]')"; \
+		docker tag $(DOCKER_TAG_BUILDER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER)-$${LSB_CODENAME}; \
+		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER)-$${LSB_CODENAME}; \
 	done
 
 # This target always succeeds, as it is purely an speed optimization
