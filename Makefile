@@ -115,7 +115,8 @@ publish-builder: builder
 		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER); \
 		docker tag $(DOCKER_TAG_BUILDER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER); \
 		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER); \
-		export LSB_CODENAME="$$(docker run -ti --rm $(DOCKER_TAG_BUILDER) lsb_release -s -c | tr -d '[:space:]')"; \
+		docker run -i --rm $(DOCKER_TAG_BUILDER) lsb_release -s -c ; \
+		export LSB_CODENAME="$$(docker run -i --rm $(DOCKER_TAG_BUILDER) lsb_release -s -c | tr -d '[:space:]')"; \
 		docker tag $(DOCKER_TAG_BUILDER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER)-$${LSB_CODENAME}; \
 		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER)-$${LSB_CODENAME}; \
 	done
