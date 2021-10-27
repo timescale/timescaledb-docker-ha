@@ -20,17 +20,9 @@ jobs:
         # This is the 'default' image, it contains PostgreSQL 12 and 13, and defaults to PostgreSQL 13 binaries
         - pg_major: "13"
           pg_versions: "13 12"
-        # This is the 12 image
-        - pg_major: "12"
-          pg_versions: "12 11"
         # This is the PostgreSQL 13 image containing only oss software
         - pg_major: "13"
           pg_versions: "13 12"
-          docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
-          docker_tag_postfix: '-oss'
-        # This is the PostgreSQL 12 image containing only oss software
-        - pg_major: "12"
-          pg_versions: "12 11"
           docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
           docker_tag_postfix: '-oss'
     runs-on: ubuntu-20.04
