@@ -16,6 +16,13 @@ These are changes that will probably be included in the next release.
 
 ### Fixed
 
+## [v1.0.6] - 2021-10-27
+
+### Changed
+ * Include and default to Timescale 2.4.2
+ * Include Timescale Cloudutils 1.0.2
+ * Update Toolkit to 1.3.1
+
 ## [v1.0.4] - 2021-10-08
 
 ### Changed
