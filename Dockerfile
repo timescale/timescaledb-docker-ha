@@ -107,7 +107,7 @@ RUN find /usr/share/i18n/charmaps/ -type f ! -name UTF-8.gz -delete \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 
 # Some Patroni prerequisites
-RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes
+RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
