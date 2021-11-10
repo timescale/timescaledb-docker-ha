@@ -16,6 +16,12 @@ These are changes that will probably be included in the next release.
 
 ### Fixed
 
+## [v1.0.8] - 2021-11-11
+
+### Changed
+ * PostgreSQL [12.9](https://www.postgresql.org/docs/12/release-12-9.html) and [13.5](https://www.postgresql.org/docs/13/release-13-5.html) have been released
+ * Include dependencies to support native Raft support for Patroni [PySyncObj](https://github.com/bakwc/PySyncObj)
+
 ## [v1.0.7] - 2021-10-27
 
 ### Changed
