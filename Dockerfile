@@ -240,11 +240,12 @@ RUN TS_VERSIONS="1.6.0 1.6.1 1.7.0 1.7.1 1.7.2 1.7.3 1.7.4 1.7.5 2.0.0-rc3 2.0.0
         done; \
     done
 
+ARG PGX_VERSION=0.2.4
 ARG TIMESCALE_PROMSCALE_EXTENSION=
 # build and install the promscale_extension extension
 RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
         set -e \
-        && cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx \
+        && cargo install cargo-pgx --version ${PGX_VERSION} \
         && git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
         && for pg in ${PG_VERSIONS}; do \
             if [ ${pg} -ge "12" ]; then \
