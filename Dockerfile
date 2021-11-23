@@ -195,6 +195,7 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_O
         && git checkout ${TIMESCALE_OOM_GUARD} \
         && mkdir /usr/local/bin/oom-guard; \
         make all && make tests  || exit 1; \
+        echo "hello";\
        chmod 0755 -R /usr/local/bin/oom-guard ;\
     fi
 RUN ls /usr/local/bin/oom-guard
