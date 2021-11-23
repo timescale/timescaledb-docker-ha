@@ -193,10 +193,10 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_O
         cd /build \
         && git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/oom_guard \
         && git checkout ${TIMESCALE_OOM_GUARD} \
-        && make all  \
-        && make tests  \
-       &&  chmod 0755 -R /usr/local/bin/oom-guard || exit 1;\
-    fi 
+        && mkdir /usr/local/bin/oom-guard;
+        make all && make tests  || exit 1;
+       chmod 0755 -R /usr/local/bin/oom-guard ;\
+    fi
 RUN ls /usr/local/bin/oom-guard
 # The following allows *new* files to be created, so that extensions can be added to a running container.
 # Existing files are still owned by root and have their sticky bit (the 1 in the 1775 permission mode) set,
