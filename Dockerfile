@@ -193,7 +193,7 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_O
         mkdir /usr/local/bin/oom-guard; \
         cd /build \
         && git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/oom_guard \
-        && git checkout ${TIMESCALE_OOM_GUARD} \
+        && cd /build/oom_guard && git reset HEAD --hard && git checkout ${TIMESCALE_OOM_GUARD} \
         && make all && make tests  || exit 1; \
        chmod 0755 -R /usr/local/bin/oom-guard ;\
     fi
