@@ -190,11 +190,11 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_H
 # It is a private timescale project and is therefore not included/built by default
 ARG TIMESCALE_OOM_GUARD=
 RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_OOM_GUARD}" ]; then \
+        mkdir /usr/local/bin/oom-guard;
         cd /build \
         && git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/oom_guard \
         && git checkout ${TIMESCALE_OOM_GUARD} \
-        && mkdir /usr/local/bin/oom-guard; \
-        make all && make tests  || exit 1; \
+        && make all && make tests  || exit 1; \
        chmod 0755 -R /usr/local/bin/oom-guard ;\
     fi 
 
