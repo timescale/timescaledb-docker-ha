@@ -43,7 +43,7 @@ RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 RUN apt-get update \
     && apt-get install -y ca-certificates curl gnupg1 gpg gpg-agent locales lsb-release wget
 
-RUN mkdir -p /build
+RUN mkdir -p /build/scripts
 RUN chmod 777 /build
 WORKDIR /build/
 
@@ -231,6 +231,8 @@ RUN if [ "${GITHUB_TOKEN}" != "" ]; then \
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
 ARG INSTALL_METHOD=docker-ha
 
+COPY build_scripts /build/scripts
+
 # If a specific GITHUB_TAG is provided, we will build that tag only. Otherwise
 # we build all the public (recent) releases
 RUN TS_VERSIONS="2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0" \
@@ -238,18 +240,7 @@ RUN TS_VERSIONS="2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0" \
     && cd /build/timescaledb && git pull \
     && set -e \
     && for pg in ${PG_VERSIONS}; do \
-        for ts in ${TS_VERSIONS}; do \
-            if [ ${pg} -ge 13 ] && [ "$(expr substr ${ts} 1 1)" = "1" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && if [ ${pg} -ge 13 ] && [ "$(expr substr ${ts} 1 3)" = "2.0" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && if [ ${pg} -ge 12 ] && [ "$(expr substr ${ts} 1 3)" = "1.6" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && if [ ${pg} -lt 12 ] && [ "$(expr substr ${ts} 1 3)" = "2.4" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && if [ ${pg} -lt 12 ] && [ "$(expr substr ${ts} 1 3)" = "2.5" ]; then echo "Skipping: TimescaleDB ${ts} is not supported on PostgreSQL ${pg}" && continue; fi \
-            && cd /build/timescaledb && git reset HEAD --hard && git clean -f -d -x && git checkout ${ts} \
-            && rm -rf build \
-            && if [ "${ts}" = "2.2.0" ]; then sed -i 's/RelWithDebugInfo/RelWithDebInfo/g' CMakeLists.txt; fi \
-            && PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" ./bootstrap -DTAP_CHECKS=OFF -DWARNINGS_AS_ERRORS=off -DCMAKE_BUILD_TYPE=RelWithDebInfo -DREGRESS_CHECKS=OFF -DGENERATE_DOWNGRADE_SCRIPT=ON -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY} \
-            && cd build && make install || exit 1; \
-        done; \
+        /build/scripts/install_timescaledb.sh ${pg} ${TS_VERSIONS} || exit 1 ; \
     done
 
 ARG PGX_VERSION=0.2.4
@@ -334,33 +325,9 @@ ARG TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS=
 RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
         set -e \
         && git clone https://github.com/timescale/timescaledb-toolkit /build/timescaledb-toolkit \
+        && cd /build/timescaledb-toolkit \
         && for pg in ${PG_VERSIONS}; do \
-            if [ ${pg} -ge "12" ]; then \
-                export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
-                mkdir -p /home/postgres/.pgx \
-                # we need to switch back to old pgx for each pg version
-                # once that ages out this should be moved above the loop
-                && cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx \
-                && printf "[configs]\npg${pg} = \"/usr/lib/postgresql/${pg}/bin/pg_config\"\n" > /home/postgres/.pgx/config.toml \
-                # build previous version if one was provided
-                && for tookit in ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS}; do \
-                    echo "building previous toolkit version ${tookit} for pg${pg}" \
-                    && cd /build/timescaledb-toolkit \
-                    && git reset HEAD --hard \
-                    && git checkout ${tookit} \
-                    && git clean -e target -f -x \
-                    && cd extension && cargo pgx install --release \
-                    && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
-                done \
-                && echo "building toolkit version ${TIMESCALEDB_TOOLKIT_EXTENSION} for pg${pg}" \
-                && cargo install cargo-pgx --version '^0.2' \
-                && cd /build/timescaledb-toolkit \
-                && git reset HEAD --hard \
-                && git checkout ${TIMESCALEDB_TOOLKIT_EXTENSION} \
-                && git clean -e target -f -x \
-                && cd extension && cargo pgx install --release \
-                && cargo run --manifest-path ../tools/post-install/Cargo.toml -- /usr/lib/postgresql/${pg}/bin/pg_config; \
-            fi; \
+            /build/scripts/install_timescaledb-toolkit.sh ${pg} ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS} ${TIMESCALEDB_TOOLKIT_EXTENSION} || exit 1 ; \
         done; \
     fi
 
