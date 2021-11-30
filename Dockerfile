@@ -8,7 +8,7 @@
 # By including multiple versions of PostgreSQL we can use the same Docker image,
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
 # pg_upgrade from 12 to 13, so we need all the postgres & timescale libraries for all versions
-ARG PG_VERSIONS="13 12"
+ARG PG_VERSIONS="14 13"
 ARG PG_MAJOR=13
 
 ## We have many base images to choose from, (alpine, bitnami) but as we're adding a lot
@@ -270,7 +270,7 @@ RUN if [ ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
         && cd /build \
         && cargo install cargo-pgx --version ${PGX_VERSION}; \
         for pg in ${PG_VERSIONS}; do \
-            if [ ${pg} -ge "12" ]; then \
+            if [ ${pg} -ge "12" ] && [ ${pg} -lt "14" ]; then \
                 [ -d "/build/timescaledb_cloudutils/.git" ] || git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/timescaledb_cloudutils || exit 1 ; \
                 cd /build/timescaledb_cloudutils && git reset HEAD --hard && git checkout ${TIMESCALE_CLOUDUTILS} ; \
                 export PG_CONFIG="/usr/lib/postgresql/${pg}/bin/pg_config"; \

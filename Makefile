@@ -1,7 +1,7 @@
-PG_MAJOR?=13
+PG_MAJOR?=14
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
-PG_VERSIONS?=13 12
+PG_VERSIONS?=14 13
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 POSTGIS_VERSIONS?="3"
@@ -93,7 +93,7 @@ DOCKER_EXEC_COMMAND=docker exec -i $(DOCKER_TAG_PREPARE) timeout 90
 fast: DOCKER_EXTRA_BUILDARGS= --build-arg GITHUB_TAG=master
 fast: PG_AUTH_MON=
 fast: PG_LOGERRORS=
-fast: PG_VERSIONS=13
+fast: PG_VERSIONS=14
 fast: POSTGIS_VERSIONS=
 fast: TIMESCALEDB_TOOLKIT_EXTENSION=
 fast: TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS=
