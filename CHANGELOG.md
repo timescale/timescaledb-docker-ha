@@ -16,6 +16,38 @@ These are changes that will probably be included in the next release.
 
 ### Fixed
 
+## [v1.1.0] - 2021-12-02
+
+This release marks the point where we no longer publish images containing
+PostgreSQL 11.
+
+As every Docker Image we release contains the PostgreSQL version of the tag,
+but also of the major PostgreSQL version before the tag, that means you can
+use the following images:
+
+- `pg13*`: Supports running PostgreSQL 13 and 12
+- `pg14*`: Supports running PostgreSQL 14 and 13
+
+For those that used to use the Docker Images tagged with pg12 with PostgreSQL 12
+you can now use the `pg13` tagged images.
+
+> NOTICE: the `pg13` images do have their PATH default to PostgreSQL 13 binaries, so
+be sure to configure the PATH environment variable correctly in the container
+that you use.
+
+For example, the `timescaledb-single` Helm Chart configures the path based
+upon the user input in [`values.yaml`](https://github.com/timescale/timescaledb-kubernetes/blob/a12dd47a2339ce1bbacde728f3eeb94309ce0e6f/charts/timescaledb-single/templates/statefulset-timescaledb.yaml#L253-L254)
+
+### Removed
+ * We no longer build images containing PostgreSQL 12 and PostgreSQL 11
+### Added
+ * We now also build PostgreSQL 14 Docker Images, they include PostgreSQL 14 and 13.
+
+### Changed
+ * Include and default to Timescale 2.5.1
+ * Include Timescale Cloudutils 1.4.0
+ * Upgrade promscale extension to version 0.3.0
+
 ## [v1.0.8] - 2021-11-11
 
 ### Changed
