@@ -236,7 +236,7 @@ COPY build_scripts /build/scripts
 
 # If a specific GITHUB_TAG is provided, we will build that tag only. Otherwise
 # we build all the public (recent) releases
-RUN TS_VERSIONS="2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0" \
+RUN TS_VERSIONS="2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0 2.5.1" \
     && if [ "${GITHUB_TAG}" != "" ]; then TS_VERSIONS="${GITHUB_TAG}"; fi \
     && cd /build/timescaledb && git pull \
     && set -e \
