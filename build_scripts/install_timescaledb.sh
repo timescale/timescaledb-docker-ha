@@ -23,14 +23,12 @@ is_supported() {
 }
 
 for TAG in "$@"; do
-    cd "${PWD}"
-    
     git reset HEAD --hard
     git checkout "${TAG}"
     git clean -f -d -x
 
     MAJOR_MINOR="$(awk '/^version/ {print $3}' version.config | cut -d. -f1,2)"
-    
+
     if [ "${TAG}" = "2.2.0" ]; then sed -i 's/RelWithDebugInfo/RelWithDebInfo/g' CMakeLists.txt; fi
 
     if is_supported "${MAJOR_MINOR}"; then
