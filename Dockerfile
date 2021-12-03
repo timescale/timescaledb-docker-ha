@@ -7,7 +7,8 @@
 
 # By including multiple versions of PostgreSQL we can use the same Docker image,
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
-# pg_upgrade from 12 to 13, so we need all the postgres & timescale libraries for all versions
+# pg_upgrade from one major version to another,
+# so we need all the postgres & timescale libraries for all versions
 ARG PG_VERSIONS="14 13"
 ARG PG_MAJOR=13
 

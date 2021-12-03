@@ -41,7 +41,7 @@ for TOOLKIT_VERSION in "$@"; do
 pg${PGVERSION} = "/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
 __EOT__
     cd extension
-    cargo pgx install --release    
+    cargo pgx install --release
     cargo run --manifest-path ../tools/post-install/Cargo.toml -- "/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
     cd ..
 done
