@@ -15,7 +15,9 @@ shift
 export PATH="/usr/lib/postgresql/${PGVERSION}/bin:${PATH}"
 
 is_supported() {
+    MAJOR="$(echo "$1" | cut -d. -f1)"
     MINOR="$(echo "$1" | cut -d. -f2)"
+    if [ "${PGVERSION}" -ge 13 ] && [ "${MAJOR}" -eq 1 ]; then return 1; fi
     if [ "${PGVERSION}" -lt 12 ] && [ "${MINOR}" -ge 4 ]; then return 1; fi
     if [ "${PGVERSION}" -ge 14 ] && [ "${MINOR}" -lt 5 ]; then return 1; fi
     if [ "${PGVERSION}" -ge 13 ] && [ "${MINOR}" -lt 1 ]; then return 1; fi

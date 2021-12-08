@@ -16,6 +16,12 @@ These are changes that will probably be included in the next release.
 
 ### Fixed
 
+## [v1.1.1] - 2021-12-08
+
+### Added
+ * Include TimescaleDB 1.7.5 to allow users of TimescaleDB 1.x to keep using this
+   image in combination with PostgreSQL 12 databases.
+
 ## [v1.1.0] - 2021-12-02
 
 This release marks the point where we no longer publish images containing
