@@ -13,6 +13,10 @@ env:
   TIMESCALE_HOT_FORGE: "v0.1.35"
   TIMESCALE_OOM_GUARD:  "v1.1.1"
   TIMESCALE_CLOUDUTILS: "v1.0.3"
+  # This builder image is used to create patches in other environments.
+  # Some of these patches still require PostgreSQL 12 support, therefore,
+  # we include 3 versions for the builder image
+  PG_VERSIONS: "14 13 12"
 jobs:
   build-image:
     name: Build the builder Docker Image
