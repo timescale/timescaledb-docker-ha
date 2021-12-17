@@ -16,6 +16,15 @@ These are changes that will probably be included in the next release.
 
 ### Fixed
 
+## [v1.1.1] - 2021-12-17
+
+### Changed 
+ * Include Timescale Cloudutils 1.0.3
+ * Upgrade Oom Guard to 1.1.1
+ * Include Hot Forge v0.1.36
+### Added
+ * [`pldebugger`](https://github.com/EnterpriseDB/pldebugger) is now included (from packages)
+
 ## [v1.1.1] - 2021-12-08
 
 ### Added
