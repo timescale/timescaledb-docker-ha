@@ -11,7 +11,7 @@ env:
   TIMESCALE_HOT_FORGE: "v0.1.35"
   TIMESCALE_OOM_GUARD: "v1.1.1"
   TIMESCALE_CLOUDUTILS: "v1.0.3"
-  DOCKER_CACHE_FROM: docker.io/timescale/timescaledb-ha:pg13-builder
+  DOCKER_CACHE_FROM: docker.io/timescale/timescaledb-ha:pg14-builder
 jobs:
   build-image:
     name: Build the default Docker Image
