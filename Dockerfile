@@ -127,7 +127,7 @@ RUN for pg in ${PG_VERSIONS}; do \
 RUN for pg in ${PG_VERSIONS}; do \
         apt-get install -y postgresql-${pg} postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} \
             postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
-            postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron || exit 1; \
+            postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger || exit 1; \
     done
 
 # We put Postgis in first, so these layers can be reused
@@ -145,7 +145,7 @@ RUN apt-get install -y patroni
 
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
         # We want timescaledb to be loaded in this image by every created cluster
-        sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" $file \
+        sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,plugin_debugger,\2'/;s/,'/'/" $file \
         # We need to listen on all interfaces, otherwise PostgreSQL is not accessible
         && echo "listen_addresses = '*'" >> $file; \
     done
