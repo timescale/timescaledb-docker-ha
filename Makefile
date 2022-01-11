@@ -6,6 +6,7 @@ PG_VERSIONS?=14 13
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 POSTGIS_VERSIONS?="3"
 PG_AUTH_MON?=v1.0
+PG_STAT_MONITOR?=1.0.0-rc.1
 PG_LOGERRORS?=3c55887b
 TIMESCALE_PROMSCALE_EXTENSION?=0.3.0
 TIMESCALEDB_TOOLKIT_EXTENSION?=forge-stable-1.4.0
@@ -66,6 +67,7 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg PG_AUTH_MON="$(PG_AUTH_MON)" \
 					 --build-arg PG_LOGERRORS="$(PG_LOGERRORS)" \
 					 --build-arg PG_MAJOR=$(PG_MAJOR) \
+					 --build-arg PG_STAT_MONITOR="$(PG_STAT_MONITOR)" \
 					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
 					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
 					 --build-arg PRIVATE_REPO_TOKEN="$(PRIVATE_REPO_TOKEN)" \

@@ -9,6 +9,7 @@ These are changes that will probably be included in the next release.
 ## [future release]
 
 ### Added
+ * Include [`pg_stat_monitor`](https://github.com/percona/pg_stat_monitor)
 
 ### Changed
 

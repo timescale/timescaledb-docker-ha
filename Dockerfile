@@ -295,6 +295,20 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_T
         done; \
     fi
 
+# pg_stat_monitor is a Query Performance Monitoring tool for PostgreSQL
+# https://github.com/percona/pg_stat_monitor
+ARG PG_STAT_MONITOR=
+RUN if [ ! -z "${PG_STAT_MONITOR}" ]; then \
+        cd /build \
+        && git clone https://github.com/percona/pg_stat_monitor \
+        && for pg in ${PG_VERSIONS}; do \
+            export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" \
+            && cd /build/pg_stat_monitor && git reset HEAD --hard && git checkout "${PG_STAT_MONITOR}" \
+            && make USE_PGXS=1 \
+            && make USE_PGXS=1 install || exit 1 ; \
+        done; \
+    fi
+
 # pg_auth_mon is an extension to monitor authentication attempts
 # It is also useful to determine whether the DB is actively used
 # https://github.com/RafiaSabih/pg_auth_mon
