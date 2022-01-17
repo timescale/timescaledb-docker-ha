@@ -244,7 +244,7 @@ RUN TS_VERSIONS="1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5
         /build/scripts/install_timescaledb.sh ${pg} ${TS_VERSIONS} || exit 1 ; \
     done
 
-ARG PGX_VERSION=0.2.4
+ARG PGX_VERSION=0.2.6
 ARG TIMESCALE_PROMSCALE_EXTENSION=
 # build and install the promscale_extension extension
 RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
@@ -263,7 +263,7 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
     fi
 
 # Make sure to override this when upgrading to new PGX version
-ARG PGX_VERSION=0.1.21
+ARG PGX_VERSION=0.2.6
 ARG TIMESCALE_CLOUDUTILS=
 # build and install the cloudutils libarary and extension
 RUN if [ ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
@@ -271,7 +271,7 @@ RUN if [ ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
         && cd /build \
         && cargo install cargo-pgx --version ${PGX_VERSION}; \
         for pg in ${PG_VERSIONS}; do \
-            if [ ${pg} -ge "12" ] && [ ${pg} -lt "14" ]; then \
+            if [ ${pg} -ge "13" ]; then \
                 [ -d "/build/timescaledb_cloudutils/.git" ] || git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/timescaledb_cloudutils || exit 1 ; \
                 cd /build/timescaledb_cloudutils && git reset HEAD --hard && git checkout ${TIMESCALE_CLOUDUTILS} ; \
                 export PG_CONFIG="/usr/lib/postgresql/${pg}/bin/pg_config"; \
