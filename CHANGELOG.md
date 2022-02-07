@@ -8,6 +8,13 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.1.4] - 2022-02-07
+
+### Changed
+
+* Use Rust 1.58.1
+* Use [sscache](https://github.com/mozilla/sccache) a compiler cache to speed up Rust compilation
+
 ## [v1.1.3] - 2022-02-07
 
 ### Added
