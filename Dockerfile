@@ -245,6 +245,15 @@ RUN TS_VERSIONS="1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5
         /build/scripts/install_timescaledb.sh ${pg} ${TS_VERSIONS} || exit 1 ; \
     done
 
+# As we build many Rust Components, against many PostgreSQL versions, we really benefit from
+# a build cache, even if it only exists ephemerally in the container.
+RUN wget "https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz"
+RUN tar xzfp sccache*.tar.gz
+RUN chmod +x sccache-*/sccache
+RUN mkdir -p /build/bin
+RUN mv sccache-*/sccache /build/bin/sccache
+ENV RUSTC_WRAPPER=/build/bin/sccache
+
 ARG PGX_VERSION=0.2.6
 ARG TIMESCALE_PROMSCALE_EXTENSION=
 # build and install the promscale_extension extension
@@ -374,6 +383,7 @@ RUN apt-get autoremove -y \
             /usr/share/locale/?? \
             /usr/share/locale/??_?? \
             /home/postgres/.pgx \
+            /home/postgres/.cargo \
             /build/ \
             /usr/local/rustup \
             /usr/local/cargo \
