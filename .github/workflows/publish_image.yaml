@@ -18,9 +18,9 @@ jobs:
     strategy:
       matrix:
         include:
-        # This is the 'default' image, it contains PostgreSQL 14 and 13, and defaults to PostgreSQL 14 binaries
+        # This is the 'default' image, it contains PostgreSQL 14, 13 and 12, and defaults to PostgreSQL 14 binaries
         - pg_major: "14"
-          pg_versions: "14 13"
+          pg_versions: "14 13 12"
         # This is the PostgreSQL 14 image containing only oss software
         - pg_major: "14"
           pg_versions: "14 13"
