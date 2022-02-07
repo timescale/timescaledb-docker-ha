@@ -8,18 +8,20 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.1.3] - 2022-02-07
+
 ### Added
- * Include [`pg_stat_monitor`](https://github.com/percona/pg_stat_monitor)
+
+* Include [`pg_stat_monitor`](https://github.com/percona/pg_stat_monitor)
 
 ### Changed
 
-### Removed
+* Include Timescale Cloudutils 1.1.0, this includes support for PostgreSQL 14
+* Retain PostgreSQL 12 support in the builder/compiler images
 
-### Fixed
+## [v1.1.2] - 2021-12-17
 
-## [v1.1.1] - 2021-12-17
-
-### Changed 
+### Changed
  * Include Timescale Cloudutils 1.0.3
  * Upgrade Oom Guard to 1.1.1
  * Include Hot Forge v0.1.36
