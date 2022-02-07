@@ -113,7 +113,7 @@ RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-ku
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lld lsb-release make patchutils python2-dev python3-dev wget"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
@@ -253,6 +253,7 @@ RUN chmod +x sccache-*/sccache
 RUN mkdir -p /build/bin
 RUN mv sccache-*/sccache /build/bin/sccache
 ENV RUSTC_WRAPPER=/build/bin/sccache
+ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
 
 ARG PGX_VERSION=0.2.6
 ARG TIMESCALE_PROMSCALE_EXTENSION=
