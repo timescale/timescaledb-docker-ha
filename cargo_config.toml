@@ -1,0 +1,8 @@
+# This is a TOML document.
+[build]
+rustc-wrapper = "/build/bin/sccache"
+
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+    "-C", "link-arg=-fuse-ld=lld",
+]

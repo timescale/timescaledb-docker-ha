@@ -251,9 +251,12 @@ RUN wget "https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v
 RUN tar xzfp sccache*.tar.gz
 RUN chmod +x sccache-*/sccache
 RUN mkdir -p /build/bin
+RUN mkdir -p /build/cache
 RUN mv sccache-*/sccache /build/bin/sccache
-ENV RUSTC_WRAPPER=/build/bin/sccache
-ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
+
+COPY cargo_config.toml /usr/local/cargo/config.toml
+ENV CARGO_INCREMENTAL=0
+ENV SCCACHE_DIR=/build/cache
 
 ARG PGX_VERSION=0.2.6
 ARG TIMESCALE_PROMSCALE_EXTENSION=
@@ -358,6 +361,8 @@ RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
     fi
 
 USER root
+
+RUN du -ms /build/cache
 
 # All the tools that were built in the previous steps have their ownership set to postgres
 # to allow mutability. To allow one to build this image with the default privileges (owned by root)
