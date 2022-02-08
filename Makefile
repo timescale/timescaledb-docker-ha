@@ -87,6 +87,8 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --label org.opencontainers.image.source="$(GIT_REMOTE)" \
 					 --label org.opencontainers.image.vendor=Timescale \
 					 --secret id=private_repo_token,env=PRIVATE_REPO_TOKEN \
+					 --secret id=AWS_ACCESS_KEY_ID,env=AWS_ACCESS_KEY_ID \
+					 --secret id=AWS_SECRET_ACCESS_KEY,env=AWS_SECRET_ACCESS_KEY \
 					 $(DOCKER_EXTRA_BUILDARGS) \
 					 .
 

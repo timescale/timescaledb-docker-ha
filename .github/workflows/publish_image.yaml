@@ -65,6 +65,8 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           PG_VERSIONS: ${{ matrix.pg_versions }}
           DOCKER_ECR_URL: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         # Note that our ECR registry has immutability guarantees, therefore we do not push
         # the mutable ('latest') tags to the ECR registry
         run: |
