@@ -8,6 +8,19 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.1.4] - 2022-02-08
+
+### Changed
+
+* Use Rust 1.58.1 to allow
+    [Rust 2021 edition](https://doc.rust-lang.org/edition-guide/rust-2021/index.html)
+    projects to be included
+* Build fewer versions of Toolkit to improve build time
+* Switch to using Docker Secrets with the
+    [`--secret`](https://docs.docker.com/engine/reference/commandline/build/#options) option
+    this also requires the use of
+    [Docker BuildKit](https://docs.docker.com/develop/develop-images/build_enhancements/)
+
 ## [v1.1.3] - 2022-02-07
 
 ### Added
