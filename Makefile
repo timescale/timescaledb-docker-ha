@@ -46,7 +46,7 @@ INSTALL_METHOD?=docker-ha
 
 # These variables have to do with what software we pull in from github for timescaledb
 GITHUB_REPO?=timescale/timescaledb
-GITHUB_TAG?=master
+GITHUB_TAG?=
 
 # We need dynamic variables here, that is why we do not use $(shell awk ...)
 VAR_PGMINOR="$$(awk -F '=' '/postgresql.version=/ {print $$2}' $(VAR_VERSION_INFO))"
@@ -54,12 +54,17 @@ VAR_TSMINOR="$$(awk -F '=' '/timescaledb.version=/ {print $$2}' $(VAR_VERSION_IN
 VAR_TSMAJOR="$$(awk -F '[.=]' '/timescaledb.version=/ {print $$3 "." $$4}' $(VAR_VERSION_INFO))"
 VAR_VERSION_INFO=version_info-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX).log
 
+# We require the use of buildkit, as we use the --secret arguments for docker build
+export DOCKER_BUILDKIT = 1
+
 # We label all the Docker Images with the versions of PostgreSQL, TimescaleDB and some other extensions
 # afterwards, by using introspection, as minor versions may differ even when using the same
 # Dockerfile
 DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg ALLOW_ADDING_EXTENSIONS="$(ALLOW_ADDING_EXTENSIONS)" \
 					 --build-arg GITHUB_DOCKERLIB_POSTGRES_REF="$(GITHUB_DOCKERLIB_POSTGRES_REF)" \
+					 --build-arg GITHUB_REPO="$(GITHUB_REPO)" \
+					 --build-arg GITHUB_TAG=$(GITHUB_TAG) \
 					 --build-arg GITHUB_TIMESCALEDB_DOCKER_REF="$(GITHUB_TIMESCALEDB_DOCKER_REF)" \
 					 --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" \
 					 --build-arg PG_AUTH_MON="$(PG_AUTH_MON)" \
@@ -68,7 +73,6 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg PG_STAT_MONITOR="$(PG_STAT_MONITOR)" \
 					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
 					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
-					 --build-arg PRIVATE_REPO_TOKEN="$(PRIVATE_REPO_TOKEN)" \
 					 --build-arg TIMESCALE_CLOUDUTILS="$(TIMESCALE_CLOUDUTILS)" \
 					 --build-arg TIMESCALE_HOT_FORGE="$(TIMESCALE_HOT_FORGE)" \
 					 --build-arg TIMESCALE_OOM_GUARD="$(TIMESCALE_OOM_GUARD)" \
@@ -77,11 +81,12 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS="$(TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS)" \
 					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSION="$(TIMESCALEDB_TOOLKIT_EXTENSION)" \
 					 --cache-from "$(DOCKER_CACHE_FROM)" \
+					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
 					 --label org.opencontainers.image.source="$(GIT_REMOTE)" \
 					 --label org.opencontainers.image.vendor=Timescale \
-					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
+					 --secret id=private_repo_token,env=PRIVATE_REPO_TOKEN \
 					 $(DOCKER_EXTRA_BUILDARGS) \
 					 .
 
@@ -200,7 +205,6 @@ publish-immutable: is_ci build
 list-images:
 	docker images --filter "label=com.timescaledb.image.install_method=$(INSTALL_METHOD)" --filter "dangling=false"
 
-build-tag: DOCKER_EXTRA_BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GITHUB_TAG=$(GITHUB_TAG)
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
 build-tag: build
 
