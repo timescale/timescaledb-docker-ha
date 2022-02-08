@@ -172,15 +172,17 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 RUN ln -s /usr/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
 RUN ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 
+ENV REPO_SECRET_FILE=/run/secrets/private_repo_token
+
 # hot-forge is a project that allows hot-patching of postgres containers
 # It is currently a private timescale project and is therefore not included/built by default,
 # and never included in the OSS image.
-ARG PRIVATE_REPO_TOKEN=
 ARG TIMESCALE_HOT_FORGE=
-RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_HOT_FORGE}" ]; then \
+RUN --mount=type=secret,uid=1000,id=private_repo_token \
+    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_HOT_FORGE}" ]; then \
         GH_REPO="https://api.github.com/repos/timescale/hot-forge"; \
-        ASSET_ID="$(curl -sL --header "Authorization: token ${PRIVATE_REPO_TOKEN}" "${GH_REPO}/releases/tags/${TIMESCALE_HOT_FORGE}" | jq '.assets[0].id')"; \
-        curl -sL --header "Authorization: token ${PRIVATE_REPO_TOKEN}" \
+        ASSET_ID="$(curl -sL --header "Authorization: token $(cat "${REPO_SECRET_FILE}")" "${GH_REPO}/releases/tags/${TIMESCALE_HOT_FORGE}" | jq '.assets[0].id')"; \
+        curl -sL --header "Authorization: token $(cat "${REPO_SECRET_FILE}")" \
                  --header 'Accept: application/octet-stream' \
                  "${GH_REPO}/releases/assets/${ASSET_ID}" > /usr/local/bin/hot-forge || exit 1; \
         chmod 0755 /usr/local/bin/hot-forge ; \
@@ -190,10 +192,11 @@ RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_H
 # OOM Guard is a library that enables us to mitigate OOMs by blocking allocations above a limit.
 # It is a private timescale project and is therefore not included/built by default
 ARG TIMESCALE_OOM_GUARD=
-RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_OOM_GUARD}" ]; then \
+RUN --mount=type=secret,uid=1000,id=private_repo_token \
+    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_OOM_GUARD}" ]; then \
         mkdir /usr/local/bin/oom-guard; \
         cd /build \
-        && git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/oom_guard \
+        && git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/oom_guard \
         && cd /build/oom_guard && git reset HEAD --hard && git checkout ${TIMESCALE_OOM_GUARD} \
         && make all && make tests  || exit 1; \
        chmod 0755 -R /usr/local/bin/oom-guard ;\
@@ -218,18 +221,18 @@ USER postgres
 
 ENV MAKEFLAGS=-j8
 
-ARG OSS_ONLY
-ARG PRIVATE_REPO_TOKEN
 ARG GITHUB_REPO=timescale/timescaledb
-ARG GITHUB_TAG
-RUN if [ "${PRIVATE_REPO_TOKEN}" != "" ]; then \
-        git clone "https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/${GITHUB_REPO}" /build/timescaledb; \
+RUN --mount=type=secret,uid=1000,id=private_repo_token \
+    if [ -f "{REPO_SECRET_FILE}" ]; then \
+        git clone "https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/${GITHUB_REPO}" /build/timescaledb; \
     else \
         git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
     fi
 
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
 ARG INSTALL_METHOD=docker-ha
+ARG GITHUB_TAG
+ARG OSS_ONLY
 
 COPY build_scripts /build/scripts
 
@@ -265,13 +268,14 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
 ARG PGX_VERSION=0.2.6
 ARG TIMESCALE_CLOUDUTILS=
 # build and install the cloudutils libarary and extension
-RUN if [ ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
+RUN --mount=type=secret,uid=1000,id=private_repo_token \
+    if [ -f "${REPO_SECRET_FILE}" -a ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
         set -e \
         && cd /build \
         && cargo install cargo-pgx --version ${PGX_VERSION}; \
         for pg in ${PG_VERSIONS}; do \
             if [ ${pg} -ge "13" ]; then \
-                [ -d "/build/timescaledb_cloudutils/.git" ] || git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/timescaledb_cloudutils || exit 1 ; \
+                [ -d "/build/timescaledb_cloudutils/.git" ] || git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/timescaledb_cloudutils || exit 1 ; \
                 cd /build/timescaledb_cloudutils && git reset HEAD --hard && git checkout ${TIMESCALE_CLOUDUTILS} ; \
                 export PG_CONFIG="/usr/lib/postgresql/${pg}/bin/pg_config"; \
                 export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
@@ -285,9 +289,10 @@ RUN if [ ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
 # Protected Roles is a library that restricts the CREATEROLE/CREATEDB privileges of non-superusers.
 # It is a private timescale project and is therefore not included/built by default
 ARG TIMESCALE_TSDB_ADMIN=
-RUN if [ ! -z "${PRIVATE_REPO_TOKEN}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TSDB_ADMIN}" ]; then \
+RUN --mount=type=secret,uid=1000,id=private_repo_token \
+    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TSDB_ADMIN}" ]; then \
         cd /build \
-        && git clone https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/timescale/protected_roles \
+        && git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/protected_roles \
         && for pg in ${PG_VERSIONS}; do \
             cd /build/protected_roles && git reset HEAD --hard && git checkout ${TIMESCALE_TSDB_ADMIN} \
             && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
