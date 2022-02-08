@@ -45,8 +45,6 @@ GIT_REV?=$(shell git rev-parse HEAD)
 INSTALL_METHOD?=docker-ha
 
 # These variables have to do with what software we pull in from github for timescaledb
-GITHUB_USER?=
-GITHUB_TOKEN?=
 GITHUB_REPO?=timescale/timescaledb
 GITHUB_TAG?=master
 
@@ -202,7 +200,7 @@ publish-immutable: is_ci build
 list-images:
 	docker images --filter "label=com.timescaledb.image.install_method=$(INSTALL_METHOD)" --filter "dangling=false"
 
-build-tag: DOCKER_EXTRA_BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GITHUB_USER=$(GITHUB_USER) --build-arg GITHUB_TOKEN=$(GITHUB_TOKEN) --build-arg GITHUB_TAG=$(GITHUB_TAG)
+build-tag: DOCKER_EXTRA_BUILDARGS = --build-arg GITHUB_REPO=$(GITHUB_REPO) --build-arg GITHUB_TAG=$(GITHUB_TAG)
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
 build-tag: build
 

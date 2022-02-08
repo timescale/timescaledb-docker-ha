@@ -219,12 +219,11 @@ USER postgres
 ENV MAKEFLAGS=-j8
 
 ARG OSS_ONLY
-ARG GITHUB_USER
-ARG GITHUB_TOKEN
+ARG PRIVATE_REPO_TOKEN
 ARG GITHUB_REPO=timescale/timescaledb
 ARG GITHUB_TAG
-RUN if [ "${GITHUB_TOKEN}" != "" ]; then \
-        git clone "https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}" /build/timescaledb; \
+RUN if [ "${PRIVATE_REPO_TOKEN}" != "" ]; then \
+        git clone "https://github-actions:${PRIVATE_REPO_TOKEN}@github.com/${GITHUB_REPO}" /build/timescaledb; \
     else \
         git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
     fi
