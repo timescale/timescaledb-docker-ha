@@ -247,10 +247,21 @@ RUN TS_VERSIONS="1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5
         /build/scripts/install_timescaledb.sh ${pg} ${TS_VERSIONS} || exit 1 ; \
     done
 
+RUN curl -L "https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz" \
+    | tar zxf -
+RUN chmod +x sccache-*/sccache
+RUN mkdir -p /build/bin
+RUN mv sccache-*/sccache /build/bin/sccache
+ENV RUSTC_WRAPPER=/build/bin/sccache
+ENV SCCACHE_BUCKET=timescaledb-docker-ha-sccache
+
 ARG PGX_VERSION=0.2.6
 ARG TIMESCALE_PROMSCALE_EXTENSION=
 # build and install the promscale_extension extension
-RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
+RUN --mount=type=secret,uid=1000,id=AWS_ACCESS_KEY_ID --mount=type=secret,uid=1000,id=AWS_SECRET_ACCESS_KEY \
+    if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
+        [ -f "/run/secrets/AWS_ACCESS_KEY_ID" ] && export AWS_ACCESS_KEY_ID="$(cat /run/secrets/AWS_ACCESS_KEY_ID)" ; \
+        [ -f "/run/secrets/AWS_SECRET_ACCESS_KEY" ] && export AWS_SECRET_ACCESS_KEY="$(cat /run/secrets/AWS_SECRET_ACCESS_KEY)" ; \
         set -e \
         && cargo install cargo-pgx --version ${PGX_VERSION} \
         && git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
@@ -269,8 +280,10 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
 ARG PGX_VERSION=0.2.6
 ARG TIMESCALE_CLOUDUTILS=
 # build and install the cloudutils libarary and extension
-RUN --mount=type=secret,uid=1000,id=private_repo_token \
+RUN --mount=type=secret,uid=1000,id=private_repo_token --mount=type=secret,uid=1000,id=AWS_ACCESS_KEY_ID --mount=type=secret,uid=1000,id=AWS_SECRET_ACCESS_KEY \
     if [ -f "${REPO_SECRET_FILE}" -a ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
+        [ -f "/run/secrets/AWS_ACCESS_KEY_ID" ] && export AWS_ACCESS_KEY_ID="$(cat /run/secrets/AWS_ACCESS_KEY_ID)" ; \
+        [ -f "/run/secrets/AWS_SECRET_ACCESS_KEY" ] && export AWS_SECRET_ACCESS_KEY="$(cat /run/secrets/AWS_SECRET_ACCESS_KEY)" ; \
         set -e \
         && cd /build \
         && cargo install cargo-pgx --version ${PGX_VERSION}; \
@@ -342,7 +355,10 @@ RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
 ARG TIMESCALEDB_TOOLKIT_EXTENSION=
 ARG TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS=
 # build and install the timescaledb-toolkit extension
-RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
+RUN  --mount=type=secret,uid=1000,id=AWS_ACCESS_KEY_ID --mount=type=secret,uid=1000,id=AWS_SECRET_ACCESS_KEY \
+    if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
+        [ -f "/run/secrets/AWS_ACCESS_KEY_ID" ] && export AWS_ACCESS_KEY_ID="$(cat /run/secrets/AWS_ACCESS_KEY_ID)" ; \
+        [ -f "/run/secrets/AWS_SECRET_ACCESS_KEY" ] && export AWS_SECRET_ACCESS_KEY="$(cat /run/secrets/AWS_SECRET_ACCESS_KEY)" ; \
         set -e \
         && git clone https://github.com/timescale/timescaledb-toolkit /build/timescaledb-toolkit \
         && cd /build/timescaledb-toolkit \
@@ -350,6 +366,9 @@ RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
             /build/scripts/install_timescaledb-toolkit.sh ${pg} ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS} ${TIMESCALEDB_TOOLKIT_EXTENSION} || exit 1 ; \
         done; \
     fi
+
+# We can remove this at some point, useful for debugging builds for now
+RUN /build/bin/sccache --show-stats
 
 USER root
 
