@@ -1,7 +1,7 @@
 PG_MAJOR?=14
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
-PG_VERSIONS?=14 13
+PG_VERSIONS?=14 13 12
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 POSTGIS_VERSIONS?="3"
