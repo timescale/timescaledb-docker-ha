@@ -8,6 +8,13 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## v[1.1.5] - 2022-02-10
+
+### Changed
+
+* Include and default to [TimescaleDB 2.5.2](https://github.com/timescale/timescaledb/releases/tag/2.5.2)
+* Include PostgreSQL in the image labeled with PostgreSQL 14 to allow `pg_upgrade` from version 12 to version 14
+
 ## [v1.1.4] - 2022-02-08
 
 ### Changed
