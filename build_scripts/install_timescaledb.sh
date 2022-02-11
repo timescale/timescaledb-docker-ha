@@ -42,6 +42,12 @@ for TAG in "$@"; do
             -DGENERATE_DOWNGRADE_SCRIPT=ON \
             -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}${OSS_ONLY}"
         cd build
+
+        make
+
+        # https://github.com/timescale/timescaledb/commit/531f7ed8b16e4d1a99021d3d2b843bbc939798e3
+        if [ "${TAG}" = "2.5.2" ]; then sed -i 's/pg_temp./_timescaledb_internal./g' sql/**/*.sql; fi
+
         make install
         cd ..
     else
