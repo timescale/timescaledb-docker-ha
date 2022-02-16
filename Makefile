@@ -11,6 +11,7 @@ PG_LOGERRORS?=3c55887b
 TIMESCALE_PROMSCALE_EXTENSION?=0.3.0
 TIMESCALEDB_TOOLKIT_EXTENSION?=forge-stable-1.4.0
 TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS?=forge-stable-1.3.0 forge-stable-1.3.1
+TIMESCALEDB_TOOLKIT_REPO?=github.com/timescale/timescaledb-toolkit
 TIMESCALE_TSDB_ADMIN?=
 TIMESCALE_HOT_FORGE?=
 TIMESCALE_OOM_GUARD?=
@@ -80,6 +81,7 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg TIMESCALE_TSDB_ADMIN="$(TIMESCALE_TSDB_ADMIN)" \
 					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS="$(TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS)" \
 					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSION="$(TIMESCALEDB_TOOLKIT_EXTENSION)" \
+					 --build-arg TIMESCALEDB_TOOLKIT_REPO="$(TIMESCALEDB_TOOLKIT_REPO)" \
 					 --cache-from "$(DOCKER_CACHE_FROM)" \
 					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
