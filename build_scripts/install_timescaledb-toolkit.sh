@@ -45,3 +45,26 @@ __EOT__
     cargo run --manifest-path ../tools/post-install/Cargo.toml -- "/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
     cd ..
 done
+
+# We want to enforce users that install toolkit 1.5+ when upgrading or reinstalling.
+# NOTE: This does not affect versions that have already been installed, it only blocks
+#       users from installing/upgrading to these versions
+for file in "/usr/share/postgresql/${PGVERSION}/extension/timescaledb_toolkit--"*.sql; do
+
+    base="${file%.sql}"
+    target_version="${base##*--}"
+    case "${target_version}" in
+        "1.4"|"1.3"|"1.3.1")
+            cat > "${file}" << __SQL__
+DO LANGUAGE plpgsql
+\$\$
+BEGIN
+    RAISE EXCEPTION 'TimescaleDB Toolkit version ${target_version} can not be installed. You can install TimescaleDB Toolkit 1.5.1 or higher';
+END;
+\$\$
+__SQL__
+            ;;
+        *)
+            ;;
+    esac
+done
