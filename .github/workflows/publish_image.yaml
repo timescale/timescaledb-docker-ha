@@ -11,7 +11,7 @@ env:
   TIMESCALE_TSDB_ADMIN: "1.0.0"
   TIMESCALE_HOT_FORGE: "v0.1.36"
   TIMESCALE_OOM_GUARD:  "v1.1.1"
-  TIMESCALE_CLOUDUTILS: "v1.1.0"
+  TIMESCALE_CLOUDUTILS: "v1.1.1"
 jobs:
   publish-image:
     name: Publish the Docker Images
