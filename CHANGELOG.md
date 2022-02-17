@@ -9,9 +9,13 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
-###
+## [v1.1.7] - 2022-02-17
+### Changed
 
 * Include Timescale Cloudutils 1.1.1
+* Include TimescaleDB Toolkit 1.5.1
+* Fix `search_path` for TimescaleDB < 2.5.2
+* Use Docker Secrets during building
 
 ## [v1.1.6] - 2022-02-10
 
