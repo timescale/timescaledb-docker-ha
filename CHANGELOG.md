@@ -9,6 +9,12 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.1.9] - 2022-02-23
+
+### Changed
+
+* Patroni was updated to [2.1.3](https://patroni.readthedocs.io/en/latest/releases.html#version-2-1-3)
+
 ## [v1.1.8] - 2022-02-17
 
 ### Changed
