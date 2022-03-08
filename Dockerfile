@@ -31,7 +31,7 @@ ARG PG_MAJOR=13
 ## the changes required are not that big for this Docker Image. Most of the
 ## tools we use will be the same across the board, as most of our tools our
 ## installed using external repositories.
-FROM ubuntu:21.10 AS compiler
+FROM ubuntu:22.04 AS compiler
 
 ENV DEBIAN_FRONTEND=noninteractive
 # We need full control over the running user, including the UID, therefore we
@@ -158,8 +158,8 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
 ARG PG_VERSIONS
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
-# TODO: Replace `focal` with `$(lsb_release -s -c)` once
-# we switch to Ubuntu 22.04.
+# TODO: Replace `focal` with `$(lsb_release -s -c)` once packages are available
+# for Ubuntu 22.04
 RUN wget -O - https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor --output /usr/share/keyrings/timescaledb.keyring
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/timescaledb.keyring] https://packagecloud.io/timescale/timescaledb/ubuntu/ focal main" > /etc/apt/sources.list.d/timescaledb.list
 
