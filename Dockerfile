@@ -31,8 +31,9 @@ ARG PG_MAJOR=13
 ## the changes required are not that big for this Docker Image. Most of the
 ## tools we use will be the same across the board, as most of our tools our
 ## installed using external repositories.
-FROM ubuntu:21.04 AS compiler
+FROM ubuntu:21.10 AS compiler
 
+ENV DEBIAN_FRONTEND=noninteractive
 # We need full control over the running user, including the UID, therefore we
 # create the postgres user as the first thing on our list
 RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" postgres
@@ -155,8 +156,10 @@ FROM compiler as builder
 ARG PG_VERSIONS
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
+# TODO: Replace `focal` with `$(lsb_release -s -c)` once
+# we switch to Ubuntu 22.04.
 RUN wget -O - https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor --output /usr/share/keyrings/timescaledb.keyring
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/timescaledb.keyring] https://packagecloud.io/timescale/timescaledb/ubuntu/ $(lsb_release -s -c) main" > /etc/apt/sources.list.d/timescaledb.list
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/timescaledb.keyring] https://packagecloud.io/timescale/timescaledb/ubuntu/ focal main" > /etc/apt/sources.list.d/timescaledb.list
 
 RUN apt-get update && apt-get install -y timescaledb-tools
 
