@@ -9,11 +9,21 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.2.0] - 2022-03-11
+
+Minor release bump as we change Ubuntu to 21.10, which includes a higher
+version of `glibc`.
+
+### Changed
+
+* Use Ubuntu 21.10 as a base image instead of Ubuntu 21.04
+* Patroni was updated to [2.1.3](<https://patroni.readthedocs.io/en/latest/releases.html#version-2-1-3>)
+
 ## [v1.1.9] - 2022-02-23
 
 ### Changed
 
-* Patroni was updated to [2.1.3](https://patroni.readthedocs.io/en/latest/releases.html#version-2-1-3)
+* ~Patroni was updated to [2.1.3]~ Due to packaging problems, Patroni was still at 2.1.2 for this release.
 
 ## [v1.1.8] - 2022-02-17
 
@@ -22,6 +32,7 @@ These are changes that will probably be included in the next release.
 * Include and default to [TimescaleDB 2.6.0](https://github.com/timescale/timescaledb/releases/tag/2.6.0)
 
 ## [v1.1.7] - 2022-02-17
+
 ### Changed
 
 * Include Timescale Cloudutils 1.1.1
