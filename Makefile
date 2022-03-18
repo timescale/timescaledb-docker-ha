@@ -30,7 +30,7 @@ DOCKER_CACHE_FROM?=scratch
 
 # These parameters control which entrypoints we add to the scripts
 GITHUB_DOCKERLIB_POSTGRES_REF=master
-GITHUB_TIMESCALEDB_DOCKER_REF=master
+GITHUB_TIMESCALEDB_DOCKER_REF=main
 
 ALLOW_ADDING_EXTENSIONS?=true
 
