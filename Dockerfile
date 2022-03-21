@@ -359,14 +359,9 @@ ARG TIMESCALEDB_TOOLKIT_EXTENSION=
 ARG TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS=
 ARG TIMESCALEDB_TOOLKIT_REPO=github.com/timescale/timescaledb-toolkit
 # build and install the timescaledb-toolkit extension
-RUN --mount=type=secret,uid=1000,id=AWS_ACCESS_KEY_ID \
-    --mount=type=secret,uid=1000,id=AWS_SECRET_ACCESS_KEY \
-    --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
-        [ -f "/run/secrets/AWS_ACCESS_KEY_ID" ] && export AWS_ACCESS_KEY_ID="$(cat /run/secrets/AWS_ACCESS_KEY_ID)" ; \
-        [ -f "/run/secrets/AWS_SECRET_ACCESS_KEY" ] && export AWS_SECRET_ACCESS_KEY="$(cat /run/secrets/AWS_SECRET_ACCESS_KEY)" ; \
+RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
         set -e \
-        && git clone "https://github-actions:$(cat ${REPO_SECRET_FILE} 2>/dev/null || true)@${TIMESCALEDB_TOOLKIT_REPO}" /build/timescaledb-toolkit \
+        && git clone "https://${TIMESCALEDB_TOOLKIT_REPO}" /build/timescaledb-toolkit \
         && cd /build/timescaledb-toolkit \
         && for pg in ${PG_VERSIONS}; do \
             /build/scripts/install_timescaledb-toolkit.sh ${pg} ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS} ${TIMESCALEDB_TOOLKIT_EXTENSION} || exit 1 ; \
