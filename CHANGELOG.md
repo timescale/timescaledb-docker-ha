@@ -9,6 +9,12 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.2.1] - 2022-03-21
+
+### Changed
+
+* Upgrade promscale extension to version 0.3.2
+
 ## [v1.2.0] - 2022-03-11
 
 Minor release bump as we change Ubuntu to 21.10, which includes a higher
