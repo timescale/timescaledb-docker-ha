@@ -355,16 +355,15 @@ RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
         done; \
     fi
 
-ARG TIMESCALEDB_TOOLKIT_EXTENSION=
-ARG TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS=
+ARG TIMESCALEDB_TOOLKIT_EXTENSIONS=
 ARG TIMESCALEDB_TOOLKIT_REPO=github.com/timescale/timescaledb-toolkit
 # build and install the timescaledb-toolkit extension
-RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
+RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
         set -e \
         && git clone "https://${TIMESCALEDB_TOOLKIT_REPO}" /build/timescaledb-toolkit \
         && cd /build/timescaledb-toolkit \
         && for pg in ${PG_VERSIONS}; do \
-            /build/scripts/install_timescaledb-toolkit.sh ${pg} ${TIMESCALEDB_TOOLKIT_EXTENSION_PREVIOUS} ${TIMESCALEDB_TOOLKIT_EXTENSION} || exit 1 ; \
+            /build/scripts/install_timescaledb-toolkit.sh ${pg} ${TIMESCALEDB_TOOLKIT_EXTENSIONS} || exit 1 ; \
         done; \
     fi
 
