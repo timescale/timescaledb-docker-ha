@@ -16,6 +16,7 @@ TIMESCALE_TSDB_ADMIN?=
 TIMESCALE_HOT_FORGE?=
 TIMESCALE_OOM_GUARD?=
 TIMESCALE_CLOUDUTILS?=
+TIMESCALE_STATIC_PRIMARY?=
 
 DOCKER_EXTRA_BUILDARGS?=
 DOCKER_REGISTRY?=localhost:5000
@@ -81,6 +82,7 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg TIMESCALE_TSDB_ADMIN="$(TIMESCALE_TSDB_ADMIN)" \
 					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSIONS="$(TIMESCALEDB_TOOLKIT_EXTENSIONS)" \
 					 --build-arg TIMESCALEDB_TOOLKIT_REPO="$(TIMESCALEDB_TOOLKIT_REPO)" \
+					 --build-arg TIMESCALE_STATIC_PRIMARY="$(TIMESCALE_STATIC_PRIMARY)" \
 					 --cache-from "$(DOCKER_CACHE_FROM)" \
 					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \

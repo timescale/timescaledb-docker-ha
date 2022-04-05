@@ -146,7 +146,15 @@ RUN for postgisv in ${POSTGIS_VERSIONS}; do \
 # This need to be done after the PostgreSQL packages have been installed,
 # to ensure we have the preferred libpq installations etc.
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj
-RUN apt-get install -y patroni
+RUN apt-get install -y patroni=2.1.3-\*
+# Patch Patroni code with changes from https://github.com/timescale/patroni/pull/1
+# NOTE: This is a temporary solution until changes land upstream.
+ARG TIMESCALE_STATIC_PRIMARY
+RUN if [ "${TIMESCALE_STATIC_PRIMARY}" != "" ]; then \
+    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.3/patroni/ha.py > /usr/lib/python3/dist-packages/patroni/ha.py && \
+    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.3/patroni/config.py > /usr/lib/python3/dist-packages/patroni/config.py && \
+    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.3/patroni/validator.py > /usr/lib/python3/dist-packages/patroni/validator.py; \
+    fi
 
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
         # We want timescaledb to be loaded in this image by every created cluster
@@ -270,7 +278,7 @@ RUN --mount=type=secret,uid=1000,id=AWS_ACCESS_KEY_ID --mount=type=secret,uid=10
         [ -f "/run/secrets/AWS_ACCESS_KEY_ID" ] && export AWS_ACCESS_KEY_ID="$(cat /run/secrets/AWS_ACCESS_KEY_ID)" ; \
         [ -f "/run/secrets/AWS_SECRET_ACCESS_KEY" ] && export AWS_SECRET_ACCESS_KEY="$(cat /run/secrets/AWS_SECRET_ACCESS_KEY)" ; \
         set -e \
-        && git clone https://${TIMESCALE_PROMSCALE_REPO} /build/promscale_extension \ 
+        && git clone https://${TIMESCALE_PROMSCALE_REPO} /build/promscale_extension \
         && cd /build/promscale_extension \
         && for pg in ${PG_VERSIONS}; do \
             /build/scripts/install_promscale.sh ${pg} ${TIMESCALE_PROMSCALE_EXTENSIONS} || exit 1 ; \
