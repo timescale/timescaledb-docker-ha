@@ -9,6 +9,11 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.2.2] - 2022-04-06
+
+* Upgrade TimescaleDB Toolkit extension to [1.6.0](https://github.com/timescale/timescaledb-toolkit/releases/tag/1.6.0)
+* pgBackRest is upgraded to [2.38](https://pgbackrest.org/release.html#2.38)
+
 ## [v1.2.1] - 2022-03-21
 
 ### Changed
