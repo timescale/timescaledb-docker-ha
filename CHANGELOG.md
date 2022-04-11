@@ -9,6 +9,13 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.2.3] - 2022-04-11
+
+### Changed
+
+* Include and default to [TimescaleDB 2.6.1](https://github.com/timescale/timescaledb/releases/tag/2.6.1)
+* Include Cloudutils v1.1.2
+
 ## [v1.2.2] - 2022-04-06
 
 * Upgrade TimescaleDB Toolkit extension to [1.6.0](https://github.com/timescale/timescaledb-toolkit/releases/tag/1.6.0)
