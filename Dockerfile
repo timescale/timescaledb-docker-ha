@@ -297,8 +297,7 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token --mount=type=secret,uid=1
                 export PG_CONFIG="/usr/lib/postgresql/${pg}/bin/pg_config"; \
                 export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
                 cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config; \
-                git clean -f -x; \
-                make clean && make install -j1 || exit 1; \
+                make && make install -j1 || exit 1; \
             fi; \
         done; \
     fi
@@ -362,9 +361,8 @@ RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
         set -e \
         && git clone "https://${TIMESCALEDB_TOOLKIT_REPO}" /build/timescaledb-toolkit \
         && cd /build/timescaledb-toolkit \
-        && for pg in ${PG_VERSIONS}; do \
-            /build/scripts/install_timescaledb-toolkit.sh ${pg} ${TIMESCALEDB_TOOLKIT_EXTENSIONS} || exit 1 ; \
-        done; \
+        && export PG_VERSIONS \
+        && /build/scripts/install_timescaledb-toolkit.sh ${TIMESCALEDB_TOOLKIT_EXTENSIONS} || exit 1 ; \
     fi
 
 # We can remove this at some point, useful for debugging builds for now

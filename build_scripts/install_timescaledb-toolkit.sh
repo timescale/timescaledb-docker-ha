@@ -2,25 +2,21 @@
 # This script was created to reduce the complexity of the RUN command
 # that installs all combinations of PostgreSQL and TimescaleDB Toolkit
 
-if [ -z "$2" ]; then
-    echo "Usage: $0 PGVERSION [TOOLKIT_TAG..]"
+if [ -z "$1" ]; then
+    echo "Usage: $0 [TOOLKIT_TAG..]"
     exit 1
 fi
 
-PGVERSION="$1"
-shift
-
-if [ "${PGVERSION}" -lt 12 ]; then
-    exit 0
+if [ -z "${PGVERSIONS}" ]; then
+    echo "Please export all PG Versions through PGVERSIONS env variable"
+    exit 1
 fi
 
 set -e
 
-export PATH="/usr/lib/postgresql/${PGVERSION}/bin:${PATH}"
 mkdir -p /home/postgres/.pgx
 
 for TOOLKIT_VERSION in "$@"; do
-    git clean -e target -f -x
     git reset HEAD --hard
     git checkout "${TOOLKIT_VERSION}"
 
@@ -36,26 +32,31 @@ for TOOLKIT_VERSION in "$@"; do
         fi
         cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx
     fi
-    cat > /home/postgres/.pgx/config.toml <<__EOT__
+
+    for PGVERSION in $PGVERSIONS; do
+        if [ "${PGVERSION}" -le 12 ]; then continue; fi
+        if [ "${PGVERSION}" -ge 14 ] && [ "${TOOLKIT_VERSION}" = "forge-stable-1.3.1" ]; then continue; fi
+        cat > /home/postgres/.pgx/config.toml <<__EOT__
 [configs]
 pg${PGVERSION} = "/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
 __EOT__
-    cd extension
-    cargo pgx install --release
-    cargo run --manifest-path ../tools/post-install/Cargo.toml -- "/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
-    cd ..
+        cd extension
+        cargo pgx install --release
+        cargo run --manifest-path ../tools/post-install/Cargo.toml -- "/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
+        cd ..
+    done
 done
 
 # We want to enforce users that install toolkit 1.5+ when upgrading or reinstalling.
 # NOTE: This does not affect versions that have already been installed, it only blocks
 #       users from installing/upgrading to these versions
-for file in "/usr/share/postgresql/${PGVERSION}/extension/timescaledb_toolkit--"*.sql; do
-
-    base="${file%.sql}"
-    target_version="${base##*--}"
-    case "${target_version}" in
-        "1.4"|"1.3"|"1.3.1")
-            cat > "${file}" << __SQL__
+for PGVERSION in $PGVERSIONS; do
+    for file in "/usr/share/postgresql/${PGVERSION}/extension/timescaledb_toolkit--"*.sql; do
+        base="${file%.sql}"
+        target_version="${base##*--}"
+        case "${target_version}" in
+            "1.4"|"1.3"|"1.3.1")
+                cat > "${file}" << __SQL__
 DO LANGUAGE plpgsql
 \$\$
 BEGIN
@@ -63,8 +64,9 @@ BEGIN
 END;
 \$\$
 __SQL__
-            ;;
-        *)
-            ;;
-    esac
+                ;;
+            *)
+                ;;
+        esac
+    done
 done
