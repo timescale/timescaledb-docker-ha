@@ -66,11 +66,11 @@ RUN apt-get install -y less jq strace procps
 # containers using this image
 RUN apt-get install -y gdb gdbserver
 
-# The next 2 instructions (ENV + RUN) are directly copied from https://github.com/rust-lang/docker-rust/blob/76c10aa123b24a4554b6af247d12f17f4b1a4edc/1.58.1/buster/Dockerfile
+# The next 2 instructions (ENV + RUN) are directly copied from https://github.com/rust-lang/docker-rust/blob/aa8bed3870cb14ecf49f127bae0a212adebc2384/1.60.0/buster/Dockerfile
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
-    RUST_VERSION=1.58.1
+    RUST_VERSION=1.60.0
 
 RUN set -eux; \
     dpkgArch="$(dpkg --print-architecture)"; \
