@@ -258,24 +258,18 @@ RUN mv sccache-*/sccache /build/bin/sccache
 ENV RUSTC_WRAPPER=/build/bin/sccache
 ENV SCCACHE_BUCKET=timescaledb-docker-ha-sccache
 
-ARG PGX_VERSION=0.2.6
-ARG TIMESCALE_PROMSCALE_EXTENSION=
+ARG TIMESCALE_PROMSCALE_EXTENSIONS=
+ARG TIMESCALE_PROMSCALE_REPO=github.com/timescale/promscale_extension
 # build and install the promscale_extension extension
 RUN --mount=type=secret,uid=1000,id=AWS_ACCESS_KEY_ID --mount=type=secret,uid=1000,id=AWS_SECRET_ACCESS_KEY \
-    if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSION}" -a -z "${OSS_ONLY}" ]; then \
+    if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
         [ -f "/run/secrets/AWS_ACCESS_KEY_ID" ] && export AWS_ACCESS_KEY_ID="$(cat /run/secrets/AWS_ACCESS_KEY_ID)" ; \
         [ -f "/run/secrets/AWS_SECRET_ACCESS_KEY" ] && export AWS_SECRET_ACCESS_KEY="$(cat /run/secrets/AWS_SECRET_ACCESS_KEY)" ; \
         set -e \
-        && cargo install cargo-pgx --version ${PGX_VERSION} \
-        && git clone https://github.com/timescale/promscale_extension /build/promscale_extension \
+        && git clone https://${TIMESCALE_PROMSCALE_REPO} /build/promscale_extension \ 
+        && cd /build/promscale_extension \
         && for pg in ${PG_VERSIONS}; do \
-            if [ ${pg} -ge "12" ]; then \
-            export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"; \
-                cargo pgx init --pg${pg} /usr/lib/postgresql/${pg}/bin/pg_config \
-                && cd /build/promscale_extension && git reset HEAD --hard && git checkout ${TIMESCALE_PROMSCALE_EXTENSION} \
-                && git clean -f -x \
-                && PG_VER=pg${pg} make install || exit 1; \
-            fi; \
+            /build/scripts/install_promscale.sh ${pg} ${TIMESCALE_PROMSCALE_EXTENSIONS} || exit 1 ; \
         done; \
     fi
 
