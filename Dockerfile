@@ -166,7 +166,7 @@ RUN apt-get update && apt-get install -y timescaledb-tools
 ## Entrypoints as they are from the Timescale image and its default alpine upstream repositories.
 ## This ensures the default interface (entrypoint) equals the one of the github.com/timescale/timescaledb-docker one,
 ## which allows this Docker Image to be a drop-in replacement for those Docker Images.
-ARG GITHUB_TIMESCALEDB_DOCKER_REF=master
+ARG GITHUB_TIMESCALEDB_DOCKER_REF=main
 ARG GITHUB_DOCKERLIB_POSTGRES_REF=main
 RUN cd /build && git clone https://github.com/timescale/timescaledb-docker && cd /build/timescaledb-docker && git checkout ${GITHUB_TIMESCALEDB_DOCKER_REF}
 RUN cp -a /build/timescaledb-docker/docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/
