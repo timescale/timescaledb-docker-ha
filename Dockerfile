@@ -109,9 +109,6 @@ RUN find /usr/share/i18n/charmaps/ -type f ! -name UTF-8.gz -delete \
     ## Make sure we have a en_US.UTF-8 locale available
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 
-# Some Patroni prerequisites
-RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj
-
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
 ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget"
@@ -125,9 +122,14 @@ RUN for pg in ${PG_VERSIONS}; do \
         mk-build-deps postgresql-${pg} && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
     done
 
+# For the compiler image, we want all the PostgreSQL versions to be installed,
+# so tools that depend on `pg_config` or other parts to exist can be run
+RUN for pg in ${PG_VERSIONS}; do apt-get install -y postgresql-${pg} postgresql-server-dev-${pg} || exit 1; done
+
+FROM compiler as builder
 
 RUN for pg in ${PG_VERSIONS}; do \
-        apt-get install -y postgresql-${pg} postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-server-dev-${pg} \
+        apt-get install -y postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} \
             postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger || exit 1; \
     done
@@ -140,9 +142,10 @@ RUN for postgisv in ${POSTGIS_VERSIONS}; do \
         done; \
     done
 
-# Patroni and Spilo Dependencies
+# Some Patroni prerequisites
 # This need to be done after the PostgreSQL packages have been installed,
 # to ensure we have the preferred libpq installations etc.
+RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj
 RUN apt-get install -y patroni
 
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
@@ -152,7 +155,6 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
         && echo "listen_addresses = '*'" >> $file; \
     done
 
-FROM compiler as builder
 ARG PG_VERSIONS
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
