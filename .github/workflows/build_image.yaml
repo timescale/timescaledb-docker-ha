@@ -6,7 +6,7 @@ on:
     - '**'
 
 env:
-  DOCKER_CACHE_FROM: docker.io/timescale/timescaledb-ha:pg14-builder
+  DOCKER_CACHE_FROM: docker.io/timescale/timescaledb-ha:pg14-compiler
   INSTALL_METHOD: docker-ha
   PG_VERSIONS: "14 13 12"
   TIMESCALE_CLOUDUTILS: "v1.1.3"

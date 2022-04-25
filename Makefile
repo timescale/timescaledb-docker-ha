@@ -23,7 +23,6 @@ DOCKER_PUBLISH_URLS?=$(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY)
 DOCKER_TAG_POSTFIX?=
 DOCKER_TAG_PREPARE=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
 DOCKER_TAG_LABELED=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-labeled
-DOCKER_TAG_BUILDER=pg$(PG_MAJOR)-builder
 DOCKER_TAG_COMPILER=pg$(PG_MAJOR)-compiler
 DOCKER_CACHE_FROM?=scratch
 
@@ -111,17 +110,11 @@ fast: prepare
 compiler:
 	$(DOCKER_BUILD_COMMAND) --target compiler --tag $(DOCKER_TAG_COMPILER)
 
-.PHONY: builder
-builder: compiler
-	$(DOCKER_BUILD_COMMAND) --target builder --tag $(DOCKER_TAG_BUILDER)
-
-.PHONY: publish-builder
-publish-builder: builder
+.PHONY: publish-compiler
+publish-compiler: compiler
 	for url in $(DOCKER_PUBLISH_URLS); do \
 		docker tag $(DOCKER_TAG_COMPILER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER) || exit 1 ; \
 		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER) || exit 1 ; \
-		docker tag $(DOCKER_TAG_BUILDER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER) || exit 1 ; \
-		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_BUILDER) || exit 1 ; \
 	done
 
 # This target always succeeds, as it is purely an speed optimization
