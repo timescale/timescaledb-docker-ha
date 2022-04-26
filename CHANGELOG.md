@@ -9,6 +9,8 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.2.5] - 2022-04-26
+
 ### Changed
 
 * Use Ubuntu 22.04 LTS as a base image instead of Ubuntu 21.10
