@@ -4,6 +4,8 @@ on:
   push:
     branches:
     - '**'
+    paths-ignore:
+    - '.github/workflows/publish*.yaml'
 
 env:
   DOCKER_CACHE_FROM: docker.io/timescale/timescaledb-ha:pg14-compiler
