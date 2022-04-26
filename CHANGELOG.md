@@ -9,6 +9,12 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.2.5] - 2022-04-26
+
+### Changed
+
+ * Include Timescale Cloudutils 1.1.4
+
 ## [v1.2.4] - 2022-04-20
 
 ### Changed
