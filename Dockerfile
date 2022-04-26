@@ -185,7 +185,7 @@ ENV REPO_SECRET_FILE=/run/secrets/private_repo_token
 # and never included in the OSS image.
 ARG TIMESCALE_HOT_FORGE=
 RUN --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_HOT_FORGE}" ]; then \
+    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_HOT_FORGE}" -a "$(uname -p)" = "x86_64" ]; then \
         GH_REPO="https://api.github.com/repos/timescale/hot-forge"; \
         ASSET_ID="$(curl -sL --header "Authorization: token $(cat "${REPO_SECRET_FILE}")" "${GH_REPO}/releases/tags/${TIMESCALE_HOT_FORGE}" | jq '.assets[0].id')"; \
         curl -sL --header "Authorization: token $(cat "${REPO_SECRET_FILE}")" \
