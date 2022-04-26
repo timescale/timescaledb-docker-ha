@@ -13,6 +13,7 @@ These are changes that will probably be included in the next release.
 
 * Use Ubuntu 22.04 LTS as a base image instead of Ubuntu 21.10
 * Bump `hot_forge` to 0.1.37
+* Include Timescale Cloudutils 1.1.4
 
 ## [v1.2.4] - 2022-04-20
 
