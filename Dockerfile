@@ -172,6 +172,8 @@ ARG GITHUB_TIMESCALEDB_DOCKER_REF=main
 ARG GITHUB_DOCKERLIB_POSTGRES_REF=main
 RUN cd /build && git clone https://github.com/timescale/timescaledb-docker && cd /build/timescaledb-docker && git checkout ${GITHUB_TIMESCALEDB_DOCKER_REF}
 RUN cp -a /build/timescaledb-docker/docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/
+# Add custom entrypoint to install timescaledb_toolkit
+COPY scripts/010_install_timescaledb_toolkit.sh /docker-entrypoint-initdb.d/
 RUN curl -s -o /usr/local/bin/docker-entrypoint.sh https://raw.githubusercontent.com/docker-library/postgres/${GITHUB_DOCKERLIB_POSTGRES_REF}/13/alpine/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # Satisfy assumptions of the entrypoint scripts

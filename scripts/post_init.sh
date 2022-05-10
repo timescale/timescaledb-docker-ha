@@ -9,11 +9,13 @@ psql -d template1 <<__SQL__
 -- As we're still only initializing, we cannot have synchronous_commit enabled just yet.
 SET synchronous_commit to 'off';
 CREATE EXTENSION timescaledb;
+CREATE EXTENSION timescaledb_toolkit;
 
 \connect postgres
 
 SET synchronous_commit to 'off';
 CREATE EXTENSION timescaledb;
+CREATE EXTENSION timescaledb_toolkit;
 
 \i /scripts/tsdbadmin.sql
 __SQL__
