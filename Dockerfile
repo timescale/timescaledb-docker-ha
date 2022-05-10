@@ -285,7 +285,7 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token --mount=type=secret,uid=1
         [ -f "/run/secrets/AWS_SECRET_ACCESS_KEY" ] && export AWS_SECRET_ACCESS_KEY="$(cat /run/secrets/AWS_SECRET_ACCESS_KEY)" ; \
         set -e \
         && cd /build \
-        && cargo install cargo-pgx --version ${PGX_VERSION}; \
+        && cargo install cargo-pgx --git https://github.com/nikkhils/pgx.git --rev 4cc6a13; \
         for pg in ${PG_VERSIONS}; do \
             if [ ${pg} -ge "13" ]; then \
                 [ -d "/build/timescaledb_cloudutils/.git" ] || git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/timescaledb_cloudutils || exit 1 ; \
