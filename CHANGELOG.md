@@ -9,6 +9,14 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.2.8] - 2022-05-12
+
+### Changed
+
+* PostgreSQL [12.11](https://www.postgresql.org/docs/12/release-12-11.html),
+    [13.7](https://www.postgresql.org/docs/13/release-13-7.html) have been released, and
+    [14.3](https://www.postgresql.org/docs/14/release-14-3.html) have been released
+
 ## [v1.2.7] - 2022-05-12
 
 ### Changed
