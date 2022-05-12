@@ -9,6 +9,12 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.2.7] - 2022-05-12
+
+### Changed
+
+* Install timescaledb_toolkit extension by default
+
 ## [v1.2.6] - 2022-05-11 
 
 ### Changed
