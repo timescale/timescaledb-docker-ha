@@ -6,6 +6,7 @@ on:
     - '**'
     paths-ignore:
     - '.github/workflows/publish*.yaml'
+    - '*.md'
 
 env:
   DOCKER_CACHE_FROM: docker.io/timescale/timescaledb-ha:pg14-compiler
