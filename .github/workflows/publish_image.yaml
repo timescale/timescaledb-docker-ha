@@ -14,6 +14,7 @@ env:
   TIMESCALE_TSDB_ADMIN: "1.0.0"
   TIMESCALEDB_TOOLKIT_REPO: github.com/timescale/timescaledb-toolkit
   TIMESCALEDB_TOOLKIT_EXTENSIONS: forge-stable-1.3.1 1.5.1-cloud 1.6.0
+  TIMESCALE_STATIC_PRIMARY: ''
 jobs:
   publish-image:
     name: Publish the Docker Images
@@ -23,6 +24,11 @@ jobs:
         # This is the 'default' image, it contains PostgreSQL 14 13 and 12, and defaults to PostgreSQL 14 binaries
         - pg_major: "14"
           pg_versions: "14 13 12"
+        # This is the 'default' image, along with Patroni changes to support static primaries
+        - pg_major: "14"
+          pg_versions: "14"
+          patroni_static_primary: "true"
+          docker_tag_postfix: "-patroni-static-primary"
         # This is the PostgreSQL 14 image containing only oss software
         - pg_major: "14"
           pg_versions: "14 13 12"
@@ -75,6 +81,7 @@ jobs:
           DOCKER_ECR_URL: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TIMESCALE_STATIC_PRIMARY: ${{ matrix.patroni_static_primary }}
         # Note that our ECR registry has immutability guarantees, therefore we do not push
         # the mutable ('latest') tags to the ECR registry
         run: |

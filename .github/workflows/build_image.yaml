@@ -18,6 +18,7 @@ env:
   TIMESCALE_TSDB_ADMIN: "1.0.0"
   TIMESCALEDB_TOOLKIT_REPO: github.com/timescale/timescaledb-toolkit
   TIMESCALEDB_TOOLKIT_EXTENSIONS: forge-stable-1.3.1 1.5.1-cloud 1.6.0
+  TIMESCALE_STATIC_PRIMARY: "true"
 jobs:
   build-image:
     name: Build the default Docker Image
