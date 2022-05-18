@@ -9,6 +9,14 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.3.0-beta.0] - 2022-05-18
+
+### Changed
+
+* Patroni has been updated to support a new static primary configuration pattern which
+  is optimized to ensure that a single-node Patroni cluster is able to maintain maximum
+  uptime.
+
 ## [v1.2.8] - 2022-05-12
 
 ### Changed
@@ -23,7 +31,7 @@ These are changes that will probably be included in the next release.
 
 * Install timescaledb_toolkit extension by default
 
-## [v1.2.6] - 2022-05-11 
+## [v1.2.6] - 2022-05-11
 
 ### Changed
 
