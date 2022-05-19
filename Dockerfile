@@ -214,7 +214,7 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token \
         cd /build \
         && git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/oom_guard \
         && cd /build/oom_guard && git reset HEAD --hard && git checkout ${TIMESCALE_OOM_GUARD} \
-        && make all && make tests  || exit 1; \
+        && make all || exit 1; \
        chmod 0755 -R /usr/local/bin/oom-guard ;\
     fi
 
