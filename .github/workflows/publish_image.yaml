@@ -26,7 +26,7 @@ jobs:
           pg_versions: "14 13 12"
         # This is the 'default' image, along with Patroni changes to support static primaries
         - pg_major: "14"
-          pg_versions: "14"
+          pg_versions: "14 13 12"
           patroni_static_primary: "true"
           docker_tag_postfix: "-patroni-static-primary"
         # This is the PostgreSQL 14 image containing only oss software
