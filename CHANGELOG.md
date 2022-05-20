@@ -9,6 +9,13 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.3.1] - 2022-05-20
+
+### Changed
+
+* Upgrade TimescaleDB Toolkit extension to [1.7.0](https://github.com/timescale/timescaledb-toolkit/releases/tag/1.7.0)
+* Upgrade Oom Guard to 1.2.0
+
 ## [v1.3.0-beta.0] - 2022-05-18
 
 ### Changed
