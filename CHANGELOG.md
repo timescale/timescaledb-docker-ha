@@ -9,6 +9,12 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.3.2] - 2022-05-20
+
+### Changed
+
+* Ensure experimental Patroni image also supports PostgreSQL 12 and 13
+
 ## [v1.3.1] - 2022-05-20
 
 ### Changed
