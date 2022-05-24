@@ -41,8 +41,8 @@ RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" post
 RUN echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/01norecommend
 RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 
-# Install the highlest level dependencies
-RUN apt-get update \
+# Make sure we're as up-to-date as possible, and install the highlest level dependencies
+RUN apt-get update && apt-get upgrade -y \
     && apt-get install -y ca-certificates curl gnupg1 gpg gpg-agent locales lsb-release wget
 
 RUN mkdir -p /build/scripts
