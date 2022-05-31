@@ -146,14 +146,18 @@ RUN for postgisv in ${POSTGIS_VERSIONS}; do \
 # This need to be done after the PostgreSQL packages have been installed,
 # to ensure we have the preferred libpq installations etc.
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj
-RUN apt-get install -y patroni=2.1.3-\*
-# Patch Patroni code with changes from https://github.com/timescale/patroni/pull/1
+RUN echo 'deb http://cz.archive.ubuntu.com/ubuntu kinetic main universe' >> /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y patroni=2.1.4-\* && \
+    head -n -1 /etc/apt/sources.list > /etc/apt/sources.list.tmp; mv /etc/apt/sources.list.tmp /etc/apt/sources.list; \
+    apt-get update
+# Patch Patroni code with changes from https://github.com/zalando/patroni/pull/2318.
 # NOTE: This is a temporary solution until changes land upstream.
 ARG TIMESCALE_STATIC_PRIMARY
 RUN if [ "${TIMESCALE_STATIC_PRIMARY}" != "" ]; then \
-    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.3/patroni/ha.py > /usr/lib/python3/dist-packages/patroni/ha.py && \
-    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.3/patroni/config.py > /usr/lib/python3/dist-packages/patroni/config.py && \
-    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.3/patroni/validator.py > /usr/lib/python3/dist-packages/patroni/validator.py; \
+    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.4/patroni/ha.py > /usr/lib/python3/dist-packages/patroni/ha.py && \
+    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.4/patroni/config.py > /usr/lib/python3/dist-packages/patroni/config.py && \
+    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.4/patroni/validator.py > /usr/lib/python3/dist-packages/patroni/validator.py; \
     fi
 
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
