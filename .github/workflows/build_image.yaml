@@ -12,7 +12,7 @@ env:
   DOCKER_CACHE_FROM: docker.io/timescale/timescaledb-ha:pg14-compiler
   INSTALL_METHOD: docker-ha
   PG_VERSIONS: "14 13 12"
-  TIMESCALE_CLOUDUTILS: "v1.1.5"
+  TIMESCALE_CLOUDUTILS: "v1.1.6"
   TIMESCALE_HOT_FORGE: "v0.1.37"
   TIMESCALE_OOM_GUARD: "v1.2.0"
   TIMESCALE_STATIC_PRIMARY: "true"

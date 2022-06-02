@@ -9,6 +9,8 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+Include timescaledb_cloudutils v1.1.6
+
 ## [v1.3.3] - 2022-05-24
 
 ### Changed
