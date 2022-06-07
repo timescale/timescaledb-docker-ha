@@ -119,7 +119,7 @@ publish-compiler: compiler
 	for url in $(DOCKER_PUBLISH_URLS); do \
 		docker tag $(DOCKER_TAG_COMPILER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER) || exit 1 ; \
 		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER) || exit 1 ; \
-		PGMINOR=$$(docker run -ti $(DOCKER_TAG_COMPILER) psql --version | awk '{print $$3}') ;\
+		PGMINOR=$$(docker run -i $(DOCKER_TAG_COMPILER) psql --version | awk '{print $$3}') ;\
 		docker tag $(DOCKER_TAG_COMPILER) $(DOCKER_PUBLISH_URLS):pg$${PGMINOR}-compiler || exit 1 ; \
 		docker push $(DOCKER_PUBLISH_URLS):pg$${PGMINOR}-compiler || exit 1 ; \
 	done
