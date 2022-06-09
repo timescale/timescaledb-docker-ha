@@ -9,6 +9,10 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+### Changed
+
+* Upgrade Promscale extension to version 0.5.1
+
 ## [v1.4.0] - 2022-06-03
 
 This release removes a lot of minor versions of TimescaleDB. We keep the following versions for
