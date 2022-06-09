@@ -9,11 +9,14 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.4.1] - 2022-06-14
+
 ### Changed
 
 * Upgrade Promscale extension to version 0.5.1
+* Patroni was updated to [2.1.4](https://patroni.readthedocs.io/en/latest/releases.html#version-2-1-4)
 
-## [v1.4.0] - 2022-06-03
+## [v1.4.0] - 2022-06-09
 
 This release removes a lot of minor versions of TimescaleDB. We keep the following versions for
 compatibility with older Docker Images:
@@ -62,7 +65,7 @@ newer Docker Image.
 
 ## [v1.3.4] - 2022-06-03
 
-Include timescaledb_cloudutils v1.1.6
+* Include timescaledb\_cloudutils v1.1.6
 
 ## [v1.3.3] - 2022-05-24
 
