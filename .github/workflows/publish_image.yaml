@@ -13,7 +13,7 @@ env:
   TIMESCALE_OOM_GUARD:  "v1.2.0"
   TIMESCALE_STATIC_PRIMARY: ''
   TIMESCALE_TSDB_ADMIN: "1.0.0"
-  TIMESCALEDB_TOOLKIT_EXTENSIONS: forge-stable-1.3.1 1.5.1-cloud 1.6.0 1.7.0
+  TIMESCALEDB_TOOLKIT_EXTENSIONS: 1.6.0 1.7.0
   TIMESCALEDB_TOOLKIT_REPO: github.com/timescale/timescaledb-toolkit
 jobs:
   publish-image:
