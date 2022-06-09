@@ -9,6 +9,8 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+* Upgrade Promscale extension to version 0.5.1
+
 ## [v1.3.4] - 2022-06-03
 
 Include timescaledb_cloudutils v1.1.6

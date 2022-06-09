@@ -24,9 +24,10 @@ for PROMSCALE_VERSION in "$@"; do
     git reset HEAD --hard
     git checkout "${PROMSCALE_VERSION}"
 
-    MAJOR_MINOR="$(awk '/^version/ {print $3}' ./Cargo.toml | tr -d "\"" | cut -d. -f1,2)"
-    MAJOR="$(echo "${MAJOR_MINOR}" | cut -d. -f1)"
-    MINOR="$(echo "${MAJOR_MINOR}" | cut -d. -f2)"
+    MAJOR_MINOR_PATCH="$(awk '/^version/ {print $3}' ./Cargo.toml | tr -d "\"" | cut -d. -f1,2,3)"
+    MAJOR="$(echo "${MAJOR_MINOR_PATCH}" | cut -d. -f1)"
+    MINOR="$(echo "${MAJOR_MINOR_PATCH}" | cut -d. -f2)"
+    PATCH="$(echo "${MAJOR_MINOR_PATCH}" | cut -d. -f3)"
 
     if [ "${MAJOR}" -le 0 ] && [ "${MINOR}" -le 3 ]; then
         cargo install cargo-pgx --version '^0.2'
@@ -36,7 +37,12 @@ for PROMSCALE_VERSION in "$@"; do
     cargo pgx init --pg${PGVERSION} /usr/lib/postgresql/${PGVERSION}/bin/pg_config
     if [ "${MAJOR}" -le 0 ] && [ "${MINOR}" -le 3 ]; then
         PG_VER=pg${PGVERSION} make install || exit 1;
-    else
+    elif [ "${MAJOR}" -le 0 ] && [ "${MINOR}" -le 5 ] && [ "${PATCH}" -le 0 ]; then
         (make package && make install) || exit 1;
+    else
+        make
+        chown -R root:postgres ./target/release/promscale-pg${PGVERSION}
+        cp ./target/release/promscale-pg${PGVERSION}/usr/share/postgresql/${PGVERSION}/extension/* /usr/share/postgresql/${PGVERSION}/extension/
+        cp ./target/release/promscale-pg${PGVERSION}/usr/lib/postgresql/${PGVERSION}/lib/* /usr/lib/postgresql/${PGVERSION}/lib/
     fi
 done
