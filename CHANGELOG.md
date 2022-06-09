@@ -9,6 +9,53 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.4.0] - 2022-06-03
+
+This release removes a lot of minor versions of TimescaleDB. We keep the following versions for
+compatibility with older Docker Images:
+
+* 1.7.5 - This version is the final version 1.x.x version of TimescaleDB.for PostgreSQL 11 users.
+    This version is only available for PostgreSQL 12.
+    Having this version in the Docker Image allows this Image to be a stepping stone in a migration
+    from PostgreSQL 11 and/or TimescaleDB 1.7.5, using `pg_dump` and `pg_restore` for example.
+* 2.6.1 - The final point release for the previous minor release
+* 2.7.0 - The latest TimescaleDB release
+
+For those users that are currently running a TimescaleDB version that is removed from this image,
+they are adviced to update their TimescaleDB extension to 2.7.0 *prior* to using the newer Docker
+Image.
+
+The latest Docker Image that allows you to run many previous minor versions to 2.7.0 is:
+
+```shell
+timescale/timescaledb-ha:pg14.3-ts2.7.0-p1
+```
+
+This release also deprecates versions of `timescaledb_toolkit`. The same advice applies for this
+extension as for the `timescaledb` extension, to update the extension to 1.7.0 *prior* to using the
+newer Docker Image.
+
+### Removed
+
+* TimescaleDB versions:
+  * 2.1.0
+  * 2.1.1
+  * 2.2.0
+  * 2.2.1
+  * 2.3.0
+  * 2.3.1
+  * 2.4.0
+  * 2.4.1
+  * 2.4.2
+  * 2.5.0
+  * 2.5.1
+  * 2.5.2
+  * 2.6.0
+
+* TimescaleDB Toolkit versions:
+  * forge-stable-1.3.1
+  * 1.5.1-cloud
+
 ## [v1.3.4] - 2022-06-03
 
 Include timescaledb_cloudutils v1.1.6
