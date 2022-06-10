@@ -33,9 +33,11 @@ for PROMSCALE_VERSION in "$@"; do
     else
         cargo install cargo-pgx --git https://github.com/timescale/pgx --branch promscale-staging
     fi
-    cargo pgx init --pg${PGVERSION} /usr/lib/postgresql/${PGVERSION}/bin/pg_config
+    cargo pgx init "--pg${PGVERSION}" "/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
     if [ "${MAJOR}" -le 0 ] && [ "${MINOR}" -le 3 ]; then
         PG_VER=pg${PGVERSION} make install || exit 1;
+    elif [ "${PROMSCALE_VERSION}" = "0.5.1" ]; then
+        make package && cp -v --recursive "./target/release/promscale-pg${PGVERSION}/"* / || exit 1
     else
         (make package && make install) || exit 1;
     fi
