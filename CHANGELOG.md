@@ -9,6 +9,10 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.4.2] - 2022-06-14
+
+* [PostgreSQL 14.4](https://www.postgresql.org/docs/release/14.4/) was released
+
 ## [v1.4.1] - 2022-06-14
 
 ### Changed
