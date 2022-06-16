@@ -9,6 +9,12 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.4.3] - 2022-06-16
+
+This release reintroduces all minor versions of TimescaleDB that were dropped when 1.4.0 was
+released. We received multiple reports from users of this Docker Image that they rely on
+older (minor) versions of TimescaleDB.
+
 ## [v1.4.2] - 2022-06-14
 
 * [PostgreSQL 14.4](https://www.postgresql.org/docs/release/14.4/) was released
