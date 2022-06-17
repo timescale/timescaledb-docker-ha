@@ -9,6 +9,11 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.4.4] - 2022-06-17
+
+* [PostgreSQL 14.4](https://www.postgresql.org/docs/release/14.4/) was now actually released
+    as debian packages
+
 ## [v1.4.3] - 2022-06-16
 
 This release reintroduces all minor versions of TimescaleDB that were dropped when 1.4.0 was
