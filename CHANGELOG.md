@@ -9,6 +9,8 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+* Upgrade Promscale extension to 0.5.2
+
 ## [v1.4.4] - 2022-06-17
 
 * [PostgreSQL 14.4](https://www.postgresql.org/docs/release/14.4/) was now actually released
