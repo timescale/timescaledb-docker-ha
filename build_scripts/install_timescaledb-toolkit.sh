@@ -27,7 +27,9 @@ for TOOLKIT_VERSION in "$@"; do
     MAJOR_MINOR="$(awk '/^default_version/ {print $3}' ../timescaledb-toolkit/extension/timescaledb_toolkit.control | tr -d "'" | cut -d. -f1,2)"
     MAJOR="$(echo "${MAJOR_MINOR}" | cut -d. -f1)"
     MINOR="$(echo "${MAJOR_MINOR}" | cut -d. -f2)"
-    if [ "${MAJOR}" -ge 1 ] && [ "${MINOR}" -ge 4 ]; then
+    if [ "${MAJOR}" -ge 1 ] && [ "${MINOR}" -ge 8 ]; then
+        cargo install cargo-pgx --version '^0.4.5'
+    elif [ "${MAJOR}" -ge 1 ] && [ "${MINOR}" -ge 4 ]; then
         cargo install cargo-pgx --version '^0.2'
     else
         if [ "${PGVERSION}" -ge 14 ]; then
