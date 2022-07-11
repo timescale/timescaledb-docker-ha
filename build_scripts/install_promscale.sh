@@ -7,6 +7,10 @@ if [ -z "$2" ]; then
     exit 1
 fi
 
+echo "RUSTC_WRAPPER=${RUSTC_WRAPPER}"
+echo "SCCACHE_BUCKET=${SCCACHE_BUCKET}"
+exit 0
+
 PGVERSION="$1"
 shift
 

@@ -14,6 +14,10 @@ if [ "${PGVERSION}" -lt 12 ]; then
     exit 0
 fi
 
+echo "RUSTC_WRAPPER=${RUSTC_WRAPPER}"
+echo "SCCACHE_BUCKET=${SCCACHE_BUCKET}"
+exit 0
+
 set -e
 
 export PATH="/usr/lib/postgresql/${PGVERSION}/bin:${PATH}"
