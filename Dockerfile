@@ -284,9 +284,7 @@ RUN --mount=type=secret,uid=1000,id=AWS_ACCESS_KEY_ID --mount=type=secret,uid=10
         set -e \
         && git clone https://${TIMESCALE_PROMSCALE_REPO} /build/promscale_extension \
         && cd /build/promscale_extension \
-        && for pg in ${PG_VERSIONS}; do \
-            /build/scripts/install_promscale.sh ${pg} ${TIMESCALE_PROMSCALE_EXTENSIONS} || exit 1 ; \
-        done; \
+        && /build/scripts/install_promscale.sh ${TIMESCALE_PROMSCALE_EXTENSIONS} || exit 1 ; \
     fi
 
 # Make sure to override this when upgrading to new PGX version
@@ -372,9 +370,7 @@ RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
         set -e \
         && git clone "https://${TIMESCALEDB_TOOLKIT_REPO}" /build/timescaledb-toolkit \
         && cd /build/timescaledb-toolkit \
-        && for pg in ${PG_VERSIONS}; do \
-            /build/scripts/install_timescaledb-toolkit.sh ${pg} ${TIMESCALEDB_TOOLKIT_EXTENSIONS} || exit 1 ; \
-        done; \
+        /build/scripts/install_timescaledb-toolkit.sh ${TIMESCALEDB_TOOLKIT_EXTENSIONS} || exit 1 ; \
     fi
 
 # We can remove this at some point, useful for debugging builds for now

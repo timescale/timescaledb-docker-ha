@@ -2,25 +2,18 @@
 # This script was created to reduce the complexity of the RUN command
 # that installs all combinations of PostgreSQL and TimescaleDB Toolkit
 
-if [ -z "$2" ]; then
-    echo "Usage: $0 PGVERSION [TOOLKIT_TAG..]"
+if [ -z "$1" ]; then
+    echo "Usage: $0 [TOOLKIT_TAG..]"
     exit 1
 fi
 
-PGVERSION="$1"
-shift
-
-if [ "${PGVERSION}" -lt 12 ]; then
+if [ "${pg}" -lt 12 ]; then
     exit 0
 fi
 
-echo "RUSTC_WRAPPER=${RUSTC_WRAPPER}"
-echo "SCCACHE_BUCKET=${SCCACHE_BUCKET}"
-exit 0
-
 set -e
 
-export PATH="/usr/lib/postgresql/${PGVERSION}/bin:${PATH}"
+export PATH="/usr/lib/postgresql/${pg}/bin:${PATH}"
 mkdir -p /home/postgres/.pgx
 
 for TOOLKIT_VERSION in "$@"; do
@@ -31,37 +24,38 @@ for TOOLKIT_VERSION in "$@"; do
     MAJOR_MINOR="$(awk '/^default_version/ {print $3}' ../timescaledb-toolkit/extension/timescaledb_toolkit.control | tr -d "'" | cut -d. -f1,2)"
     MAJOR="$(echo "${MAJOR_MINOR}" | cut -d. -f1)"
     MINOR="$(echo "${MAJOR_MINOR}" | cut -d. -f2)"
-    if [ "${MAJOR}" -ge 1 ] && [ "${MINOR}" -ge 8 ]; then
-        cargo install cargo-pgx --version '^0.4.5'
-    elif [ "${MAJOR}" -ge 1 ] && [ "${MINOR}" -ge 4 ]; then
-        cargo install cargo-pgx --version '^0.2'
-    else
-        if [ "${PGVERSION}" -ge 14 ]; then
-            echo "TimescaleDB Toolkit ${TOOLKIT_VERSION} is not supported on PostgreSQL ${PGVERSION}"
-            continue;
+
+    for pg in ${PG_VERSIONS}; do
+        if [ "${MAJOR}" -ge 1 ] && [ "${MINOR}" -ge 8 ]; then
+            cargo install cargo-pgx --version '^0.4.5'
+        elif [ "${MAJOR}" -ge 1 ] && [ "${MINOR}" -ge 4 ]; then
+            cargo install cargo-pgx --version '^0.2'
+        else
+            if [ "${pg}" -ge 14 ]; then
+                echo "TimescaleDB Toolkit ${TOOLKIT_VERSION} is not supported on PostgreSQL ${pg}"
+                continue;
+            fi
+            cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx
         fi
-        cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx
-    fi
-    cat > /home/postgres/.pgx/config.toml <<__EOT__
+        cat > /home/postgres/.pgx/config.toml <<__EOT__
 [configs]
-pg${PGVERSION} = "/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
+pg${pg} = "/usr/lib/postgresql/${pg}/bin/pg_config"
 __EOT__
-    cd extension
-    cargo pgx install --release
-    cargo run --manifest-path ../tools/post-install/Cargo.toml -- "/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
-    cd ..
-done
+        cd extension
+        cargo pgx install --release
+        cargo run --manifest-path ../tools/post-install/Cargo.toml -- "/usr/lib/postgresql/${pg}/bin/pg_config"
+        cd ..
 
-# We want to enforce users that install toolkit 1.5+ when upgrading or reinstalling.
-# NOTE: This does not affect versions that have already been installed, it only blocks
-#       users from installing/upgrading to these versions
-for file in "/usr/share/postgresql/${PGVERSION}/extension/timescaledb_toolkit--"*.sql; do
+        # We want to enforce users that install toolkit 1.5+ when upgrading or reinstalling.
+        # NOTE: This does not affect versions that have already been installed, it only blocks
+        #       users from installing/upgrading to these versions
+        for file in "/usr/share/postgresql/${pg}/extension/timescaledb_toolkit--"*.sql; do
 
-    base="${file%.sql}"
-    target_version="${base##*--}"
-    case "${target_version}" in
-        "1.4"|"1.3"|"1.3.1")
-            cat > "${file}" << __SQL__
+            base="${file%.sql}"
+            target_version="${base##*--}"
+            case "${target_version}" in
+                "1.4"|"1.3"|"1.3.1")
+                    cat > "${file}" << __SQL__
 DO LANGUAGE plpgsql
 \$\$
 BEGIN
@@ -69,8 +63,11 @@ BEGIN
 END;
 \$\$
 __SQL__
-            ;;
-        *)
-            ;;
-    esac
+                    ;;
+                *)
+                    ;;
+            esac
+        done
+
+    done
 done
