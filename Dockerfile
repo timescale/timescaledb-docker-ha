@@ -231,7 +231,7 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token \
 # - files owned by postgres can be overwritten in a running container
 # - new files can be added to the directories mentioned here
 RUN for pg in ${PG_VERSIONS}; do \
-        for dir in "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
+        for dir in /usr/share/doc "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
             install --directory "${dir}" --group postgres --mode 1775 \
             && find "${dir}" -type d -exec install --directory {} --group postgres --mode 1775 \; || exit 1 ; \
         done; \
@@ -388,7 +388,7 @@ USER root
 ARG ALLOW_ADDING_EXTENSIONS=true
 RUN if [ "${ALLOW_ADDING_EXTENSIONS}" != "true" ]; then \
         for pg in ${PG_VERSIONS}; do \
-            for dir in "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
+            for dir in /usr/share/doc "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
                 chown root:root "{dir}" -R ; \
             done ; \
         done ; \
