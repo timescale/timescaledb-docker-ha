@@ -20,32 +20,13 @@ export PATH="/usr/lib/postgresql/${PGVERSION}/bin:${PATH}"
 mkdir -p /home/postgres/.pgx
 
 for TOOLKIT_VERSION in "$@"; do
-    git clean -e target -f -x
-    git reset HEAD --hard
-    git checkout "${TOOLKIT_VERSION}"
-
-    MAJOR_MINOR="$(awk '/^default_version/ {print $3}' ../timescaledb-toolkit/extension/timescaledb_toolkit.control | tr -d "'" | cut -d. -f1,2)"
-    MAJOR="$(echo "${MAJOR_MINOR}" | cut -d. -f1)"
-    MINOR="$(echo "${MAJOR_MINOR}" | cut -d. -f2)"
-    if [ "${MAJOR}" -ge 1 ] && [ "${MINOR}" -ge 8 ]; then
-        cargo install cargo-pgx --version '^0.4.5'
-    elif [ "${MAJOR}" -ge 1 ] && [ "${MINOR}" -ge 4 ]; then
-        cargo install cargo-pgx --version '^0.2'
-    else
-        if [ "${PGVERSION}" -ge 14 ]; then
-            echo "TimescaleDB Toolkit ${TOOLKIT_VERSION} is not supported on PostgreSQL ${PGVERSION}"
-            continue;
-        fi
-        cargo install --git https://github.com/JLockerman/pgx.git --branch timescale cargo-pgx
-    fi
-    cat > /home/postgres/.pgx/config.toml <<__EOT__
-[configs]
-pg${PGVERSION} = "/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
-__EOT__
-    cd extension
-    cargo pgx install --release
-    cargo run --manifest-path ../tools/post-install/Cargo.toml -- "/usr/lib/postgresql/${PGVERSION}/bin/pg_config"
-    cd ..
+    # The packages aren't named totally consistent, therefore we ask - using apt info -
+    # to describe all the versions that are there, which we then pattern match.
+    DEBVERSION="$(apt info -a timescaledb-toolkit-postgresql-${PGVERSION} | awk '/Version:/ {print $2}' | grep "${TOOLKIT_VERSION}" | grep -v forge | head -n 1)"
+    mkdir /tmp/dpkg
+    apt-get download timescaledb-toolkit-postgresql-${PGVERSION}=${DEBVERSION}
+    dpkg --install --admindir /tmp/dpkg --force-depends --force-not-root --force-overwrite timescaledb-toolkit-postgresql-${PGVERSION}*${TOOLKIT_VERSION}*.deb
+    rm -rf /tmp/dpkg
 done
 
 # We want to enforce users that install toolkit 1.5+ when upgrading or reinstalling.
