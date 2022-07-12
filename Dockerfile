@@ -275,14 +275,10 @@ ENV RUSTC_WRAPPER=/build/bin/sccache
 ENV SCCACHE_BUCKET=timescaledb-docker-ha-sccache
 
 ARG TIMESCALE_PROMSCALE_EXTENSIONS=
-ARG TIMESCALE_PROMSCALE_REPO=github.com/timescale/promscale_extension
 # build and install the promscale_extension extension
-RUN --mount=type=secret,uid=1000,id=AWS_ACCESS_KEY_ID --mount=type=secret,uid=1000,id=AWS_SECRET_ACCESS_KEY \
-    if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
-        [ -f "/run/secrets/AWS_ACCESS_KEY_ID" ] && export AWS_ACCESS_KEY_ID="$(cat /run/secrets/AWS_ACCESS_KEY_ID)" ; \
-        [ -f "/run/secrets/AWS_SECRET_ACCESS_KEY" ] && export AWS_SECRET_ACCESS_KEY="$(cat /run/secrets/AWS_SECRET_ACCESS_KEY)" ; \
+RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
         set -e \
-        && git clone https://${TIMESCALE_PROMSCALE_REPO} /build/promscale_extension \
+        && mkdir /build/promscale_extension \
         && cd /build/promscale_extension \
         && for pg in ${PG_VERSIONS}; do \
             /build/scripts/install_promscale.sh ${pg} ${TIMESCALE_PROMSCALE_EXTENSIONS} || exit 1 ; \
