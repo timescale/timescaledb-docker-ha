@@ -34,6 +34,22 @@ WITH versions(name, version) AS (
         name = 'timescaledb'
     UNION ALL
     SELECT
+        'promscale.available_versions',
+        string_agg(version, ',' ORDER BY version)
+    FROM
+        pg_available_extension_versions
+    WHERE
+        name = 'promscale'
+    UNION ALL
+    SELECT
+        'timescaledb_toolkit.available_versions',
+        string_agg(version, ',' ORDER BY version)
+    FROM
+        pg_available_extension_versions
+    WHERE
+        name = 'timescaledb_toolkit'
+    UNION ALL
+    SELECT
         'postgresql.available_versions',
         string_agg(version, ',' ORDER BY version)
     FROM
@@ -42,4 +58,6 @@ WITH versions(name, version) AS (
 SELECT
     format('%s=%s', name, version)
 FROM
-    versions;
+    versions
+WHERE
+    version != '';
