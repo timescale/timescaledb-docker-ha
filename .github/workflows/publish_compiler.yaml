@@ -11,7 +11,7 @@ env:
   INSTALL_METHOD: docker-ha
   TIMESCALE_CLOUDUTILS: "v1.1.6"
   TIMESCALE_HOT_FORGE: "v0.1.37"
-  TIMESCALE_OOM_GUARD:  "v1.2.0"
+  TIMESCALE_OOM_GUARD:  "v1.3.0"
   TIMESCALE_TSDB_ADMIN: "1.0.0"
 
   # This compiler image is used to create patches in other environments.
