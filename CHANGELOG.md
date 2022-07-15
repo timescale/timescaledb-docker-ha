@@ -9,8 +9,11 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
-* Upgrade Promscale extension to 0.5.3
+* [Upgrade Promscale extension to 0.5.3](https://github.com/timescale/timescaledb-docker-ha/pull/280)
 
+## [v1.4.7] - 2022-07-14
+
+* [Update OOMGuard](https://github.com/timescale/timescaledb-docker-ha/pull/279)
 
 ## [v1.4.6] - 2022-07-07
 
