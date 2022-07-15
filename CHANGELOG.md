@@ -9,7 +9,7 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
-Describe the changes that will go into the next release here
+* [Use binary packages for promscale and toolkit](https://github.com/timescale/timescaledb-docker-ha/pull/277)
 
 ## [v1.4.7] - 2022-07-14
 
