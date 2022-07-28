@@ -209,6 +209,20 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token \
         hot-forge -V || exit 1 ; \
     fi
 
+# patroni-k8s-sync is a project which synchronizes data from Patroni with a host K8s cluster,
+# particularly in cases where Patroni is not using the host K8s cluster as its DCS.
+ARG TIMESCALE_PATRONI_K8S_SYNC=
+RUN --mount=type=secret,uid=1000,id=private_repo_token \
+    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_PATRONI_K8S_SYNC}" ]; then \
+        GH_REPO="https://api.github.com/repos/timescale/patroni-k8s-sync"; \
+        ASSET_ID="$(curl -sL --header "Authorization: token $(cat "${REPO_SECRET_FILE}")" "${GH_REPO}/releases/tags/${TIMESCALE_PATRONI_K8S_SYNC}" | jq '.assets[0].id')"; \
+        curl -sL --header "Authorization: token $(cat "${REPO_SECRET_FILE}")" \
+                 --header 'Accept: application/octet-stream' \
+                 "${GH_REPO}/releases/assets/${ASSET_ID}" > /usr/local/bin/patroni-k8s-sync || exit 1; \
+        chmod 0755 /usr/local/bin/patroni-k8s-sync ; \
+        /usr/local/bin/patroni-k8s-sync -V || exit 1 ; \
+    fi
+
 # OOM Guard is a library that enables us to mitigate OOMs by blocking allocations above a limit.
 # It is a private timescale project and is therefore not included/built by default
 ARG TIMESCALE_OOM_GUARD=
