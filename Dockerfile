@@ -98,7 +98,7 @@ RUN set -eux; \
 RUN apt-get update && apt-get install -y dumb-init daemontools
 
 RUN apt-get update \
-    && apt-get install -y postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop \
+    && apt-get install -y postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop libsybdb5 freetds-dev freetds-common gnupg gcc make \
     # forbid creation of a main cluster when package is installed
     && sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
 
