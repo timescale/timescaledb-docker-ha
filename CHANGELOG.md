@@ -9,6 +9,10 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.0] - 2022-08-11
+* [PostgreSQL 14.5](https://www.postgresql.org/docs/release/14.5/) was now actually released
+* [PostgreSQL 13.8](https://www.postgresql.org/docs/release/13.8/) was now actually released
+
 ## [v1.4.9] - 2022-07-25
 
 * Include and default to [TimescaleDB 2.7.2](https://github.com/timescale/timescaledb/releases/tag/2.7.2)
