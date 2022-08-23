@@ -9,7 +9,12 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.1] - 2022-08-23
+
+* Upgrade TimescaleDB Toolkit extension to [1.10.1](https://github.com/timescale/timescaledb-toolkit/releases/tag/1.10.1)
+
 ## [v1.5.0] - 2022-08-11
+
 * [PostgreSQL 14.5](https://www.postgresql.org/docs/release/14.5/) was now actually released
 * [PostgreSQL 13.8](https://www.postgresql.org/docs/release/13.8/) was now actually released
 
