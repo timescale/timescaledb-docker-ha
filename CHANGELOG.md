@@ -9,6 +9,10 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.2] - 2022-08-24
+
+* Include patroni-k8s-sync in non-oss images
+
 ## [v1.5.1] - 2022-08-23
 
 * Upgrade TimescaleDB Toolkit extension to [1.10.1](https://github.com/timescale/timescaledb-toolkit/releases/tag/1.10.1)
