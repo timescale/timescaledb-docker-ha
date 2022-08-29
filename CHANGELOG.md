@@ -9,6 +9,8 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+* Upgrade the Promscale extension to 0.6.0
+
 ## [v1.5.2] - 2022-08-24
 
 * Include patroni-k8s-sync in non-oss images
