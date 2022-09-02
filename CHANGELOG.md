@@ -9,6 +9,10 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.7] - 2022-09-02
+
+* Include [timescaledb-tune 0.14.1](https://github.com/timescale/timescaledb-tune/releases/tag/v0.14.1)
+
 ## [v1.5.6] - 2022-08-31
 
 * Include and default to [TimescaleDB 2.8.0](https://github.com/timescale/timescaledb/releases/tag/2.8.0)
