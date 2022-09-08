@@ -59,7 +59,8 @@ RUN apt-get update
 
 # The following tools are required for some of the processes we (TimescaleDB) regularly
 # run inside the containers that use this Docker Image
-RUN apt-get install -y less jq strace procps
+# awscli is useful in many situations, for example, to list backup buckets etc
+RUN apt-get install -y less jq strace procps awscli
 
 # For debugging it is very useful if the Docker Image contains gdb(server). Even though it is
 # not expected to be running gdb in a live instance often, it simplifies getting backtraces from
