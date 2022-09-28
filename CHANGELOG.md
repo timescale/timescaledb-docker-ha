@@ -9,6 +9,11 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.8] - 2022-09-28
+
+* Upgrade TimescaleDB Toolkit extension to [1.11.0](https://github.com/timescale/timescaledb-toolkit/releases/tag/1.11.0)
+* Include timescaledb\_cloudutils v1.1.7
+
 ## [v1.5.7] - 2022-09-02
 
 * Include [timescaledb-tune 0.14.1](https://github.com/timescale/timescaledb-tune/releases/tag/v0.14.1)
