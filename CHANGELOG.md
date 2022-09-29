@@ -9,6 +9,8 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.10] - 2022-09-29
+
 * Bump `hot_forge` to 0.1.39 for AWS Security Token Service
 
 ## [v1.5.9] - 2022-09-29
