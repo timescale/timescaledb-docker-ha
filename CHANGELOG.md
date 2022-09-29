@@ -9,6 +9,10 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.9] - 2022-09-29
+
+* Switch from docker API v1 to v2 for determining immutable tag names
+
 ## [v1.5.8] - 2022-09-28
 
 * Upgrade TimescaleDB Toolkit extension to [1.11.0](https://github.com/timescale/timescaledb-toolkit/releases/tag/1.11.0)
