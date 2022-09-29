@@ -35,7 +35,7 @@ ALLOW_ADDING_EXTENSIONS?=true
 
 # We add a patch increment to all our immutable Docker Images. To figure out which patch number
 # to assign, we need 1 repository that is the canonical source of truth
-DOCKER_CANONICAL_URL?=https://index.docker.io/v1/repositories/timescale/timescaledb-ha
+DOCKER_CANONICAL_URL?=https://hub.docker.com/v2/repositories/timescale/timescaledb-ha
 
 # These variables have to do with this Docker repository
 GIT_REMOTE=$(shell git config --get remote.origin.url | sed 's/.*@//g')
