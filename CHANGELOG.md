@@ -9,6 +9,10 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.11] - 2022-10-06
+
+* Include and default to [TimescaleDB 2.8.1](https://github.com/timescale/timescaledb/releases/tag/2.8.1)
+
 ## [v1.5.10] - 2022-09-29
 
 * Bump `hot_forge` to 0.1.39 for AWS Security Token Service
