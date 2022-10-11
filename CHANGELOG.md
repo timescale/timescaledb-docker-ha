@@ -9,6 +9,8 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.12] - 2022-10-11
+
 * Upgrade Promscale extension to 0.7.0
 
 ## [v1.5.11] - 2022-10-06
