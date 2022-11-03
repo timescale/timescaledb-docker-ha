@@ -43,7 +43,7 @@ RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 
 # Make sure we're as up-to-date as possible, and install the highlest level dependencies
 RUN apt-get update && apt-get upgrade -y \
-    && apt-get install -y ca-certificates curl gnupg1 gpg gpg-agent locales lsb-release wget
+    && apt-get install -y ca-certificates curl gnupg1 gpg gpg-agent locales lsb-release wget unzip
 
 RUN mkdir -p /build/scripts
 RUN chmod 777 /build
@@ -304,6 +304,24 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
         && cd /build/promscale_extension \
         && for pg in ${PG_VERSIONS}; do \
             /build/scripts/install_promscale.sh ${pg} ${TIMESCALE_PROMSCALE_EXTENSIONS} || exit 1 ; \
+        done; \
+    fi
+
+ARG TIMESCALE_OSM_EXTENSION=
+ARG OSM_PGX_VERSION=0.4.5
+# build and install the timescale_osm extension
+RUN --mount=type=secret,uid=1000,id=private_repo_token \
+    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_OSM_EXTENSION}" ]; then \
+        set -e \
+        && mkdir /build/osm_extension \
+        && cd /build/osm_extension \ 
+        && for pg in ${PG_VERSIONS}; do \
+            if [ ${pg} -ge "14" ]; then \
+                # install all OSM versions for each PG version. 
+                for osm_version in ${TIMESCALE_OSM_EXTENSION}; do \
+                    /build/scripts/install_timescaledb-osm.sh ${osm_version} ${pg} ${OSM_PGX_VERSION} $(cat "${REPO_SECRET_FILE}") || exit 1 ; \
+                done; \
+            fi; \
         done; \
     fi
 
