@@ -9,6 +9,10 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.13] - 2022-11-04
+
+* Update dependencies - explicitly for OpenSSL 3.0.7 this time
+
 ## [v1.5.12] - 2022-10-11
 
 * Upgrade Promscale extension to 0.7.0
