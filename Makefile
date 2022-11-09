@@ -1,15 +1,15 @@
 PG_MAJOR?=14
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
-PG_VERSIONS?=14 13 12
+PG_VERSIONS?=14
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 POSTGIS_VERSIONS?="3"
 PG_AUTH_MON?=v1.0
 PG_STAT_MONITOR?=1.0.0-rc.1
 PG_LOGERRORS?=3c55887b
-TIMESCALE_PROMSCALE_EXTENSIONS?=0.5.0 0.5.1 0.5.2 0.5.4 0.6.0
-TIMESCALEDB_TOOLKIT_EXTENSIONS?=1.6.0 1.7.0 1.8.0 1.10.1
+TIMESCALE_PROMSCALE_EXTENSIONS?=0.6.0
+TIMESCALEDB_TOOLKIT_EXTENSIONS?=1.10.1
 TIMESCALE_TSDB_ADMIN?=
 TIMESCALE_HOT_FORGE?=
 TIMESCALE_PATRONI_K8S_SYNC?=
@@ -98,7 +98,7 @@ DOCKER_EXEC_COMMAND=docker exec -i $(DOCKER_TAG_PREPARE) timeout 90
 # We provide the fast target as the first (=default) target, as it will skip installing
 # many optional extensions, and it will only install a single timescaledb (master) version.
 # This is basically useful for developers of this repository, to allow fast feedback cycles.
-fast: DOCKER_EXTRA_BUILDARGS= --build-arg GITHUB_TAG=master
+fast: DOCKER_EXTRA_BUILDARGS= --build-arg GITHUB_TAG=2.8.0
 fast: PG_AUTH_MON=
 fast: PG_LOGERRORS=
 fast: PG_VERSIONS=14

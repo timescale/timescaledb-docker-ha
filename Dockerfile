@@ -43,7 +43,7 @@ RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 
 # Make sure we're as up-to-date as possible, and install the highlest level dependencies
 RUN apt-get update && apt-get upgrade -y \
-    && apt-get install -y ca-certificates curl gnupg1 gpg gpg-agent locales lsb-release wget
+    && apt-get install -y apt-utils ca-certificates curl gnupg1 gpg gpg-agent locales lsb-release wget vim-tiny
 
 RUN mkdir -p /build/scripts
 RUN chmod 777 /build
@@ -130,7 +130,9 @@ FROM compiler as builder
 
 RUN for pg in ${PG_VERSIONS}; do \
         apt-get install -y postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} \
-            postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
+            postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack \
+            postgresql-${pg}-hypopg postgresql-${pg}-unit postgresql-${pg}-powa postgresql-${pg}-pg-wait-sampling \
+            postgresql-${pg}-extra-window-functions postgresql-${pg}-pg-track-settings postgresql-${pg}-pglogical \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger || exit 1; \
     done
 
@@ -272,7 +274,8 @@ COPY build_scripts /build/scripts
 
 # If a specific GITHUB_TAG is provided, we will build that tag only. Otherwise
 # we build all the public (recent) releases
-RUN TS_VERSIONS="1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0 2.5.1 2.5.2 2.6.0 2.6.1 2.7.0 2.7.1 2.7.2 2.8.0" \
+#RUN TS_VERSIONS="1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0 2.5.1 2.5.2 2.6.0 2.6.1 2.7.0 2.7.1 2.7.2 2.8.0" \
+RUN TS_VERSIONS="2.8.0" \
     && if [ "${GITHUB_TAG}" != "" ]; then TS_VERSIONS="${GITHUB_TAG}"; fi \
     && cd /build/timescaledb && git pull \
     && set -e \
