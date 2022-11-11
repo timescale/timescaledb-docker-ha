@@ -9,6 +9,20 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.15] - 2022-11-10
+
+* Update patroni, [add fix for creating k8s svc](https://github.com/timescale/timescaledb-docker-ha/pull/319)
+* Minor PostgreSQL verion upgrade (fetching latest distro packages): 14.6 and 13.9
+* Include Toolkit [1.12.0]*https://github.com/timescale/timescaledb-docker-ha/pull/325)
+
+## [v1.5.14] - 2022-11-04
+
+* Upgrade OpenSSL to 3.0.7 (fetching latest distro packages)
+
+## [v1.5.13] - 2022-10-24
+
+* [Upgrade OOMGuard](https://github.com/timescale/timescaledb-docker-ha/pull/320)
+
 ## [v1.5.12] - 2022-10-11
 
 * Upgrade Promscale extension to 0.7.0
