@@ -156,9 +156,16 @@ RUN echo 'deb http://cz.archive.ubuntu.com/ubuntu kinetic main universe' >> /etc
 # NOTE: This is a temporary solution until changes land upstream.
 ARG TIMESCALE_STATIC_PRIMARY
 RUN if [ "${TIMESCALE_STATIC_PRIMARY}" != "" ]; then \
-    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.4/patroni/ha.py > /usr/lib/python3/dist-packages/patroni/ha.py && \
-    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.4/patroni/config.py > /usr/lib/python3/dist-packages/patroni/config.py && \
-    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.4/patroni/validator.py > /usr/lib/python3/dist-packages/patroni/validator.py; \
+    mkdir /tmp/patroni && cd /tmp/patroni && \
+    git init && git remote add -f origin https://github.com/timescale/patroni.git && \
+    git config core.sparseCheckout true && echo 'patroni' > .git/info/sparse-checkout && \
+    git pull origin feature-static-primaries; \
+    fi
+
+# Update Patroni package dir with new code.
+RUN if [ "${TIMESCALE_STATIC_PRIMARY}" != "" ]; then \
+    rm -rf /usr/lib/python3/dist-packages/patroni && \
+    mv /tmp/patroni/patroni /usr/lib/python3/dist-packages; \
     fi
 
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
