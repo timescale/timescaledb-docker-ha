@@ -9,6 +9,11 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.17] - 2022-11-21
+
+* Include Timescale-osm
+
+
 ## [v1.5.16] - 2022-11-21
 
 * Include Toolkit [1.12.1](https://github.com/timescale/timescaledb-docker-ha/pull/327)
