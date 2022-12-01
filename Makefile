@@ -93,7 +93,7 @@ DOCKER_BUILD_COMMAND=docker build \
 					 --build-arg TIMESCALE_STATIC_PRIMARY="$(TIMESCALE_STATIC_PRIMARY)" \
 					 --cache-from "$(DOCKER_CACHE_FROM)" \
 					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
-					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
+					 --label org.opencontainers.image.created="$$(date -Iseconds -u)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
 					 --label org.opencontainers.image.source="$(GIT_REMOTE)" \
 					 --label org.opencontainers.image.vendor=Timescale \
