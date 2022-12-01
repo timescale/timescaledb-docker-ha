@@ -17,6 +17,7 @@ TIMESCALE_OOM_GUARD?=
 TIMESCALE_OSM_EXTENSION?=0.0.2 0.0.3
 TIMESCALE_CLOUDUTILS?=
 TIMESCALE_STATIC_PRIMARY?=
+TIMESCALE_TS_STAT_STATEMENTS?=
 
 DOCKER_EXTRA_BUILDARGS?=
 DOCKER_REGISTRY?=localhost:5000
@@ -81,6 +82,7 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg TIMESCALE_OSM_EXTENSION="$(TIMESCALE_OSM_EXTENSION)" \
 					 --build-arg TIMESCALE_PROMSCALE_EXTENSIONS="$(TIMESCALE_PROMSCALE_EXTENSIONS)" \
 					 --build-arg TIMESCALE_TSDB_ADMIN="$(TIMESCALE_TSDB_ADMIN)" \
+					 --build-arg TIMESCALE_TS_STAT_STATEMENTS="$(TIMESCALE_TS_STAT_STATEMENTS)" \
 					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSIONS="$(TIMESCALEDB_TOOLKIT_EXTENSIONS)" \
 					 --build-arg TIMESCALE_STATIC_PRIMARY="$(TIMESCALE_STATIC_PRIMARY)" \
 					 --cache-from "$(DOCKER_CACHE_FROM)" \
@@ -147,7 +149,9 @@ version_info-%.log: prepare
 	$(DOCKER_EXEC_COMMAND) /cicd/smoketest.sh || (docker logs $(DOCKER_TAG_PREPARE) && exit 1)
 	docker cp $(DOCKER_TAG_PREPARE):/tmp/version_info.log $(VAR_VERSION_INFO)
 	docker kill $(DOCKER_TAG_PREPARE) || true
-	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin.version=$(TIMESCALE_TSDB_ADMIN)" >> $(VAR_VERSION_INFO); fi
+	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin.version=$(TIMESCALE_TSDB_ADMIN)" >> $(VAR_VERSION_INFO); fi \
+ 	if [ ! -z "$(TIMESCALE_TS_STAT_STATEMENTS)" -a "$(POSTFIX)" != "-oss" ]; then echo "ts_stat_statements.version=$(TIMESCALE_TS_STAT_STATEMENTS)" >> $(VAR_VERSION_INFO); fi
+
 
 build: $(VAR_VERSION_INFO)
 	echo "FROM $(DOCKER_TAG_PREPARE)" | docker build --tag "$(DOCKER_TAG_LABELED)" - \
