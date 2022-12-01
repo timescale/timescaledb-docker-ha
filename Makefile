@@ -149,9 +149,7 @@ version_info-%.log: prepare
 	$(DOCKER_EXEC_COMMAND) /cicd/smoketest.sh || (docker logs $(DOCKER_TAG_PREPARE) && exit 1)
 	docker cp $(DOCKER_TAG_PREPARE):/tmp/version_info.log $(VAR_VERSION_INFO)
 	docker kill $(DOCKER_TAG_PREPARE) || true
-	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin.version=$(TIMESCALE_TSDB_ADMIN)" >> $(VAR_VERSION_INFO); fi \
- 	if [ ! -z "$(TIMESCALE_TS_STAT_STATEMENTS)" -a "$(POSTFIX)" != "-oss" ]; then echo "ts_stat_statements.version=$(TIMESCALE_TS_STAT_STATEMENTS)" >> $(VAR_VERSION_INFO); fi
-
+	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin.version=$(TIMESCALE_TSDB_ADMIN)" >> $(VAR_VERSION_INFO); fi
 
 build: $(VAR_VERSION_INFO)
 	echo "FROM $(DOCKER_TAG_PREPARE)" | docker build --tag "$(DOCKER_TAG_LABELED)" - \
