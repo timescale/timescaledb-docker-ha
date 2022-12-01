@@ -59,10 +59,16 @@ VAR_VERSION_INFO=version_info-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX).log
 # We require the use of buildkit, as we use the --secret arguments for docker build
 export DOCKER_BUILDKIT = 1
 
+PLATFORM?=amd64
+
 # We label all the Docker Images with the versions of PostgreSQL, TimescaleDB and some other extensions
 # afterwards, by using introspection, as minor versions may differ even when using the same
 # Dockerfile
-DOCKER_BUILD_COMMAND=docker build --progress=plain \
+DOCKER_BUILD_COMMAND=docker build \
+					 --platform "linux/$(PLATFORM)" \
+					 --pull \
+					 --progress=plain \
+					 --build-arg PLATFORM="$(PLATFORM)" \
 					 --build-arg ALLOW_ADDING_EXTENSIONS="$(ALLOW_ADDING_EXTENSIONS)" \
 					 --build-arg GITHUB_DOCKERLIB_POSTGRES_REF="$(GITHUB_DOCKERLIB_POSTGRES_REF)" \
 					 --build-arg GITHUB_REPO="$(GITHUB_REPO)" \

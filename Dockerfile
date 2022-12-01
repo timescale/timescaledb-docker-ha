@@ -146,12 +146,8 @@ RUN for postgisv in ${POSTGIS_VERSIONS}; do \
 # Some Patroni prerequisites
 # This need to be done after the PostgreSQL packages have been installed,
 # to ensure we have the preferred libpq installations etc.
-RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj
-RUN echo 'deb http://cz.archive.ubuntu.com/ubuntu kinetic main universe' >> /etc/apt/sources.list && \
-    apt-get update && \
-    apt-get install -y patroni=2.1.4-\* && \
-    head -n -1 /etc/apt/sources.list > /etc/apt/sources.list.tmp; mv /etc/apt/sources.list.tmp /etc/apt/sources.list; \
-    apt-get update
+RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj patroni
+
 # Patch Patroni code with changes from https://github.com/zalando/patroni/pull/2318.
 # NOTE: This is a temporary solution until changes land upstream.
 ARG TIMESCALE_STATIC_PRIMARY
@@ -207,7 +203,7 @@ ENV REPO_SECRET_FILE=/run/secrets/private_repo_token
 # and never included in the OSS image.
 ARG TIMESCALE_HOT_FORGE=
 RUN --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_HOT_FORGE}" ]; then \
+    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_HOT_FORGE}" -a "$PLATFORM" == amd64 ]; then \
         GH_REPO="https://api.github.com/repos/timescale/hot-forge"; \
         ASSET_ID="$(curl -sL --header "Authorization: token $(cat "${REPO_SECRET_FILE}")" "${GH_REPO}/releases/tags/${TIMESCALE_HOT_FORGE}" | jq '.assets[0].id')"; \
         curl -sL --header "Authorization: token $(cat "${REPO_SECRET_FILE}")" \
@@ -298,7 +294,7 @@ ENV SCCACHE_BUCKET=timescaledb-docker-ha-sccache
 
 ARG TIMESCALE_PROMSCALE_EXTENSIONS=
 # build and install the promscale_extension extension
-RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
+RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSIONS}" -a -z "${OSS_ONLY}" -a "$PLATFORM" == amd64 ]; then \
         set -e \
         && mkdir /build/promscale_extension \
         && cd /build/promscale_extension \
@@ -311,7 +307,7 @@ ARG TIMESCALE_OSM_EXTENSION=
 ARG OSM_PGX_VERSION=0.4.5
 # build and install the timescale_osm extension
 RUN --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_OSM_EXTENSION}" ]; then \
+    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_OSM_EXTENSION}" -a "$PLATFORM" == amd64 ]; then \
         set -e \
         && mkdir /build/osm_extension \
         && cd /build/osm_extension \ 
@@ -330,7 +326,7 @@ ARG PGX_VERSION=0.2.6
 ARG TIMESCALE_CLOUDUTILS=
 # build and install the cloudutils libarary and extension
 RUN --mount=type=secret,uid=1000,id=private_repo_token --mount=type=secret,uid=1000,id=AWS_ACCESS_KEY_ID --mount=type=secret,uid=1000,id=AWS_SECRET_ACCESS_KEY \
-    if [ -f "${REPO_SECRET_FILE}" -a ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
+    if [ -f "${REPO_SECRET_FILE}" -a ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" -a "$PLATFORM" == amd64 ]; then \
         [ -f "/run/secrets/AWS_ACCESS_KEY_ID" ] && export AWS_ACCESS_KEY_ID="$(cat /run/secrets/AWS_ACCESS_KEY_ID)" ; \
         [ -f "/run/secrets/AWS_SECRET_ACCESS_KEY" ] && export AWS_SECRET_ACCESS_KEY="$(cat /run/secrets/AWS_SECRET_ACCESS_KEY)" ; \
         set -e \
