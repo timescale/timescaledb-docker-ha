@@ -415,6 +415,20 @@ RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
 # We can remove this at some point, useful for debugging builds for now
 RUN /build/bin/sccache --show-stats
 
+# ts_stat_statements is a query monitoring extension.
+# It is a private timescale project and is therefore not included/built by default
+ARG TIMESCALE_TS_STAT_STATEMENTS=
+RUN --mount=type=secret,uid=1000,id=private_repo_token \
+    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TS_STAT_STATEMENTS}" ]; then \
+      cd /build \
+              && git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/ts_stat_statements \
+              && for pg in ${PG_VERSIONS}; do \
+                    if [ ${pg} -ge "14" ]; then \
+                      cd /build/ts_stat_statements && git reset HEAD --hard && git checkout ${TIMESCALE_TS_STAT_STATEMENTS} \
+                      && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
+              done; \
+    fi \
+
 USER root
 
 # All the tools that were built in the previous steps have their ownership set to postgres
