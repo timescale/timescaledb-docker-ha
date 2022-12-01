@@ -426,10 +426,9 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token \
                     if [ ${pg} -ge "14" ]; then \
                       cd /build/ts_stat_statements && git reset HEAD --hard && git checkout ${TIMESCALE_TS_STAT_STATEMENTS} \
                       && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
+                  fi; \
                 done; \
             fi; \
-        done; \
-    fi
 
 USER root
 
