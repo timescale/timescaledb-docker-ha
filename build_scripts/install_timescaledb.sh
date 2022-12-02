@@ -40,7 +40,7 @@ for TAG in "$@"; do
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DREGRESS_CHECKS=OFF \
             -DGENERATE_DOWNGRADE_SCRIPT=ON \
-            -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}${OSS_ONLY}"
+            -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}"${OSS_ONLY}
         cd build
 
         make
