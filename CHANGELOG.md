@@ -9,6 +9,10 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.18] - 2022-12-05
+
+* Include ts_stat_statements.
+
 ## [v1.5.17] - 2022-11-21
 
 * Include Timescale-osm
