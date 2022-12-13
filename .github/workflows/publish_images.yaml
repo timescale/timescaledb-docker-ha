@@ -1,0 +1,107 @@
+name: Publish images
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+  schedule:
+    - cron: '0 2 * * 0'
+
+concurrency:
+  group: publish-images-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish-image:
+    name: Publish images
+
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+        - pg_major: "15"
+          pg_versions: "15"
+          docker_tag_postfix: '-multi'
+
+        - pg_major: "15"
+          pg_versions: "15"
+          oss_only: "true"
+          docker_tag_postfix: '-multi-oss'
+
+        - pg_major: "15"
+          pg_versions: "15 14 13 12"
+          docker_tag_postfix: '-multi-all'
+
+        - pg_major: "15"
+          pg_versions: "15 14 13 12"
+          oss_only: "true"
+          docker_tag_postfix: '-multi-all-oss'
+
+    runs-on: [ "dev-eu-west-1", "x64", "non-prod" ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get tag name
+        id: tag_name
+        run: echo "GIT_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+
+      # QEMU for `make check`
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up SSH
+        uses: MrSquaare/ssh-setup-action@v2
+        with:
+          host: "${{ secrets.ARM_RUNNER_HOST }}"
+          private-key: "${{ secrets.BK_PRIVATE_KEY }}"
+          private-key-name: action_runner
+
+      - name: Setup | Docker context for buildx
+        run: |
+          docker context rm ha-builder || true
+          docker context create ha-builder
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          platforms: linux/amd64,linux/arm64
+          endpoint: ha-builder
+          driver: docker-container
+          append: |
+            - endpoint: "ssh://admin@${{ secrets.ARM_RUNNER_HOST }}"
+              platforms: linux/arm64
+
+      - name: Fetch runtime environment
+        uses: crazy-max/ghaction-github-runtime@v2
+
+      - name: Build and publish image
+        env:
+          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
+          DOCKER_REPOSITORY: timescaledev/timescaledb-ha
+          DOCKER_REGISTRY: docker.io
+          DOCKER_BUILDX_CREATE: "true"
+          DOCKER_BUILDX_DESTROY: "true"
+          DOCKER_EXTRA_BUILDARGS: ${{ matrix.docker_extra_buildargs }}
+          DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
+          PG_MAJOR: ${{ matrix.pg_major }}
+          PG_VERSIONS: ${{ matrix.pg_versions }}
+          OSS_ONLY: ${{ matrix.oss_only }}
+        run: |
+          DOCKER_CACHE_FROM="type=gha,mode=max,url=$ACTIONS_CACHE_URL,token=$ACTIONS_RUNTIME_TOKEN" \
+            DOCKER_CACHE_TO="type=gha,mode=max,url=$ACTIONS_CACHE_URL,token=$ACTIONS_RUNTIME_TOKEN" \
+            make publish-builder publish check
+
+      - name: List docker images
+        run: make list-images

@@ -8,36 +8,40 @@ POSTGIS_VERSIONS?="3"
 PG_AUTH_MON?=v2.0
 PG_STAT_MONITOR?=1.1.1
 PG_LOGERRORS?=3c55887b
+TIMESCALEDB_VERSIONS?=1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0 2.5.1 2.5.2 2.6.0 2.6.1 2.7.0 2.7.1 2.7.2 2.8.0 2.8.1 2.9.1
 TIMESCALE_PROMSCALE_EXTENSIONS?=0.5.0 0.5.1 0.5.2 0.5.4 0.6.0 0.7.0 0.8.0
 TIMESCALEDB_TOOLKIT_EXTENSIONS?=1.6.0 1.7.0 1.8.0 1.10.1 1.11.0 1.12.0 1.12.1 1.13.0 1.13.1 1.14.0 1.15.0 1.16.0
-TIMESCALE_TSDB_ADMIN?=
-TIMESCALE_HOT_FORGE?=
-TIMESCALE_PATRONI_K8S_SYNC?=
-TIMESCALE_OOM_GUARD?=
-TIMESCALE_OSM_EXTENSION?=0.0.7
-TIMESCALE_CLOUDUTILS?=
-TIMESCALE_DCS_FAILSAFE?=
-TIMESCALE_TS_STAT_STATEMENTS?=
+OSS_ONLY?=false
 
+DOCKER_PLATFORMS?=linux/amd64,linux/arm64
+
+DOCKER_FROM?=ubuntu:22.04
 DOCKER_EXTRA_BUILDARGS?=
 DOCKER_REGISTRY?=localhost:5000
-DOCKER_REPOSITORY?=timescale/timescaledb-ha
-DOCKER_PUBLISH_URLS?=$(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY)
-DOCKER_TAG_POSTFIX?=
-DOCKER_TAG_PREPARE=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
-DOCKER_TAG_LABELED=$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-labeled
-DOCKER_TAG_COMPILER=pg$(PG_MAJOR)-compiler
-DOCKER_CACHE_FROM?=scratch
+DOCKER_REPOSITORY?=timescaledev/timescaledb-ha
+DOCKER_PUBLISH_URL?=$(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY)
+DOCKER_TAG_POSTFIX?=-multi
+DOCKER_BUILDER_URL=$(DOCKER_PUBLISH_URL):pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-builder
+DOCKER_RELEASE_URL=$(DOCKER_PUBLISH_URL):pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
+DOCKER_CACHE_FROM?=
+DOCKER_CACHE_TO?=
+
+DOCKER_CACHE:=
+ifneq ($(DOCKER_CACHE_FROM),)
+DOCKER_CACHE = --cache-from $(DOCKER_CACHE_FROM)
+endif
+ifneq ($(DOCKER_CACHE_TO),)
+DOCKER_CACHE += --cache-to $(DOCKER_CACHE_TO)
+endif
+
+DOCKER_BUILDX_CREATE?=docker buildx create --driver=docker-container --platform linux/amd64,linux/arm64 ha-multinode --use --bootstrap
+DOCKER_BUILDX_DESTROY?=docker buildx rm ha-multinode
 
 # These parameters control which entrypoints we add to the scripts
 GITHUB_DOCKERLIB_POSTGRES_REF=master
 GITHUB_TIMESCALEDB_DOCKER_REF=main
 
 ALLOW_ADDING_EXTENSIONS?=true
-
-# We add a patch increment to all our immutable Docker Images. To figure out which patch number
-# to assign, we need 1 repository that is the canonical source of truth
-DOCKER_CANONICAL_URL?=https://hub.docker.com/v2/repositories/timescale/timescaledb-ha
 
 # These variables have to do with this Docker repository
 GIT_REMOTE=$(shell git config --get remote.origin.url | sed 's/.*@//g')
@@ -48,7 +52,6 @@ INSTALL_METHOD?=docker-ha
 
 # These variables have to do with what software we pull in from github for timescaledb
 GITHUB_REPO?=timescale/timescaledb
-GITHUB_TAG?=
 
 # We need dynamic variables here, that is why we do not use $(shell awk ...)
 VAR_PGMINOR="$$(awk -F '=' '/postgresql.version=/ {print $$2}' $(VAR_VERSION_INFO))"
@@ -62,11 +65,15 @@ export DOCKER_BUILDKIT = 1
 # We label all the Docker Images with the versions of PostgreSQL, TimescaleDB and some other extensions
 # afterwards, by using introspection, as minor versions may differ even when using the same
 # Dockerfile
-DOCKER_BUILD_COMMAND=docker build --progress=plain \
+DOCKER_BUILD_COMMAND=docker buildx build \
+					 --platform "$(DOCKER_PLATFORMS)" \
+					 $(DOCKER_CACHE) \
+					 --push \
+					 --progress=plain \
+					 --build-arg DOCKER_FROM="$(DOCKER_FROM)" \
 					 --build-arg ALLOW_ADDING_EXTENSIONS="$(ALLOW_ADDING_EXTENSIONS)" \
 					 --build-arg GITHUB_DOCKERLIB_POSTGRES_REF="$(GITHUB_DOCKERLIB_POSTGRES_REF)" \
 					 --build-arg GITHUB_REPO="$(GITHUB_REPO)" \
-					 --build-arg GITHUB_TAG=$(GITHUB_TAG) \
 					 --build-arg GITHUB_TIMESCALEDB_DOCKER_REF="$(GITHUB_TIMESCALEDB_DOCKER_REF)" \
 					 --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" \
 					 --build-arg PG_AUTH_MON="$(PG_AUTH_MON)" \
@@ -75,29 +82,17 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg PG_STAT_MONITOR="$(PG_STAT_MONITOR)" \
 					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
 					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
-					 --build-arg TIMESCALE_CLOUDUTILS="$(TIMESCALE_CLOUDUTILS)" \
-					 --build-arg TIMESCALE_HOT_FORGE="$(TIMESCALE_HOT_FORGE)" \
-					 --build-arg TIMESCALE_PATRONI_K8S_SYNC="$(TIMESCALE_PATRONI_K8S_SYNC)" \
-					 --build-arg TIMESCALE_OOM_GUARD="$(TIMESCALE_OOM_GUARD)" \
-					 --build-arg TIMESCALE_OSM_EXTENSION="$(TIMESCALE_OSM_EXTENSION)" \
+					 --build-arg OSS_ONLY="$(OSS_ONLY)" \
+					 --build-arg TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" \
 					 --build-arg TIMESCALE_PROMSCALE_EXTENSIONS="$(TIMESCALE_PROMSCALE_EXTENSIONS)" \
-					 --build-arg TIMESCALE_TSDB_ADMIN="$(TIMESCALE_TSDB_ADMIN)" \
-					 --build-arg TIMESCALE_TS_STAT_STATEMENTS="$(TIMESCALE_TS_STAT_STATEMENTS)" \
-					 --build-arg TIMESCALE_DCS_FAILSAFE="$(TIMESCALE_DCS_FAILSAFE)" \
 					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSIONS="$(TIMESCALEDB_TOOLKIT_EXTENSIONS)" \
-					 --cache-from "$(DOCKER_CACHE_FROM)" \
 					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
-					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
+					 --label org.opencontainers.image.created="$$(date -Iseconds -u)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
 					 --label org.opencontainers.image.source="$(GIT_REMOTE)" \
 					 --label org.opencontainers.image.vendor=Timescale \
-					 --secret id=private_repo_token,env=PRIVATE_REPO_TOKEN \
-					 --secret id=AWS_ACCESS_KEY_ID,env=AWS_ACCESS_KEY_ID \
-					 --secret id=AWS_SECRET_ACCESS_KEY,env=AWS_SECRET_ACCESS_KEY \
 					 $(DOCKER_EXTRA_BUILDARGS) \
 					 .
-
-DOCKER_EXEC_COMMAND=docker exec -i $(DOCKER_TAG_PREPARE) timeout 90
 
 # We provide the fast target as the first (=default) target, as it will skip installing
 # many optional extensions, and it will only install a single timescaledb (master) version.
@@ -109,55 +104,42 @@ fast: PG_VERSIONS=15
 fast: POSTGIS_VERSIONS=
 fast: TIMESCALEDB_TOOLKIT_EXTENSIONS=
 fast: TIMESCALE_PROMSCALE_EXTENSION=
-fast: TIMESCALE_OSM_EXTENSION=
 fast: ALLOW_ADDING_EXTENSIONS=true
-fast: prepare
+fast: build
 
-.PHONY: compiler
-compiler:
-	$(DOCKER_BUILD_COMMAND) --target compiler --tag $(DOCKER_TAG_COMPILER)
-
-.PHONY: publish-compiler
-publish-compiler: compiler
-	for url in $(DOCKER_PUBLISH_URLS); do \
-		docker tag $(DOCKER_TAG_COMPILER) $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER) || exit 1 ; \
-		docker push $(DOCKER_PUBLISH_URLS):$(DOCKER_TAG_COMPILER) || exit 1 ; \
-		PGMINOR=$$(docker run -i $(DOCKER_TAG_COMPILER) psql --version | awk '{print $$3}') ;\
-		docker tag $(DOCKER_TAG_COMPILER) $(DOCKER_PUBLISH_URLS):pg$${PGMINOR}-compiler || exit 1 ; \
-		docker push $(DOCKER_PUBLISH_URLS):pg$${PGMINOR}-compiler || exit 1 ; \
-	done
-
-# This target always succeeds, as it is purely an speed optimization
-.PHONY: pull-cached-image
-pull-cached-image:
-	@if [ "$(DOCKER_CACHE_FROM)" != "scratch" ]; then docker pull "$(DOCKER_CACHE_FROM)" || true ; fi
+publish-builder: DOCKER_EXTRA_BUILDARGS=--target builder
+publish-builder:
+	$(DOCKER_BUILDX_CREATE)
+	$(DOCKER_BUILD_COMMAND) --tag "$(DOCKER_BUILDER_URL)"
+	$(DOCKER_BUILDX_DESTROY)
 
 # The prepare step does not build the final image, as we need to use introspection
 # to find out what versions of software are installed in this image
-prepare: pull-cached-image
-	$(DOCKER_BUILD_COMMAND) --tag $(DOCKER_TAG_PREPARE)
+build: DOCKER_EXTRA_BUILDARGS=--target release
+build: $(VAR_VERSION_INFO)
+	$(DOCKER_BUILDX_CREATE)
+	$(DOCKER_BUILD_COMMAND) \
+		--tag "$(DOCKER_RELEASE_URL)" \
+		$$(for latest in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR); do \
+			echo --tag $(DOCKER_PUBLISH_URL):$${latest}$(DOCKER_TAG_POSTFIX)-latest; \
+		done) \
+		$$(awk -F '=' '{printf "--label com.timescaledb.image."$$1"="$$2" "}' $(VAR_VERSION_INFO))
+	$(DOCKER_BUILDX_DESTROY)
 
-version_info-%.log: prepare
+VERSION_NAME=versioninfo-pg$(PG_MAJOR)
+version_info-%.log: publish-builder
 	# In these steps we do some introspection to find out some details of the versions
 	# that are inside the Docker image. As we use the Ubuntu packages, we do not know until
 	# after we have built the image, what patch version of PostgreSQL, or PostGIS is installed.
 	#
 	# We will then attach this information as OCI labels to the final Docker image
-	docker rm -f $(DOCKER_TAG_PREPARE) || true
-	docker run -d --name $(DOCKER_TAG_PREPARE) -e PGDATA=/tmp/pgdata --user=postgres $(DOCKER_TAG_PREPARE) sleep 90
-	docker cp ./cicd $(DOCKER_TAG_PREPARE):/cicd/
-	$(DOCKER_EXEC_COMMAND) /cicd/smoketest.sh || (docker logs $(DOCKER_TAG_PREPARE) && exit 1)
-	docker cp $(DOCKER_TAG_PREPARE):/tmp/version_info.log $(VAR_VERSION_INFO)
-	docker kill $(DOCKER_TAG_PREPARE) || true
-	if [ ! -z "$(TIMESCALE_TSDB_ADMIN)" -a "$(POSTFIX)" != "-oss" ]; then echo "tsdb_admin.version=$(TIMESCALE_TSDB_ADMIN)" >> $(VAR_VERSION_INFO); fi
-
-build: $(VAR_VERSION_INFO)
-	echo "FROM $(DOCKER_TAG_PREPARE)" | docker build --tag "$(DOCKER_TAG_LABELED)" - \
-	  $$(awk -F '=' '{printf "--label com.timescaledb.image."$$1"="$$2" "}' $(VAR_VERSION_INFO))
-
-build-oss: DOCKER_EXTRA_BUILDARGS= --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"
-build-oss: DOCKER_TAG_POSTFIX=-oss
-build-oss: build
+	# docker buildx build does a push to export it, so it doesn't exist in the regular local registry yet
+	@docker rm --force $(VERSION_NAME) || true
+	docker run --pull always --rm -d --name $(VERSION_NAME) -e PGDATA=/tmp/pgdata --user=postgres $(DOCKER_BUILDER_URL) sleep 300
+	docker cp ./cicd $(VERSION_NAME):/cicd/
+	docker exec $(VERSION_NAME) /cicd/smoketest.sh || (docker logs $(VERSION_NAME) && exit 1)
+	docker cp $(VERSION_NAME):/tmp/version_info.log $(VAR_VERSION_INFO)
+	docker rm --force $(VERSION_NAME) || true
 
 # The purpose of publishing the images under many tags, is to provide
 # some choice to the user as to their appetite for volatility.
@@ -166,45 +148,25 @@ build-oss: build
 #  2. timescale/timescaledb-ha:pg12-ts1.7-latest
 #  3. timescale/timescaledb-ha:pg12.3-ts1.7-latest
 #  4. timescale/timescaledb-ha:pg12.3-ts1.7.1-latest
-#  5. timescale/timescaledb-ha:pg12.3-ts1.7.1-pN
-#
-# Tag 5 is immutable, and for every time we publish that image, we increase N by 1,
-# we start with N=0
-publish: publish-mutable publish-next-patch-version
+
+build-oss: OSS_ONLY=true
+build-oss: DOCKER_TAG_POSTFIX=-oss
+build-oss: build
+
+publish: is_ci build
+
+CHECK_NAME=ha-check-pg$(PGMAJOR)
+check:
+	@for arch in amd64 arm64; do \
+		docker rm --force $(CHECK_NAME); \
+		docker run --pull always --platform linux/$$arch -d --name $(CHECK_NAME) -e PGDATA=/tmp/pgdata --user=postgres "$(DOCKER_RELEASE_URL)" sleep 300; \
+		docker cp ./cicd $(CHECK_NAME):/cicd/; \
+		docker exec -e CI=$(CI) $(CHECK_NAME) /cicd/install_checks -v || { docker logs -n100 $(CHECK_NAME); exit 1; }; \
+	done
+	docker rm --force $(CHECK_NAME) || true
 
 is_ci:
 	@if [ "$${CI}" != "true" ]; then echo "environment variable CI is not set to \"true\", are you running this in Github Actions?"; exit 1; fi
-
-publish-mutable: is_ci build
-	for latest in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR); do \
-		for url in $(DOCKER_PUBLISH_URLS); do \
-			docker tag $(DOCKER_TAG_LABELED) $${url}:$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1; \
-			docker push $${url}:$${latest}$(DOCKER_TAG_POSTFIX)-latest || exit 1 ; \
-		done \
-	done
-
-
-publish-immutable: MAX_PATCH_NUMBER=100
-publish-immutable: is_ci build
-	for i in $$(seq 0 $(MAX_PATCH_NUMBER)); do \
-		export IMMUTABLE_TAG=pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR)$(DOCKER_TAG_POSTFIX)-p$${i}; \
-		export DOCKER_HUB_HTTP_CODE="$$(curl -s -o /dev/null -w '%{http_code}' "$(DOCKER_CANONICAL_URL)/tags/$${IMMUTABLE_TAG}")"; \
-		if [ $$i -ge $(MAX_PATCH_NUMBER) ]; then \
-			echo "There are already $$i patch versions, aborting"; \
-			exit 1 ; \
-		elif [ "$${DOCKER_HUB_HTTP_CODE}" = "404" ]; then \
-			for url in $(DOCKER_PUBLISH_URLS); do \
-				docker tag $(DOCKER_TAG_LABELED) $${url}:$${IMMUTABLE_TAG} || exit 1; \
-				docker push $${url}:$${IMMUTABLE_TAG} || exit 1 ; \
-			done; \
-			exit 0; \
-		elif [ "$${DOCKER_HUB_HTTP_CODE}" = "200" ]; then \
-			echo "$${IMMUTABLE_TAG} already exists, incrementing patch number"; \
-		else \
-			echo "Unexpected HTTP return code: $${DOCKER_HUB_HTTP_CODE}"; \
-			exit 1 ;\
-		fi \
-	done
 
 list-images:
 	docker images --filter "label=com.timescaledb.image.install_method=$(INSTALL_METHOD)" --filter "dangling=false"
@@ -212,14 +174,4 @@ list-images:
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
 build-tag: build
 
-push-sha: is_ci build
-ifndef GITHUB_SHA
-	$(error GITHUB_SHA is undefined, are you running this in Github Actions?)
-endif
-	for url in $(DOCKER_PUBLISH_URLS); do \
-		export FULL_TAG=$${url}:cicd-$$(printf "%.8s" $${GITHUB_SHA}) \
-		&& docker tag $(DOCKER_TAG_LABELED) $${FULL_TAG} \
-		&& docker push $${FULL_TAG} || exit 1 ; \
-	done
-
-.PHONY: fast prepare build-oss release build publish test tag build-tag publish-next-patch-version publish-mutable publish-immutable is_ci list-images
+.PHONY: fast prepare build-oss release build publish test tag build-tag is_ci list-images

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# Check for the things that are supposed to be installed in the image
+
+SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
+. "$SCRIPT_DIR"/shared.sh
+
+[ "$1" = -v ] && { VERBOSE=1; shift; }
+
+# make sure the image we're checking is at most 2 hours old
+check_base_age 7200
+
+for pg in $(cd /usr/lib/postgresql && ls); do
+    check_base_components /usr/lib/postgresql/$pg/lib
+done
+
+exit $EXIT_STATUS

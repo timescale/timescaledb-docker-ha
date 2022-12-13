@@ -1,6 +1,9 @@
 #!/bin/bash
 
-set -e -o pipefail
+SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
+. "$SCRIPT_DIR"/shared.sh
+
+set -ex -o pipefail
 
 if [ -z "$2" ]; then
     error "Usage: $0 PGVERSION [TSVERSION..]"
@@ -56,12 +59,40 @@ supported_timescaledb() {
 
 export PATH="/usr/lib/postgresql/${PGVERSION}/bin:${PATH}"
 
-if [ -n "$OSS_ONLY" ]; then
-    log "building timescaledb for OSS_ONLY"
+if [ "$OSS_ONLY" = true ]; then
+    echo "building timescaledb for OSS_ONLY"
     OSS_ONLY="-DAPACHE_ONLY=1"
 else
     OSS_ONLY=""
 fi
+
+is_supported() {
+    MAJOR="$(echo "$1" | cut -d. -f1)"
+    MINOR="$(echo "$1" | cut -d. -f2)"
+
+    case "$(arch)" in
+    x86_64|aarch64)
+        # pg15 requires 2.9 and up
+        [[ "$PGVERSION" -eq 15 && "$MAJOR" -lt 2 ]] && return 1
+        [[ "$PGVERSION" -eq 15 && "$MAJOR" -eq 2 && "$MINOR" -lt 9 ]] && return 1
+
+        # pg14 requires 2.5 and up
+        [[ "$PGVERSION" -eq 14 && "$MAJOR" -lt 2 ]] && return 1
+        [[ "$PGVERSION" -eq 14 && "$MAJOR" -eq 2 && "$MINOR" -lt 5 ]] && return 1
+
+        # pg13 requires 2.0 and up
+        [[ "$PGVERSION" -eq 13 && "$MAJOR" -lt 2 ]] && return 1
+
+        # pg12 builds basically everything, and we skip anything < pg12
+        [[ "$PGVERSION" -lt 12 ]] && return 1
+        ;;
+
+    *) echo "unexpected arch: $(arch)" >&2
+        return 1;;
+    esac
+
+    return 0
+}
 
 for TAG in "$@"; do
     git reset HEAD --hard
@@ -72,9 +103,8 @@ for TAG in "$@"; do
 
     if [ "${TAG}" = "2.2.0" ]; then sed -i 's/RelWithDebugInfo/RelWithDebInfo/g' CMakeLists.txt; fi
 
-    unsupported_reason="$(supported_timescaledb "$PGVERSION" "${MAJOR_MINOR}")"
-    if [ -n "$unsupported_reason" ]; then
-        error "$unsupported_reason"
+    if ! is_supported "${MAJOR_MINOR}"; then
+        echo "TimescaleDB ${TAG} is not supported on PostgreSQL ${PGVERSION}"
         continue
     fi
 
@@ -97,7 +127,7 @@ for TAG in "$@"; do
     make install
 
     if [ -n "$OSS_ONLY" ]; then
-        log "removing timescaledb-tsl due to OSS_ONLY"
+        echo "removing timescaledb-tsl due to OSS_ONLY"
         rm -f /usr/lib/postgresql/"$PGVERSION"/lib/timescaledb-tsl-*
     fi
 

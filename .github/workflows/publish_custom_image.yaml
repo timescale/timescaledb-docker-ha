@@ -1,0 +1,88 @@
+name: Publish custom image
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_postfix:
+        required: true
+        type: string
+        default: '-multi'
+        description: docker tag to add to the image
+      extra_build_args:
+        required: false
+        type: string
+        default: ''
+        description: "docker tag to add to the image (' --build-arg OSS_ONLY=\" -DAPACHE_ONLY=1\"' for oss-only, empty for normal builds)"
+      pg_major:
+        required: true
+        type: string
+        default: '14'
+        description: default PostgreSQL major version
+      pg_versions:
+        required: true
+        type: string
+        default: '14 13 12'
+        description: which major PostgreSQL versions to include
+      timescaledb_versions:
+        required: true
+        type: string
+        default: '1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0 2.5.1 2.5.2 2.6.0 2.6.1 2.7.0 2.7.1 2.7.2 2.8.0 2.8.1'
+        description: which timescaledb versions to include
+      promscale_versions:
+        required: true
+        type: string
+        default: '0.5.0 0.5.1 0.5.2 0.5.4 0.6.0 0.7.0'
+        description: which promscale_extension versions to include
+      toolkit_versions:
+        required: true
+        type: string
+        default: '1.6.0 1.7.0 1.8.0 1.10.1 1.11.0 1.12.0 1.12.1'
+        description: which timescaledb_toolkit versions to include
+
+jobs:
+  publish-image:
+    name: Publish custom image
+
+    runs-on: localbin
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get tag name
+        id: tag_name
+        run: echo "GIT_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: linux/amd64,linux/arm64
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          platforms: linux/amd64,linux/arm64
+
+      - name: Build and publish image
+        env:
+          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
+          DOCKER_REGISTRY: docker.io
+          DOCKER_BUILDX_CREATE: "true"
+          DOCKER_BUILDX_DESTROY: "true"
+          DOCKER_EXTRA_BUILDARGS: ${{ inputs.extra_build_args }}
+          DOCKER_TAG_POSTFIX: ${{ inputs.tag_postfix }}
+          PG_MAJOR: ${{ inputs.pg_major }}
+          PG_VERSIONS: ${{ inputs.pg_versions }}
+          TIMESCALEDB_VERSIONS: ${{ inputs.timescaledb_versions }}
+          TIMESCALE_PROMSCALE_EXTENSIONS: ${{ inputs.promscale_versions }}
+          TIMESCALEDB_TOOLKIT_EXTENSIONS: ${{ inputs.toolkit_versions }}
+        run: make publish
+
+      - name: List docker images
+        run: make list-images

@@ -9,7 +9,7 @@ WITH versions(name, version) AS (
     FROM
         pg_available_extensions
     WHERE
-        name IN ('timescaledb', 'postgis', 'pg_prometheus', 'hotforge', 'timescale_prometheus_extra', 'promscale', 'timescaledb_toolkit', 'timescale_analytics', 'timescaledb_cloudutils', 'timescaledb_osm')
+        name IN ('timescaledb', 'postgis', 'pg_prometheus', 'timescale_prometheus_extra', 'promscale', 'timescaledb_toolkit', 'timescale_analytics')
     UNION ALL
     SELECT
         'postgresql.version',
@@ -48,14 +48,6 @@ WITH versions(name, version) AS (
         pg_available_extension_versions
     WHERE
         name = 'timescaledb_toolkit'
-    UNION ALL
-    SELECT
-        'timescaledb_osm.available_versions',
-        string_agg(version, ',' ORDER BY version)
-    FROM
-        pg_available_extension_versions
-    WHERE
-        name = 'timescaledb_osm'
     UNION ALL
     SELECT
         'postgresql.available_versions',
