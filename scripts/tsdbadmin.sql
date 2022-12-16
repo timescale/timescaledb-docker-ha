@@ -176,6 +176,8 @@ CREATE OR REPLACE FUNCTION tsdbadmin.reset_password(
  SECURITY DEFINER
  SET search_path TO 'pg_catalog'
  SET log_statement TO 'none' -- We do not want any function handling passwords to be logged
+ SET log_min_duration_statement TO '-1'
+ SET pg_stat_statements.track_utility TO 'off'
 AS $function$
 DECLARE
     minimum_password_length int := 8;
