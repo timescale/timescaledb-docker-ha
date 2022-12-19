@@ -11,7 +11,7 @@ These are changes that will probably be included in the next release.
 
 ## [v1.5.18] - 2022-12-05
 
-* Include ts_stat_statements.
+* Include ts\_stat\_statements.
 
 ## [v1.5.17] - 2022-11-21
 
