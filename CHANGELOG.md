@@ -9,6 +9,12 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.19] - 2022-12-19
+
+* Include Toolkit [1.13.0](https://github.com/timescale/timescaledb-toolkit/releases/tag/1.13.0)
+* Include and default to [TimescaleDB 2.9.0](https://github.com/timescale/timescaledb/releases/tag/2.9.0)
+* Reduce surface area for [leaking passwords](https://github.com/timescale/timescaledb-docker-ha/pull/338)
+
 ## [v1.5.18] - 2022-12-05
 
 * Include ts\_stat\_statements.
