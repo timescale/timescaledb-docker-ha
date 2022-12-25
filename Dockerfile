@@ -207,7 +207,7 @@ ENV REPO_SECRET_FILE=/run/secrets/private_repo_token
 # and never included in the OSS image.
 ARG TIMESCALE_HOT_FORGE=
 RUN --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_HOT_FORGE}" ]; then \
+    if [ -s "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a -n "${TIMESCALE_HOT_FORGE}" ]; then \
         GH_REPO="https://api.github.com/repos/timescale/hot-forge"; \
         ASSET_ID="$(curl -sL --header "Authorization: token $(cat "${REPO_SECRET_FILE}")" "${GH_REPO}/releases/tags/${TIMESCALE_HOT_FORGE}" | jq '.assets[0].id')"; \
         curl -sL --header "Authorization: token $(cat "${REPO_SECRET_FILE}")" \
@@ -221,7 +221,7 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token \
 # particularly in cases where Patroni is not using the host K8s cluster as its DCS.
 ARG TIMESCALE_PATRONI_K8S_SYNC=
 RUN --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_PATRONI_K8S_SYNC}" ]; then \
+    if [ -s "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a -n "${TIMESCALE_PATRONI_K8S_SYNC}" ]; then \
         GH_REPO="https://api.github.com/repos/timescale/patroni-k8s-sync"; \
         ASSET_ID="$(curl -sL --header "Authorization: token $(cat "${REPO_SECRET_FILE}")" "${GH_REPO}/releases/tags/${TIMESCALE_PATRONI_K8S_SYNC}" | jq '.assets[0].id')"; \
         curl -sL --header "Authorization: token $(cat "${REPO_SECRET_FILE}")" \
@@ -235,7 +235,7 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token \
 # It is a private timescale project and is therefore not included/built by default
 ARG TIMESCALE_OOM_GUARD=
 RUN --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_OOM_GUARD}" ]; then \
+    if [ -s "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a -n "${TIMESCALE_OOM_GUARD}" ]; then \
         mkdir /usr/local/bin/oom-guard; \
         cd /build \
         && git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/oom_guard \
@@ -265,7 +265,7 @@ ENV MAKEFLAGS=-j8
 
 ARG GITHUB_REPO=timescale/timescaledb
 RUN --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ -f "{REPO_SECRET_FILE}" ]; then \
+    if [ -s "{REPO_SECRET_FILE}" ]; then \
         git clone "https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/${GITHUB_REPO}" /build/timescaledb; \
     else \
         git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
@@ -298,7 +298,7 @@ ENV SCCACHE_BUCKET=timescaledb-docker-ha-sccache
 
 ARG TIMESCALE_PROMSCALE_EXTENSIONS=
 # build and install the promscale_extension extension
-RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
+RUN if [ -n "${TIMESCALE_PROMSCALE_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
         set -e \
         && mkdir /build/promscale_extension \
         && cd /build/promscale_extension \
@@ -311,7 +311,7 @@ ARG TIMESCALE_OSM_EXTENSION=
 ARG OSM_PGX_VERSION=0.4.5
 # build and install the timescale_osm extension
 RUN --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_OSM_EXTENSION}" ]; then \
+    if [ -s "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a -n "${TIMESCALE_OSM_EXTENSION}" ]; then \
         set -e \
         && mkdir /build/osm_extension \
         && cd /build/osm_extension \ 
@@ -330,7 +330,7 @@ ARG PGX_VERSION=0.2.6
 ARG TIMESCALE_CLOUDUTILS=
 # build and install the cloudutils libarary and extension
 RUN --mount=type=secret,uid=1000,id=private_repo_token --mount=type=secret,uid=1000,id=AWS_ACCESS_KEY_ID --mount=type=secret,uid=1000,id=AWS_SECRET_ACCESS_KEY \
-    if [ -f "${REPO_SECRET_FILE}" -a ! -z "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
+    if [ -s "${REPO_SECRET_FILE}" -a -n "${TIMESCALE_CLOUDUTILS}" -a -z "${OSS_ONLY}" ]; then \
         [ -f "/run/secrets/AWS_ACCESS_KEY_ID" ] && export AWS_ACCESS_KEY_ID="$(cat /run/secrets/AWS_ACCESS_KEY_ID)" ; \
         [ -f "/run/secrets/AWS_SECRET_ACCESS_KEY" ] && export AWS_SECRET_ACCESS_KEY="$(cat /run/secrets/AWS_SECRET_ACCESS_KEY)" ; \
         set -e \
@@ -353,7 +353,7 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token --mount=type=secret,uid=1
 # It is a private timescale project and is therefore not included/built by default
 ARG TIMESCALE_TSDB_ADMIN=
 RUN --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TSDB_ADMIN}" ]; then \
+    if [ -s "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a -n "${TIMESCALE_TSDB_ADMIN}" ]; then \
         cd /build \
         && git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/protected_roles \
         && for pg in ${PG_VERSIONS}; do \
@@ -365,7 +365,7 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token \
 # pg_stat_monitor is a Query Performance Monitoring tool for PostgreSQL
 # https://github.com/percona/pg_stat_monitor
 ARG PG_STAT_MONITOR=
-RUN if [ ! -z "${PG_STAT_MONITOR}" ]; then \
+RUN if [ -n "${PG_STAT_MONITOR}" ]; then \
         cd /build \
         && git clone https://github.com/percona/pg_stat_monitor \
         && for pg in ${PG_VERSIONS}; do \
@@ -380,7 +380,7 @@ RUN if [ ! -z "${PG_STAT_MONITOR}" ]; then \
 # It is also useful to determine whether the DB is actively used
 # https://github.com/RafiaSabih/pg_auth_mon
 ARG PG_AUTH_MON=
-RUN if [ ! -z "${PG_AUTH_MON}" ]; then \
+RUN if [ -n "${PG_AUTH_MON}" ]; then \
         cd /build \
         && git clone https://github.com/RafiaSabih/pg_auth_mon \
         && for pg in ${PG_VERSIONS}; do \
@@ -392,7 +392,7 @@ RUN if [ ! -z "${PG_AUTH_MON}" ]; then \
 # logerrors is an extension to count the number of errors logged by postgrs, grouped by the error codes
 # https://github.com/munakoiso/logerrors
 ARG PG_LOGERRORS=
-RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
+RUN if [ -n "${PG_LOGERRORS}" ]; then \
         cd /build \
         && git clone https://github.com/munakoiso/logerrors \
         && for pg in ${PG_VERSIONS}; do \
@@ -403,7 +403,7 @@ RUN if [ ! -z "${PG_LOGERRORS}" ]; then \
 
 ARG TIMESCALEDB_TOOLKIT_EXTENSIONS=
 # build and install the timescaledb-toolkit extension
-RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
+RUN if [ -n "${TIMESCALEDB_TOOLKIT_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
         set -e \
         && mkdir /build/timescaledb-toolkit \
         && cd /build/timescaledb-toolkit \
@@ -419,7 +419,7 @@ RUN /build/bin/sccache --show-stats
 # It is a private timescale project and is therefore not included/built by default
 ARG TIMESCALE_TS_STAT_STATEMENTS=
 RUN --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TS_STAT_STATEMENTS}" ]; then \
+    if [ -s "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a -n "${TIMESCALE_TS_STAT_STATEMENTS}" ]; then \
       cd /build \
               && git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/ts_stat_statements \
               && for pg in ${PG_VERSIONS}; do \
