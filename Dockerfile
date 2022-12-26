@@ -264,12 +264,7 @@ USER postgres
 ENV MAKEFLAGS=-j8
 
 ARG GITHUB_REPO=timescale/timescaledb
-RUN --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ -s "{REPO_SECRET_FILE}" ]; then \
-        git clone "https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/${GITHUB_REPO}" /build/timescaledb; \
-    else \
-        git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
-    fi
+RUN git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb
 
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
 ARG INSTALL_METHOD=docker-ha
