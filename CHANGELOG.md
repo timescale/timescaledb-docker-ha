@@ -9,6 +9,10 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.20] - 2023-01-02
+
+* Include and default to [TimescaleDB 2.9.1](https://github.com/timescale/timescaledb/releases/tag/2.9.1)
+
 ## [v1.5.19] - 2022-12-19
 
 * Include Toolkit [1.13.0](https://github.com/timescale/timescaledb-toolkit/releases/tag/1.13.0)
