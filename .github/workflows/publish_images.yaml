@@ -98,10 +98,7 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           PG_VERSIONS: ${{ matrix.pg_versions }}
           OSS_ONLY: ${{ matrix.oss_only }}
-        run: |
-          DOCKER_CACHE_FROM="type=gha,mode=max,url=$ACTIONS_CACHE_URL,token=$ACTIONS_RUNTIME_TOKEN" \
-            DOCKER_CACHE_TO="type=gha,mode=max,url=$ACTIONS_CACHE_URL,token=$ACTIONS_RUNTIME_TOKEN" \
-            make publish-builder publish check
+        run: make publish-builder publish check
 
       - name: List docker images
         run: make list-images
