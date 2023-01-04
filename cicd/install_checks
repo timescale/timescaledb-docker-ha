@@ -11,7 +11,7 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 check_base_age 7200
 
 for pg in $(cd /usr/lib/postgresql && ls); do
-    check_base_components /usr/lib/postgresql/$pg/lib
+    check_base_components "$pg" "/usr/lib/postgresql/$pg/lib"
 done
 
 exit $EXIT_STATUS

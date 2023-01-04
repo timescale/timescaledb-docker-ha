@@ -26,6 +26,8 @@ DOCKER_RELEASE_URL=$(DOCKER_PUBLISH_URL):pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
 DOCKER_CACHE_FROM?=
 DOCKER_CACHE_TO?=
 
+GITHUB_STEP_SUMMARY?=/dev/null
+
 DOCKER_CACHE:=
 ifneq ($(DOCKER_CACHE_FROM),)
 DOCKER_CACHE = --cache-from $(DOCKER_CACHE_FROM)
@@ -159,7 +161,16 @@ CHECK_NAME=ha-check-pg$(PGMAJOR)
 check:
 	@for arch in amd64 arm64; do \
 		docker rm --force $(CHECK_NAME); \
-		docker run --pull always --platform linux/$$arch -d --name $(CHECK_NAME) -e PGDATA=/tmp/pgdata --user=postgres "$(DOCKER_RELEASE_URL)" sleep 300; \
+		docker run \
+			--platform linux/$$arch \
+			--pull always \
+			-v "$(GITHUB_STEP_SUMMARY):/tmp/step_summary" \
+			-d \
+			--name $(CHECK_NAME) \
+			-e PGDATA=/tmp/pgdata \
+			-e GITHUB_STEP_SUMMARY=/tmp/step_summary \
+			--user=postgres \
+			"$(DOCKER_RELEASE_URL)" sleep 300; \
 		docker cp ./cicd $(CHECK_NAME):/cicd/; \
 		docker exec -e CI=$(CI) $(CHECK_NAME) /cicd/install_checks -v || { docker logs -n100 $(CHECK_NAME); exit 1; }; \
 	done

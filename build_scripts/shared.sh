@@ -2,6 +2,16 @@
 
 set -e -o pipefail
 
+ARCH="$(arch)"
+
+log() {
+    echo "$(date -Iseconds)/$ARCH: $*"
+}
+
+error() {
+    echo "** $(date -Iseconds)/$ARCH: ERROR: $* **" >&2
+}
+
 git_clone() {
     local src="$1"
     local dst=/build/"$2"
