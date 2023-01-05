@@ -2,18 +2,28 @@
 
 set -e -o pipefail
 
-if [ ! -f /.image_config ]; then
-    echo "no /.image_config found"
+if [ ! -s /.image_config ]; then
+    echo "no, or empty /.image_config found"
     exit 1
 fi
 . /.image_config
 
-ARCH="$(arch)"
+if [ -s /build/scripts/shared_versions.sh ]; then
+    . /build/scripts/shared_versions.sh
+elif [ -s /cicd/scripts/shared_versions.sh ]; then
+    . /cicd/scripts/shared_versions.sh
+else
+    echo "coudln't find shared_version.sh in /build/scripts, or in /cicd/scripts"
+    exit 1
+fi
+
+require_supported_arch
+
 VERBOSE=""
 EXIT_STATUS=0
 
 if [ -n "$GITHUB_STEP_SUMMARY" ]; then
-    echo "## $(date -Iseconds)/$ARCH: image check started" >> "$GITHUB_STEP_SUMMARY"
+    echo "#### $(date -Iseconds)/$ARCH: image check started" >> "$GITHUB_STEP_SUMMARY"
 fi
 
 log() {
@@ -52,60 +62,59 @@ check_base_components() {
     local pg="$1" lib="$2"
 
     check_timescaledb "$pg" "$lib"
-    check_promscale "$lib"
-    check_toolkit "$lib"
-    check_oss_extensions "$lib"
-    check_others "$lib"
+    check_promscale "$pg" "$lib"
+    check_toolkit "$pg" "$lib"
+    check_oss_extensions "$pg" "$lib"
+    check_others "$pg" "$lib"
 }
 
 check_timescaledb() {
-    local pg="$1" lib="$2"
+    local pg="$1" lib="$2" unsupported_reason found=false
     if [ -z "$TIMESCALEDB_VERSIONS" ]; then
         error "no timescaledb versions requested, why are we here?"
         return 1
     fi
 
     for ver in $TIMESCALEDB_VERSIONS; do
+        if [[ "$ver" = master || "$ver" = main ]]; then
+            log "skipping looking for timescaledb-$ver"
+            continue
+        fi
         if [[ -s "$lib/timescaledb-$ver.so" ]]; then
             if [ "$OSS_ONLY" = true ]; then
                 if [ -s "$lib/timescaledb-tsl-$ver.so" ]; then
                     error "found timescaledb-tsl-$ver for pg$pg"
                 else
                     log "found timescaledb-$ver for pg$pg"
+                    found=true
                 fi
             else
                 if [ -s "$lib/timescaledb-tsl-$ver.so" ]; then
                     log "found timescaledb-$ver and tsl-$ver for pg$pg"
+                    found=true
                 else
                     error "found timescaledb-$ver, but not tsl-$ver for pg$pg"
                 fi
             fi
         else
-            # skip unsupported arch/version combinations
-            case "$ARCH" in
-            x86_64|aarch64)
-                if [[ "$pg" -ge 15 && "$ver" =~ ^(1\.|2\.[0-8]\.) ]]; then
-                    log "timescaledb-$ver skipped for pg$pg"
-                elif [[ "$pg" -eq 14 && "$ver" =~ ^(1\.|2\.[0-4]\.) ]]; then
-                    log "timescaledb-$ver skipped for pg$pg"
-                elif [[ "$pg" -eq 13 && "$ver" =~ ^1\. ]]; then
-                    log "timescaledb-$ver skipped for pg$pg"
-                elif [[ "$ARCH" = aarch64 && "$pg" -eq 12 && "$ver" =~ ^1\. ]]; then
-                    log "timescaledb-$ver skipped for pg$pg"
-                else
-                    error "timescaledb-$ver not found for pg$pg"
-                fi;;
-
-            *) error "unexpected arch";;
-            esac
+            unsupported_reason="$(supported_timescaledb "$pg" "$ver")"
+            if [ -n "$unsupported_reason" ]; then
+                log "skipped: $unsupported_reason"
+            else
+                error "timescaledb-$ver not found for pg$pg"
+            fi
         fi
     done
+
+    if [ "$found" = false ]; then
+        error "failed to find any timescaledb extensions for pg$pg"
+    fi
 }
 
 check_oss_extensions() {
     if [ "$OSS_ONLY" != true ]; then return 0; fi
 
-    local lib="$1"
+    local pg="$1" lib="$2"
     for pattern in timescaledb_toolkit promscale; do
         files="$(find "$lib" -maxdepth 1 -name "${pattern}*")"
         if [ -n "$files" ]; then error "found $pattern files for pg$pg when OSS_ONLY is true"; fi
@@ -114,63 +123,73 @@ check_oss_extensions() {
 
 check_promscale() {
     if [ -z "$PROMSCALE_VERSIONS" ]; then return 0; fi
-    local lib="$1"
+    local pg="$1" lib="$2" ver found=false
+
+    if [ "$OSS_ONLY" = true ]; then
+        # we don't do anything here as we depend on `check_oss_extensions` to flag on inappropriate versions of promscale
+        return
+    fi
 
     for ver in $PROMSCALE_VERSIONS; do
+        if [[ "$ver" = master || "$ver" = main ]]; then
+            log "skipping looking for promscale-$ver"
+            continue
+        fi
         if [ -s "$lib/promscale-$ver.so" ]; then
             log "found promscale-$ver for pg$pg"
+            found=true
         else
-            # skip unsupported arch/version combinations
-            case "$ARCH" in
-            x86_64)
-                if [[ "$pg" -ge 15 && "$ver" =~ ^0\.[0-7]\. ]]; then
-                    log "promscale-$ver skipped for pg$pg"
-                else
-                    error "promscale-$ver not found for pg$pg"
-                fi;;
-
-            aarch64) log "promscale has no arm support yet for pg$pg";;
-
-            *) error "unexpected arch";;
-            esac
+            unsupported_reason="$(supported_promscale "$pg" "$ver")"
+            if [ -n "$unsupported_reason" ]; then
+                log "skipped: promscale-$ver: $unsupported_reason"
+            else
+                error "promscale-$ver not found for pg$pg"
+            fi
         fi
     done
+
+    if [ "$found" = false ]; then
+        error "no promscale versions found for pg$pg"
+    fi
 }
 
 check_toolkit() {
     if [ -z "$TOOLKIT_VERSIONS" ]; then return 0; fi
-    local lib="$1"
+    local pg="$1" lib="$2" found=false
+
+    if [ "$OSS_ONLY" = true ]; then
+        # we don't do anything here as we depend on `check_oss_extensions` to flag on inappropriate versions of promscale
+        return
+    fi
 
     for ver in $TOOLKIT_VERSIONS; do
+        if [[ "$ver" = master || "$ver" = main ]]; then
+            log "skipping looking for toolkit-$ver"
+            continue
+        fi
+
         if [ -s "$lib/timescaledb_toolkit-$ver.so" ]; then
             log "found toolkit-$ver for pg$pg"
+            found=true
         else
-            # skip unsupported arch/version combinations
-            case "$ARCH" in
-            x86_64)
-                if [[ "$pg" -ge 15 && "$ver" =~ ^1\.([0-9]|1[012])\. ]]; then
-                    log "toolkit-$ver skipped for pg$pg"
-                else
-                    error "toolkit-$ver not found for pg$pg"
-                fi;;
-
-            aarch64)
-                if [[ "$pg" -ge 15 && "$ver" =~ ^1\.([0-9]|1[012])\. ]]; then
-                    log "toolkit-$ver skipped for pg$pg"
-                elif [[ "$ver" =~ ^1\.([0-9]|10)\. ]]; then
-                    log "toolkit-$ver skipped for pg$pg"
-                else
-                    error "toolkit-$ver not found for pg$pg"
-                fi;;
-
-            *) error "unexpected arch";;
-            esac
+            unsupported_reason="$(supported_toolkit "$pg" "$ver")"
+            if [ -n "$unsupported_reason" ]; then
+                log "skipped: toolkit-$ver: $unsupported_reason"
+            else
+                error "toolkit-$ver not found for pg$pg"
+            fi
         fi
     done
+
+    if [ "$found" = false ]; then
+        error "no toolkit versions found for pg$pg"
+    fi
 }
 
 # this checks for other extensions that should always exist
 check_others() {
+    local pg="$1" lib="$2" version status
+
     if [ -n "$PG_LOGERRORS" ]; then
         if [ -s "$lib/logerrors.so" ]; then
             log "found logerrors for pg$pg"
@@ -197,12 +216,21 @@ check_others() {
 
     if [ -n "$POSTGIS_VERSIONS" ]; then
         for ver in $POSTGIS_VERSIONS; do
-            res="$(dpkg-query -W -f '${status}' "postgresql-$pg-postgis-$ver")"
-            if [ "$res" = "install ok installed" ]; then
-                log "found postgis version $ver for pg$pg"
+            IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "postgresql-$pg-postgis-$ver")"
+            if [ "$status" = "install ok installed" ]; then
+                log "found pg$pg extension postgis-$version"
             else
-                error "postgis-$ver not found for pg$pg: $res"
+                error "pg$pg extension postgis-$ver not found: $status"
             fi
         done
     fi
+
+    for extname in $PG_WANTED_EXTENSIONS; do
+        IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "postgresql-$pg-$extname")"
+        if [ "$status" = "install ok installed" ]; then
+            log "found pg$pg extension $extname-$version"
+        else
+            error "pg$pg extension $extname not found: $status"
+        fi
+    done
 }

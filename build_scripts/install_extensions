@@ -3,9 +3,6 @@
 SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 . "$SCRIPT_DIR"/shared.sh
 
-# This is where the actual installation functions are
-. "$SCRIPT_DIR"/shared_install.sh
-
 # This takes the requested toolkit and promscale extensions, figures out what versions of cargo-pgx those
 # versions want, and then build from the oldest pgx to the newest so that `cargo install cargo-pgx --version`
 # commands are only ran once. Once cargo-pgx has been installed, run the installation for the extensions,
@@ -17,18 +14,6 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 # - TOOLKIT_VERSIONS
 
 ORIGINAL_PATH="$PATH"
-
-declare -A pgx_toolkit_versions=(
-    ["0.2.4"]="1.[67].0"
-    ["0.4.5"]="1.(8|9|10|11).*"
-    ["0.5.4"]="1.12.[01]"
-    ["0.6.1"]="main|1.1[34].*"
-)
-declare -A pgx_promscale_versions=(
-    ["0.3.1"]="0.5.*"
-    ["0.4.5"]="0.[67].0"
-    ["0.6.1"]="master|0.7.([1-9]).*|0.8.*"
-)
 
 [ "$1" = -n ] && { DRYRUN=true; shift; }
 

@@ -7,7 +7,8 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 
 [ "$1" = -v ] && { VERBOSE=1; shift; }
 
-# make sure the image we're checking is at most 2 hours old
+# make sure the image we're checking is at most 2 hours old, since we're doing a pull from the repository
+# for the check, this should make sure we're getting the one we just built
 check_base_age 7200
 
 for pg in $(cd /usr/lib/postgresql && ls); do

@@ -243,7 +243,7 @@ RUN set -ex; \
         done; \
     fi
 
-COPY --chown postgres:postgres build_scripts/* /build/scripts/
+COPY --chown=postgres:postgres build_scripts /build/scripts/
 
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
 ARG INSTALL_METHOD=docker-ha
@@ -260,7 +260,7 @@ RUN set -eux; \
     git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
     cd /build/timescaledb; \
     for pg in ${PG_VERSIONS}; do \
-        OSS_ONLY="${OSS_ONLY}" /build/scripts/install_timescaledb ${pg} ${TIMESCALEDB_VERSIONS}; \
+        OSS_ONLY="${OSS_ONLY}" /build/scripts/install_timescaledb "${pg}" ${TIMESCALEDB_VERSIONS}; \
     done; \
     if [ "${OSS_ONLY}" = true ]; then \
         rm -f /usr/lib/postgresql/*/lib/timescaledb-tsl-*; \
@@ -282,7 +282,7 @@ USER root
 # to allow mutability. To allow one to build this image with the default privileges (owned by root)
 # one can set the ALLOW_ADDING_EXTENSIONS argument to anything but "true".
 ARG ALLOW_ADDING_EXTENSIONS=true
-RUN set -eux; \
+RUN set -eu; \
     if [ "${ALLOW_ADDING_EXTENSIONS}" != "true" ]; then \
         for pg in ${PG_VERSIONS}; do \
             for dir in /usr/share/doc "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
@@ -347,7 +347,7 @@ RUN rm /etc/pgbackrest.conf && ln -s "${PGBACKREST_CONFIG}" /etc/pgbackrest.conf
 RUN for i in $(seq 0 7); do touch "${PGLOG}/postgresql-$i.log" "${PGLOG}/postgresql-$i.csv"; done
 
 ## Fix permissions
-RUN set -ex; \
+RUN set -e; \
     chown -R postgres:postgres "${PGLOG}" "${PGROOT}" "${PGDATA}" /var/run/postgresql/; \
     chown -R postgres:postgres /var/log/pgbackrest/ /var/lib/pgbackrest /var/spool/pgbackrest; \
     chmod -x /usr/lib/postgresql/*/lib/*.so
@@ -369,6 +369,11 @@ WORKDIR /home/postgres
 EXPOSE 5432 8008 8081
 USER postgres
 
+# This is run during the image build process so that the build will fail and the results won't be pushed
+# to the registry if there's a problem. It's run independently during CI so the output can be used in the GH summary
+# so you don't have to trawl through the huge amount of logs to find the output.
+COPY --chown=postgres:postgres cicd /cicd/
+RUN /cicd/install_checks -v
 
 FROM builder as trimmed
 
@@ -389,7 +394,8 @@ RUN set -ex; \
             /home/postgres/.pgx \
             /build/ \
             /usr/local/rustup \
-            /usr/local/cargo; \
+            /usr/local/cargo \
+            /cicd; \
     find /var/log -type f -exec truncate --size 0 {} \;
 
 USER postgres

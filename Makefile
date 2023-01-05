@@ -160,6 +160,7 @@ publish: is_ci build
 CHECK_NAME=ha-check-pg$(PGMAJOR)
 check:
 	@for arch in amd64 arm64; do \
+		echo "### Checking $$arch $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY); \
 		docker rm --force $(CHECK_NAME); \
 		docker run \
 			--platform linux/$$arch \
@@ -172,6 +173,7 @@ check:
 			--user=postgres \
 			"$(DOCKER_RELEASE_URL)" sleep 300; \
 		docker cp ./cicd $(CHECK_NAME):/cicd/; \
+		docker cp ./build_scripts $(CHECK_NAME):/cicd/scripts/; \
 		docker exec -e CI=$(CI) $(CHECK_NAME) /cicd/install_checks -v || { docker logs -n100 $(CHECK_NAME); exit 1; }; \
 	done
 	docker rm --force $(CHECK_NAME) || true

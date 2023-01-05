@@ -2,30 +2,44 @@
 
 set -e -o pipefail
 
-ARCH="$(arch)"
-
 log() {
-    echo "$(date -Iseconds)/$ARCH: $*"
+    echo "$ARCH: $*" >&2
 }
 
 error() {
-    echo "** $(date -Iseconds)/$ARCH: ERROR: $* **" >&2
+    echo "** $ARCH: ERROR: $* **" >&2
 }
 
 git_clone() {
-    local src="$1"
-    local dst=/build/"$2"
+    local src="$1" dst=/build/"$2" err
 
     [ -d "$dst"/.git ] && return 0
     git clone "$src" "$dst"
+    err=$?
+    if [ $err -ne 0 ]; then
+        error "error cloning $dst ($err)"
+        return $err
+    fi
+    log "git cloned to $dst"
+    return 0
 }
 
 git_checkout() {
-    local repo=/build/"$1"
-    local tag="$2"
+    local repo=/build/"$1" tag="$2" err
 
     git -C "$repo" checkout "$tag"
+    err=$?
+    if [ $err -ne 0 ]; then
+        error "error checking out $tag for $repo ($err)"
+        return $err
+    fi
     git -C "$repo" clean -f -d -x
+    err=$?
+    if [ $err -ne 0 ]; then
+        error "error checking out $tag for $repo ($err)"
+        return $err
+    fi
+    return 0
 }
 
 cargo_installed() {
@@ -61,25 +75,35 @@ cargo_pgx_version() {
 }
 
 require_cargo_pgx_version() {
-    local version="$1"
+    local version="$1" err
     [ -z "$version" ] && return 1
 
     if ! cargo_installed; then
-        echo "cargo is not available, cannot install cargo-pgx"
+        error "cargo is not available, cannot install cargo-pgx"
         return 1
     fi
     if ! cargo_pgx_installed; then
         cargo install cargo-pgx --version "=$version"
-        return $?
+        err=$?
+        if [ $err -ne 0 ]; then
+            error "failed installing cargo-pgx-$version ($err)"
+            return $err
+        fi
+        log "installed cargo-pgx-$version"
     fi
 
     local current_version
     current_version="$(cargo_pgx_version)"
     if [[ -z "$current_version" || "$current_version" != "$version" ]]; then
         cargo install cargo-pgx --version "=$version"
-        return $?
+        err=$?
+        if [ $err -ne 0 ]; then
+            error "failed installing cargo-pgx-$version ($err)"
+            return $err
+        fi
+        log "installed cargo-pgx-$version"
     fi
-    return 1
+    return 0
 }
 
 available_pg_versions() {
@@ -90,7 +114,7 @@ cargo_pgx_init() {
     local pgx_version="$1" pg_ver="$2" pg_versions
 
     if ! require_cargo_pgx_version "$pgx_version"; then
-        echo "failed cargo-pgx init ($?)"
+        error "failed requiring cargo-pgx-$pgx_version ($?)"
         return 1
     fi
 
@@ -108,6 +132,12 @@ cargo_pgx_init() {
     done
     rm -f /home/postgres/.pgx/config.toml
     cargo pgx init "${args[@]}"
+    err=$?
+    if [ $err -ne 0 ]; then
+        error "failed cargo pgx init ${args[*]} ($err)"
+        return $err
+    fi
+    return 0
 }
 
 find_deb() {
@@ -124,18 +154,31 @@ find_deb() {
 }
 
 install_deb() {
-    local pkg="$1" version="$2" tmpdir
-    tmpdir="/tmp/deb-$pkg.$$"
-
-    echo "install debian package $pkg-$version"
+    local pkg="$1" version="$2" err
+    local tmpdir="/tmp/deb-$pkg.$$"
 
     mkdir "$tmpdir"
     (
         cd "$tmpdir"
         apt-get download "$pkg"="$version"
         dpkg --install --log="$tmpdir"/dpkg.log --admindir="$tmpdir" --force-depends --force-not-root --force-overwrite "$pkg"_*.deb
+        err=$?
+        if [ $err -ne 0 ]; then
+            error "failed installing debian package $pkg-$version ($err)"
+            exit $err
+        fi
+        exit 0
     )
-    ret=$?
+    err=$?
     rm -rf "$tmpdir"
-    return $ret
+    if [ $err -eq 0 ]; then log "installed debian package $pkg-$version"; fi
+    return $err
 }
+
+# This is where we set arch/pg/extension version support checks, used by install and cicd
+. "$SCRIPT_DIR"/shared_versions.sh
+
+# This is where the actual installation functions are
+. "$SCRIPT_DIR"/shared_install.sh
+
+require_supported_arch
