@@ -243,7 +243,7 @@ RUN set -ex; \
         done; \
     fi
 
-COPY build_scripts /build/scripts
+COPY --chown postgres:postgres build_scripts/* /build/scripts/
 
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
 ARG INSTALL_METHOD=docker-ha
