@@ -12,8 +12,10 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 # and then continue through the next cargo-pgx version. At the end, we're left with the latest version of
 # cargo-pgx so that the builder image can be used to test master/main branches.
 
-[ -z "$PROMSCALE_VERSIONS" ] && PROMSCALE_VERSIONS="master"
-[ -z "$TOOLKIT_VERSIONS" ] &&   TOOLKIT_VERSIONS="main"
+# we use the following variables to decide on if/what to install:
+# - PROMSCALE_VERSIONS
+# - TOOLKIT_VERSIONS
+
 ORIGINAL_PATH="$PATH"
 
 declare -A pgx_toolkit_versions=(
