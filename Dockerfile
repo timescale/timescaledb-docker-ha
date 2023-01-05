@@ -326,7 +326,7 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token \
     fi
 
 # Make sure to override this when upgrading to new PGX version
-ARG PGX_VERSION=0.2.6
+ARG PGX_VERSION=0.6.1
 ARG TIMESCALE_CLOUDUTILS=
 # build and install the cloudutils libarary and extension
 RUN --mount=type=secret,uid=1000,id=private_repo_token --mount=type=secret,uid=1000,id=AWS_ACCESS_KEY_ID --mount=type=secret,uid=1000,id=AWS_SECRET_ACCESS_KEY \
@@ -335,7 +335,7 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token --mount=type=secret,uid=1
         [ -f "/run/secrets/AWS_SECRET_ACCESS_KEY" ] && export AWS_SECRET_ACCESS_KEY="$(cat /run/secrets/AWS_SECRET_ACCESS_KEY)" ; \
         set -e \
         && cd /build \
-        && cargo install cargo-pgx --git https://github.com/nikkhils/pgx.git --rev 4cc6a13; \
+        && cargo install --version ${PGX_VERSION} cargo-pgx; \
         for pg in ${PG_VERSIONS}; do \
             if [ ${pg} -ge "13" ]; then \
                 [ -d "/build/timescaledb_cloudutils/.git" ] || git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/timescaledb_cloudutils || exit 1 ; \
