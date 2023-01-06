@@ -187,4 +187,4 @@ list-images:
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
 build-tag: build
 
-.PHONY: fast prepare build-oss release build publish test tag build-tag is_ci list-images
+.PHONY: fast prepare build-oss release build publish test tag build-tag is_ci list-images check

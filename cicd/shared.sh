@@ -13,7 +13,7 @@ if [ -s /build/scripts/shared_versions.sh ]; then
 elif [ -s /cicd/scripts/shared_versions.sh ]; then
     . /cicd/scripts/shared_versions.sh
 else
-    echo "coudln't find shared_version.sh in /build/scripts, or in /cicd/scripts"
+    echo "couldn't find shared_version.sh in /build/scripts, or in /cicd/scripts"
     exit 1
 fi
 
@@ -106,9 +106,7 @@ check_timescaledb() {
         fi
     done
 
-    if [ "$found" = false ]; then
-        error "failed to find any timescaledb extensions for pg$pg"
-    fi
+    if [ "$found" = false ]; then error "failed to find any timescaledb extensions for pg$pg"; fi
 }
 
 check_oss_extensions() {
@@ -148,9 +146,7 @@ check_promscale() {
         fi
     done
 
-    if [ "$found" = false ]; then
-        error "no promscale versions found for pg$pg"
-    fi
+    if [ "$found" = false ]; then error "no promscale versions found for pg$pg"; fi
 }
 
 check_toolkit() {
@@ -181,9 +177,7 @@ check_toolkit() {
         fi
     done
 
-    if [ "$found" = false ]; then
-        error "no toolkit versions found for pg$pg"
-    fi
+    if [ "$found" = false ]; then error "no toolkit versions found for pg$pg"; fi
 }
 
 # this checks for other extensions that should always exist
