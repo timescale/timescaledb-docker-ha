@@ -43,6 +43,15 @@ RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" post
 RUN echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/01norecommend
 RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 
+# Ubuntu will throttle downloads which can slow things down so much that we can't complete. Since we're
+# building in AWS, use their mirrors. arm64 and amd64 use different sources though
+COPY sources /tmp/sources
+RUN set -eux; \
+    source="/tmp/sources/sources.list.$(dpkg --print-architecture)"; \
+    mv /etc/apt/sources.list /etc/apt/sources.list.dist; \
+    cp "$source" /etc/apt/sources.list; \
+    rm -fr /tmp/sources
+
 # Make sure we're as up-to-date as possible, and install the highlest level dependencies
 RUN set -eux; \
     apt-get update; \
