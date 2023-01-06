@@ -11,6 +11,9 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 # for the check, this should make sure we're getting the one we just built
 check_base_age 7200
 
+# Check for packages that aren't pg-version-specific
+check_packages
+
 for pg in $(cd /usr/lib/postgresql && ls); do
     check_base_components "$pg" "/usr/lib/postgresql/$pg/lib"
 done

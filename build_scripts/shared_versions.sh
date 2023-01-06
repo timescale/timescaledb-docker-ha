@@ -19,6 +19,8 @@ declare -A pgx_promscale_versions=(
 # Check to make sure these extensions are available in all pg versions
 PG_WANTED_EXTENSIONS="pglogical wal2json pgextwlist pgrouting pg-stat-kcache cron pldebugger hypopg unit repack hll"
 
+WANTED_PACKAGES="patroni pgbackrest timescaledb-tools"
+
 # These functions return "" if the combination of architecture, pg version, and package version are supported,
 # otherwise it returns a reason string. Both the cicd/install_checks, and the install_extensions scripts use
 # this to decide what should be built/included.

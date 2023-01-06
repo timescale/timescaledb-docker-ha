@@ -234,3 +234,15 @@ check_others() {
         fi
     done
 }
+
+check_packages() {
+    local pkg
+    for pkg in $WANTED_PACKAGES; do
+        IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "$pkg")"
+        if [ "$status" = "install ok installed" ]; then
+            log "found package $pkg-$version"
+        else
+            error "package $pkg not found: $status"
+        fi
+    done
+}
