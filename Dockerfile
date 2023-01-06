@@ -361,6 +361,11 @@ RUN set -e; \
     chown -R postgres:postgres /var/log/pgbackrest/ /var/lib/pgbackrest /var/spool/pgbackrest; \
     chmod -x /usr/lib/postgresql/*/lib/*.so
 
+# return /etc/apt/sources.list back to a non-AWS version for anybody that wants to use this image elsewhere
+RUN set -eux; \
+    mv -f /etc/apt/sources.list /etc/apt/sources.list.aws; \
+    mv -f /etc/apt/sources.list.dist /etc/apt/sources.list
+
 RUN echo "TIMESCALEDB_VERSIONS=\"${TIMESCALEDB_VERSIONS}\"" > /.image_config; \
     echo "OSS_ONLY=\"$OSS_ONLY\"" >> /.image_config; \
     echo "PROMSCALE_VERSIONS=\"${TIMESCALE_PROMSCALE_EXTENSIONS}\"" >> /.image_config; \
