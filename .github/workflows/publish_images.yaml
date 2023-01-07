@@ -41,6 +41,24 @@ jobs:
           oss_only: "true"
           docker_tag_postfix: '-multi-all-oss'
 
+        - pg_major: "14"
+          pg_versions: "14"
+          docker_tag_postfix: '-multi'
+
+        - pg_major: "14"
+          pg_versions: "14"
+          oss_only: "true"
+          docker_tag_postfix: '-multi-oss'
+
+        - pg_major: "14"
+          pg_versions: "14 13 12"
+          docker_tag_postfix: '-multi-all'
+
+        - pg_major: "14"
+          pg_versions: "14 13 12"
+          oss_only: "true"
+          docker_tag_postfix: '-multi-all-oss'
+
     runs-on: [ "dev-eu-west-1", "x64", "non-prod" ]
 
     steps:
