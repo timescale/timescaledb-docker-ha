@@ -22,11 +22,6 @@ require_supported_arch
 VERBOSE=""
 EXIT_STATUS=0
 
-if [ -n "$GITHUB_STEP_SUMMARY" ]; then
-    echo "#### $(date -Iseconds)/$ARCH: image check started for pg$PG_MAJOR" >> "$GITHUB_STEP_SUMMARY"
-    echo "** $RELEASE_URL **" >> "$GITHUB_STEP_SUMMARY"
-fi
-
 log() {
     local msg
     msg="$ARCH: $*"

@@ -23,43 +23,43 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-        - pg_major: "15"
-          pg_versions: "15"
-          docker_tag_postfix: '-multi'
+          - pg_major: "14"
+            pg_versions: "14"
+            docker_tag_postfix: "-multi"
+          - pg_major: "15"
+            pg_versions: "15"
+            docker_tag_postfix: "-multi"
 
-        - pg_major: "15"
-          pg_versions: "15"
-          oss_only: "true"
-          docker_tag_postfix: '-multi-oss'
+          - pg_major: "14"
+            pg_versions: "14 13 12"
+            docker_tag_postfix: "-multi-all"
+          - pg_major: "15"
+            pg_versions: "15 14 13 12"
+            docker_tag_postfix: "-multi-all"
 
-        - pg_major: "15"
-          pg_versions: "15 14 13 12"
-          docker_tag_postfix: '-multi-all'
+          - pg_major: "14"
+            pg_versions: "14"
+            oss_only: "true"
+            docker_tag_postfix: "-multi-oss"
+          - pg_major: "15"
+            pg_versions: "15"
+            oss_only: "true"
+            docker_tag_postfix: "-multi-oss"
 
-        - pg_major: "15"
-          pg_versions: "15 14 13 12"
-          oss_only: "true"
-          docker_tag_postfix: '-multi-all-oss'
-
-        - pg_major: "14"
-          pg_versions: "14"
-          docker_tag_postfix: '-multi'
-
-        - pg_major: "14"
-          pg_versions: "14"
-          oss_only: "true"
-          docker_tag_postfix: '-multi-oss'
-
-        - pg_major: "14"
-          pg_versions: "14 13 12"
-          docker_tag_postfix: '-multi-all'
-
-        - pg_major: "14"
-          pg_versions: "14 13 12"
-          oss_only: "true"
-          docker_tag_postfix: '-multi-all-oss'
+          - pg_major: "14"
+            pg_versions: "14 13 12"
+            oss_only: "true"
+            docker_tag_postfix: "-multi-all-oss"
+          - pg_major: "15"
+            pg_versions: "15 14 13 12"
+            oss_only: "true"
+            docker_tag_postfix: "-multi-all-oss"
 
     runs-on: [ "dev-eu-west-1", "x64", "non-prod" ]
+
+    env:
+      DOCKER_REPOSITORY: timescaledev/timescaledb-ha
+      DOCKER_REGISTRY: docker.io
 
     steps:
       - name: Checkout code
@@ -107,8 +107,6 @@ jobs:
       - name: Build and publish image pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
-          DOCKER_REPOSITORY: timescaledev/timescaledb-ha
-          DOCKER_REGISTRY: docker.io
           DOCKER_BUILDX_CREATE: "true"
           DOCKER_BUILDX_DESTROY: "true"
           DOCKER_EXTRA_BUILDARGS: ${{ matrix.docker_extra_buildargs }}
@@ -121,8 +119,6 @@ jobs:
       - name: Check image pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
-          DOCKER_REPOSITORY: timescaledev/timescaledb-ha
-          DOCKER_REGISTRY: docker.io
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
           PG_MAJOR: ${{ matrix.pg_major }}
         run: make check
