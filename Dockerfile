@@ -366,6 +366,10 @@ RUN set -eux; \
     mv -f /etc/apt/sources.list /etc/apt/sources.list.aws; \
     mv -f /etc/apt/sources.list.dist /etc/apt/sources.list
 
+# DOCKER_FROM needs re-importing as any args from before FROM only apply to FROM
+ARG DOCKER_FROM
+ARG BUILDER_URL
+ARG RELEASE_URL
 RUN echo "TIMESCALEDB_VERSIONS=\"${TIMESCALEDB_VERSIONS}\"" > /.image_config; \
     echo "OSS_ONLY=\"$OSS_ONLY\"" >> /.image_config; \
     echo "PROMSCALE_VERSIONS=\"${TIMESCALE_PROMSCALE_EXTENSIONS}\"" >> /.image_config; \
@@ -377,6 +381,8 @@ RUN echo "TIMESCALEDB_VERSIONS=\"${TIMESCALEDB_VERSIONS}\"" > /.image_config; \
     echo "PG_MAJOR=\"${PG_MAJOR}\"" >> /.image_config; \
     echo "PG_VERSIONS=\"${PG_VERSIONS}\"" >> /.image_config; \
     echo "FROM=\"${DOCKER_FROM}\"" >> /.image_config; \
+    echo "RELEASE_URL=\"${RELEASE_URL}\"" >> /.image_config; \
+    echo "BUILDER_URL=\"${BUILDER_URL}\"" >> /.image_config; \
     echo "BUILD_DATE=\"$(date -Iseconds)\"" >> /.image_config
 
 WORKDIR /home/postgres

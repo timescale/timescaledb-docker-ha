@@ -88,6 +88,8 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 					 --build-arg TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" \
 					 --build-arg TIMESCALE_PROMSCALE_EXTENSIONS="$(TIMESCALE_PROMSCALE_EXTENSIONS)" \
 					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSIONS="$(TIMESCALEDB_TOOLKIT_EXTENSIONS)" \
+					 --build-arg RELEASE_URL="$(DOCKER_RELEASE_URL)" \
+					 --build-arg BUILDER_URL="$(DOCKER_BUILDER_URL)" \
 					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds -u)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
@@ -157,7 +159,7 @@ build-oss: build
 
 publish: is_ci build
 
-CHECK_NAME=ha-check-pg$(PGMAJOR)
+CHECK_NAME=ha-check-pg$(PGMAJOR)$(DOCKER_TAG_POSTFIX)
 check:
 	@for arch in amd64 arm64; do \
 		echo "### Checking $$arch $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY); \

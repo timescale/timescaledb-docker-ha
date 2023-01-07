@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   publish-image:
-    name: Publish images
+    name: Publish image pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
 
     strategy:
       fail-fast: false
@@ -104,7 +104,7 @@ jobs:
       - name: Fetch runtime environment
         uses: crazy-max/ghaction-github-runtime@v2
 
-      - name: Build and publish image
+      - name: Build and publish image pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
           DOCKER_REPOSITORY: timescaledev/timescaledb-ha
@@ -116,7 +116,16 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           PG_VERSIONS: ${{ matrix.pg_versions }}
           OSS_ONLY: ${{ matrix.oss_only }}
-        run: GITHUB_STEP_SUMMARY="$GITHUB_STEP_SUMMARY" make publish-builder publish check
+        run: make publish-builder publish
+
+      - name: Check image pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
+        env:
+          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
+          DOCKER_REPOSITORY: timescaledev/timescaledb-ha
+          DOCKER_REGISTRY: docker.io
+          DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
+          PG_MAJOR: ${{ matrix.pg_major }}
+        run: make check
 
       - name: List docker images
         run: make list-images
