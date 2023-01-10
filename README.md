@@ -10,6 +10,8 @@ This directory contains everything that allows us to create a Docker image with 
 
 Currently, our base image is Ubuntu, as we require glibc 2.33+.
 
+It's currently pushing the resuting images to: https://hub.docker.com/r/timescaledev/timescaledb-ha
+
 ## Build images
 
 To build an image, run the following make target:
