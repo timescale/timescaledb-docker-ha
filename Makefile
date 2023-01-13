@@ -1,7 +1,14 @@
+SHELL = bash
+.SHELLFLAGS = -ec
+.ONESHELL:
+.DELETE_ON_ERROR:
+
+all: help
+
 PG_MAJOR?=15
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
-PG_VERSIONS?=15 14 13 12
+PG_VERSIONS?=
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 POSTGIS_VERSIONS?="3"
@@ -11,33 +18,42 @@ PG_LOGERRORS?=3c55887b
 TIMESCALEDB_VERSIONS?=1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0 2.5.1 2.5.2 2.6.0 2.6.1 2.7.0 2.7.1 2.7.2 2.8.0 2.8.1 2.9.1
 TIMESCALE_PROMSCALE_EXTENSIONS?=0.5.0 0.5.1 0.5.2 0.5.4 0.6.0 0.7.0 0.8.0
 TIMESCALEDB_TOOLKIT_EXTENSIONS?=1.6.0 1.7.0 1.8.0 1.10.1 1.11.0 1.12.0 1.12.1 1.13.0 1.13.1 1.14.0 1.15.0 1.16.0
+
+# This is used to build the docker --platform, so pick amd64 or arm64
+PLATFORM?=amd64
+
+DOCKER_TAG_POSTFIX?=-multi
+ALL_VERSIONS?=false
 OSS_ONLY?=false
 
-DOCKER_PLATFORMS?=linux/amd64,linux/arm64
+ifeq ($(ALL_VERSIONS),true)
+  DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-all
+  ifeq ($(PG_MAJOR),15)
+    PG_VERSIONS := 15 14 13 12
+  else ifeq ($(PG_MAJOR),14)
+    PG_VERSIONS := 14 13 12
+  endif
+else
+  PG_VERSIONS := $(PG_MAJOR)
+endif
+
+ifeq ($(OSS_ONLY),true)
+  DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-oss
+endif
 
 DOCKER_FROM?=ubuntu:22.04
 DOCKER_EXTRA_BUILDARGS?=
 DOCKER_REGISTRY?=localhost:5000
 DOCKER_REPOSITORY?=timescaledev/timescaledb-ha
 DOCKER_PUBLISH_URL?=$(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY)
-DOCKER_TAG_POSTFIX?=-multi
+
 DOCKER_BUILDER_URL=$(DOCKER_PUBLISH_URL):pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-builder
+DOCKER_BUILDER_ARCH_URL=$(DOCKER_PUBLISH_URL):pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-builder-$(PLATFORM)
 DOCKER_RELEASE_URL=$(DOCKER_PUBLISH_URL):pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
-DOCKER_CACHE_FROM?=
-DOCKER_CACHE_TO?=
+DOCKER_RELEASE_ARCH_URL=$(DOCKER_PUBLISH_URL):pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-$(PLATFORM)
 
 GITHUB_STEP_SUMMARY?=/dev/null
-
-DOCKER_CACHE:=
-ifneq ($(DOCKER_CACHE_FROM),)
-DOCKER_CACHE = --cache-from $(DOCKER_CACHE_FROM)
-endif
-ifneq ($(DOCKER_CACHE_TO),)
-DOCKER_CACHE += --cache-to $(DOCKER_CACHE_TO)
-endif
-
-DOCKER_BUILDX_CREATE?=docker buildx create --driver=docker-container --platform linux/amd64,linux/arm64 ha-multinode --use --bootstrap
-DOCKER_BUILDX_DESTROY?=docker buildx rm ha-multinode
+GITHUB_OUTPUT?=/dev/null
 
 # These parameters control which entrypoints we add to the scripts
 GITHUB_DOCKERLIB_POSTGRES_REF=master
@@ -56,8 +72,8 @@ INSTALL_METHOD?=docker-ha
 GITHUB_REPO?=timescale/timescaledb
 
 # We need dynamic variables here, that is why we do not use $(shell awk ...)
-VAR_PGMINOR="$$(awk -F '=' '/postgresql.version=/ {print $$2}' $(VAR_VERSION_INFO))"
-VAR_TSMINOR="$$(awk -F '=' '/timescaledb.version=/ {print $$2}' $(VAR_VERSION_INFO))"
+VAR_PGMAJOR="$$(awk -F '=' '/postgresql.version=/ {print $$2}' $(VAR_VERSION_INFO) 2>/dev/null)"
+VAR_TSVERSION="$$(awk -F '=' '/timescaledb.version=/ {print $$2}' $(VAR_VERSION_INFO) 2>/dev/null)"
 VAR_TSMAJOR="$$(awk -F '[.=]' '/timescaledb.version=/ {print $$3 "." $$4}' $(VAR_VERSION_INFO))"
 VAR_VERSION_INFO=version_info-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX).log
 
@@ -67,10 +83,9 @@ export DOCKER_BUILDKIT = 1
 # We label all the Docker Images with the versions of PostgreSQL, TimescaleDB and some other extensions
 # afterwards, by using introspection, as minor versions may differ even when using the same
 # Dockerfile
-DOCKER_BUILD_COMMAND=docker buildx build \
-					 --platform "$(DOCKER_PLATFORMS)" \
-					 $(DOCKER_CACHE) \
-					 --push \
+DOCKER_BUILD_COMMAND=docker build \
+					 --platform "linux/$(PLATFORM)" \
+					 --pull \
 					 --progress=plain \
 					 --build-arg DOCKER_FROM="$(DOCKER_FROM)" \
 					 --build-arg ALLOW_ADDING_EXTENSIONS="$(ALLOW_ADDING_EXTENSIONS)" \
@@ -101,6 +116,7 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 # We provide the fast target as the first (=default) target, as it will skip installing
 # many optional extensions, and it will only install a single timescaledb (master) version.
 # This is basically useful for developers of this repository, to allow fast feedback cycles.
+.PHONY: fast
 fast: DOCKER_EXTRA_BUILDARGS= --build-arg GITHUB_TAG=master
 fast: PG_AUTH_MON=
 fast: PG_LOGERRORS=
@@ -111,39 +127,44 @@ fast: TIMESCALE_PROMSCALE_EXTENSION=
 fast: ALLOW_ADDING_EXTENSIONS=true
 fast: build
 
-publish-builder: DOCKER_EXTRA_BUILDARGS=--target builder
-publish-builder:
-	$(DOCKER_BUILDX_CREATE)
-	$(DOCKER_BUILD_COMMAND) --tag "$(DOCKER_BUILDER_URL)"
-	$(DOCKER_BUILDX_DESTROY)
+.PHONY: builder
+builder: # build the `builder` target image
+builder: DOCKER_EXTRA_BUILDARGS=--target builder
+builder:
+	$(DOCKER_BUILD_COMMAND) --tag "$(DOCKER_BUILDER_ARCH_URL)"
+
+.PHONY: publish-builder
+publish-builder: # build and publish the `builder` target image
+publish-builder: builder
+	docker push "$(DOCKER_BUILDER_ARCH_URL)"
 
 # The prepare step does not build the final image, as we need to use introspection
 # to find out what versions of software are installed in this image
-build: DOCKER_EXTRA_BUILDARGS=--target release
-build: $(VAR_VERSION_INFO)
-	$(DOCKER_BUILDX_CREATE)
-	$(DOCKER_BUILD_COMMAND) \
-		--tag "$(DOCKER_RELEASE_URL)" \
-		$$(for latest in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMINOR)-ts$(VAR_TSMINOR); do \
-			echo --tag $(DOCKER_PUBLISH_URL):$${latest}$(DOCKER_TAG_POSTFIX)-latest; \
-		done) \
+.PHONY: release
+release: # build the `release` target image
+release: DOCKER_EXTRA_BUILDARGS=--target release
+release: $(VAR_VERSION_INFO)
+	$(DOCKER_BUILD_COMMAND) --tag "$(DOCKER_RELEASE_ARCH_URL)" \
 		$$(awk -F '=' '{printf "--label com.timescaledb.image."$$1"="$$2" "}' $(VAR_VERSION_INFO))
-	$(DOCKER_BUILDX_DESTROY)
 
-VERSION_NAME=versioninfo-pg$(PG_MAJOR)
-version_info-%.log: publish-builder
+publish-release: # build and publish the `release` target image
+publish-release: release
+	docker push "$(DOCKER_RELEASE_ARCH_URL)}"
+
+VERSION_NAME=versioninfo-pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
+version_info-%.log: builder
 	# In these steps we do some introspection to find out some details of the versions
 	# that are inside the Docker image. As we use the Ubuntu packages, we do not know until
 	# after we have built the image, what patch version of PostgreSQL, or PostGIS is installed.
 	#
 	# We will then attach this information as OCI labels to the final Docker image
 	# docker buildx build does a push to export it, so it doesn't exist in the regular local registry yet
-	@docker rm --force $(VERSION_NAME) || true
-	docker run --pull always --rm -d --name $(VERSION_NAME) -e PGDATA=/tmp/pgdata --user=postgres $(DOCKER_BUILDER_URL) sleep 300
-	docker cp ./cicd $(VERSION_NAME):/cicd/
-	docker exec $(VERSION_NAME) /cicd/smoketest.sh || (docker logs $(VERSION_NAME) && exit 1)
-	docker cp $(VERSION_NAME):/tmp/version_info.log $(VAR_VERSION_INFO)
-	docker rm --force $(VERSION_NAME) || true
+	@docker rm --force "$(VERSION_NAME)" >&/dev/null || true
+	docker run --pull always --rm -d --name "$(VERSION_NAME)" -e PGDATA=/tmp/pgdata --user=postgres "$(DOCKER_BUILDER_URL)" sleep 300
+	docker cp ./cicd "$(VERSION_NAME):/cicd/"
+	docker exec "$(VERSION_NAME)" /cicd/smoketest.sh || (docker logs -n100 "$(VERSION_NAME)" && exit 1)
+	docker cp "$(VERSION_NAME):/tmp/version_info.log" "$(VAR_VERSION_INFO)"
+	docker rm --force "$(VERSION_NAME)" || true
 
 # The purpose of publishing the images under many tags, is to provide
 # some choice to the user as to their appetite for volatility.
@@ -153,41 +174,80 @@ version_info-%.log: publish-builder
 #  3. timescale/timescaledb-ha:pg12.3-ts1.7-latest
 #  4. timescale/timescaledb-ha:pg12.3-ts1.7.1-latest
 
+.PHONY: build-oss
+build-oss: # build an OSS-only image
 build-oss: OSS_ONLY=true
 build-oss: DOCKER_TAG_POSTFIX=-oss
-build-oss: build
+build-oss: release
 
-publish: is_ci build
+.PHONY: publish
+publish: is_ci release
+
+.PHONY: publish-combined-builder-manifest
+publish-combined-builder-manifest: # publish a combined builder image manifest
+	docker pull "$(DOCKER_BUILDER_URL)-amd64"
+	docker pull "$(DOCKER_BUILDER_URL)-arm64"
+	docker manifest rm "$(DOCKER_BUILDER_URL)" >& /dev/null || true
+	docker manifest create "$(DOCKER_BUILDER_URL)" --amend "$(DOCKER_BUILDER_URL)-amd64" --amend "$(DOCKER_BUILDER_URL)-arm64"
+	docker manifest push "$(DOCKER_BUILDER_URL)"
+
+# since we're using immutable tags, we don't need to pull/find the child image SHAs, we can just use the tags
+.PHONY: publish-combined-manifest
+publish-combined-manifest: # publish the main combined manifest that includes amd64 and arm64 images
+	docker pull "$(DOCKER_RELEASE_URL)-amd64"
+	docker pull "$(DOCKER_RELEASE_URL)-arm64"
+	docker manifest rm "$(DOCKER_RELEASE_URL)" >& /dev/null || true
+	docker manifest create "$(DOCKER_RELEASE_URL)" --amend "$(DOCKER_RELEASE_URL)-amd64" --amend "$(DOCKER_RELEASE_URL)-arm64"
+	docker manifest push "$(DOCKER_RELEASE_URL)"
+	for tag in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMAJOR)-ts$(VAR_TSVERSION); do
+		url="$(DOCKER_PUBLISH_URL):$${tag}$(DOCKER_TAG_POSTFIX)"
+		docker manifest rm "$$url" >&/dev/null || true
+		docker manifest create "$$url" --amend "$(DOCKER_RELEASE_URL)-amd64" "$(DOCKER_RELEASE_URL)-arm64"
+		docker push "$$url"
+	done
+
+.PHONY: publish-manifests
+publish-manifests: # publish the combined manifests for the builder and the release images
+publish-manifests: publish-combined-builder-manifest publish-combined-manifest
 
 CHECK_NAME=ha-check-pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
-check:
+.PHONY: check
+check: # check images to see if they have all the requested content
 	@for arch in amd64 arm64; do \
+		key="$$(mktemp -u XXXXXX)"
+		check_name="$(CHECK_NAME)-$$arch-$$key"
+		echo "Checking $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY); \
 		echo "### Checking $$arch $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY); \
-		docker rm --force $(CHECK_NAME); \
+		docker rm --force "$(CHECK_NAME)" >&/dev/null || true
 		docker run \
-			--platform linux/$$arch \
+			--platform linux/"$$arch" \
 			--pull always \
-			-v "$(GITHUB_STEP_SUMMARY):/tmp/step_summary" \
 			-d \
-			--name $(CHECK_NAME) \
+			--name "$$check_name" \
 			-e PGDATA=/tmp/pgdata \
-			-e GITHUB_STEP_SUMMARY=/tmp/step_summary \
 			--user=postgres \
-			"$(DOCKER_RELEASE_URL)" sleep 300; \
-		tar -cf - -C ./cicd . | docker exec -i $(CHECK_NAME) tar -C /cicd -x; \
-		docker exec $(CHECK_NAME) mkdir /cicd/scripts; \
-		tar -cf - -C ./build_scripts . | docker exec -i $(CHECK_NAME) tar -C /cicd/scripts -x; \
-		docker exec -e CI=$(CI) $(CHECK_NAME) /cicd/install_checks -v || { docker logs -n100 $(CHECK_NAME); exit 1; }; \
+			"$(DOCKER_RELEASE_URL)" sleep 300
+		tar -cf - -C ./cicd . | docker exec -i "$$check_name" tar -C /cicd -x
+		docker exec "$$check_name" mkdir /cicd/scripts
+		tar -cf - -C ./build_scripts . | docker exec -i "$$check_name" tar -C /cicd/scripts -x
+		docker exec -e GITHUB_STEP_SUMMARY="/tmp/step_summary-$$key" -e CI="$(CI)" "$$check_name" /cicd/install_checks -v || { docker logs -n100 "$$check_name"; exit 1; }
+		docker rm --force "$$check_name" >&/dev/null || true
 	done
-	docker rm --force $(CHECK_NAME) || true
 
+.PHONY: is_ci
 is_ci:
 	@if [ "$${CI}" != "true" ]; then echo "environment variable CI is not set to \"true\", are you running this in Github Actions?"; exit 1; fi
 
-list-images:
+.PHONY: list-images
+list-images: # list local images
 	docker images --filter "label=com.timescaledb.image.install_method=$(INSTALL_METHOD)" --filter "dangling=false"
 
+.PHONY: build-tag
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
 build-tag: build
 
-.PHONY: fast prepare build-oss release build publish test tag build-tag is_ci list-images check
+HELP_TARGET_DEPTH ?= \#
+help: # Show how to get started & what targets are available
+	@printf "This is a list of all the make targets that you can run, e.g. $(BOLD)make check$(NORMAL)\n\n"
+	@awk -F':+ |$(HELP_TARGET_DEPTH)' '/^[0-9a-zA-Z._%-]+:+.+$(HELP_TARGET_DEPTH).+$$/ { printf "$(GREEN)%-20s\033[0m %s\n", $$1, $$3 }' $(MAKEFILE_LIST)
+	@echo

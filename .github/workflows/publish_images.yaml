@@ -11,63 +11,42 @@ on:
     - cron: '0 2 * * 0'
 
 concurrency:
-  group: publish-images-${{ github.ref }}
+  group: publish-ha-images-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  DOCKER_REPOSITORY: timescaledev/timescaledb-ha
+  DOCKER_REGISTRY: docker.io
+
 jobs:
-  publish-image:
-    name: Publish image pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
+  publish:
+    name: Publish (${{ matrix.short_platform }} pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }})
 
     strategy:
       fail-fast: false
-      max-parallel: 1
       matrix:
+        platform: [ "amd64", "arm64" ]
+        pg_major: [ "14", "15" ]
+        all_versions: [ "false", "true" ]
+        oss_only: [ "false", "true" ]
+
         include:
-          - pg_major: "14"
-            pg_versions: "14"
-            docker_tag_postfix: "-multi"
-          - pg_major: "15"
-            pg_versions: "15"
-            docker_tag_postfix: "-multi"
+          - platform: amd64
+            runner_type: x64
+            short_platform: amd
+          - platform: arm64
+            runner_type: arm64
+            short_platform: arm
+          - oss_only: "true"
+            oss: "-oss"
+          - all_versions: "true"
+            all: "-all"
 
-          - pg_major: "14"
-            pg_versions: "14 13 12"
-            docker_tag_postfix: "-multi-all"
-          - pg_major: "15"
-            pg_versions: "15 14 13 12"
-            docker_tag_postfix: "-multi-all"
-
-          - pg_major: "14"
-            pg_versions: "14"
-            oss_only: "true"
-            docker_tag_postfix: "-multi-oss"
-          - pg_major: "15"
-            pg_versions: "15"
-            oss_only: "true"
-            docker_tag_postfix: "-multi-oss"
-
-          - pg_major: "14"
-            pg_versions: "14 13 12"
-            oss_only: "true"
-            docker_tag_postfix: "-multi-all-oss"
-          - pg_major: "15"
-            pg_versions: "15 14 13 12"
-            oss_only: "true"
-            docker_tag_postfix: "-multi-all-oss"
-
-    runs-on: [ "dev-eu-west-1", "x64", "non-prod" ]
-
-    env:
-      DOCKER_REPOSITORY: timescaledev/timescaledb-ha
-      DOCKER_REGISTRY: docker.io
+    runs-on: [ "self-hosted", "${{ matrix.runner_type }}" ]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Get tag name
-        id: tag_name
-        run: echo "GIT_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -75,53 +54,91 @@ jobs:
           username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
           password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
 
-      # QEMU for `make check`
+      - name: Setup | Docker Context
+        run: if [ ! `docker context use ha-builder` ]; then docker context create ha-builder; fi
+
+      - name: Setup | Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          endpoint: ha-builder
+
+      # default arm action-runners don't have `make`
+      - name: Install tools
+        run: |
+          if ! which -s make >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y build-essential
+          fi
+
+      - name: Build and publish (${{ matrix.short_platform }} pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }})
+        env:
+          DOCKER_TAG_POSTFIX: "-multi"
+          PLATFORM: ${{ matrix.platform }}
+          PG_MAJOR: ${{ matrix.pg_major }}
+          ALL_VERSIONS: ${{ matrix.all_versions }}
+          OSS_ONLY: ${{ matrix.oss_only }}
+        run: | 
+          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder publish
+
+  publish-combined-manifests:
+    name: Publish manifest pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
+    needs:
+      - publish
+
+    # us-east-1 means quicker push/pull
+    runs-on: [ "self-hosted", "dev-us-east-1" ]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        pg_major: [ "14", "15" ]
+        docker_tag_postfix: ["-multi", "-multi-all", "-multi-oss", "-multi-all-oss" ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Publish combined manifest for pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
+        env:
+          PG_MAJOR: ${{ matrix.pg_major }}
+          DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
+        run: make publish-manifests
+
+  check:
+    name: Check image pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
+    needs:
+      - publish-combined-manifests
+
+    # us-east-1 means quicker push/pull
+    runs-on: [ "self-hosted", "dev-us-east-1" ]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        pg_major: [ "14", "15" ]
+        docker_tag_postfix: ["-multi", "-multi-all", "-multi-oss", "-multi-all-oss" ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+
+      # QEMU is good enough for `make check`
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
-      - name: Set up SSH
-        uses: MrSquaare/ssh-setup-action@v2
-        with:
-          host: "${{ secrets.ARM_RUNNER_HOST }}"
-          private-key: "${{ secrets.BK_PRIVATE_KEY }}"
-          private-key-name: action_runner
-
-      - name: Setup | Docker context for buildx
-        run: |
-          docker context rm ha-builder || true
-          docker context create ha-builder
-
-      - name: Setup Buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          platforms: linux/amd64,linux/arm64
-          endpoint: ha-builder
-          driver: docker-container
-          append: |
-            - endpoint: "ssh://admin@${{ secrets.ARM_RUNNER_HOST }}"
-              platforms: linux/arm64
-
-      - name: Fetch runtime environment
-        uses: crazy-max/ghaction-github-runtime@v2
-
-      - name: Build and publish image pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
+      - name: Check pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
-          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
-          DOCKER_BUILDX_CREATE: "true"
-          DOCKER_BUILDX_DESTROY: "true"
-          DOCKER_EXTRA_BUILDARGS: ${{ matrix.docker_extra_buildargs }}
-          DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
           PG_MAJOR: ${{ matrix.pg_major }}
-          PG_VERSIONS: ${{ matrix.pg_versions }}
-          OSS_ONLY: ${{ matrix.oss_only }}
-        run: make publish-builder publish
-
-      - name: Check image pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
-        env:
-          GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
-          PG_MAJOR: ${{ matrix.pg_major }}
         run: make check
-
-      - name: List docker images
-        run: make list-images
