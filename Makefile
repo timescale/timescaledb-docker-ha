@@ -149,10 +149,16 @@ release: $(VAR_VERSION_INFO)
 
 publish-release: # build and publish the `release` target image
 publish-release: release
-	docker push "$(DOCKER_RELEASE_ARCH_URL)}"
+	docker push "$(DOCKER_RELEASE_ARCH_URL)"
 
-VERSION_NAME=versioninfo-pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
+VERSION_TAG?=
+ifeq ($(VERSION_TAG),)
+VERSION_TAG := pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-builder-$(PLATFORM)
 version_info-%.log: builder
+endif
+VERSION_IMAGE := $(DOCKER_PUBLISH_URL):$(VERSION_TAG)
+VERSION_NAME=versioninfo-pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
+version_info-%.log:
 	# In these steps we do some introspection to find out some details of the versions
 	# that are inside the Docker image. As we use the Ubuntu packages, we do not know until
 	# after we have built the image, what patch version of PostgreSQL, or PostGIS is installed.
@@ -160,7 +166,7 @@ version_info-%.log: builder
 	# We will then attach this information as OCI labels to the final Docker image
 	# docker buildx build does a push to export it, so it doesn't exist in the regular local registry yet
 	@docker rm --force "$(VERSION_NAME)" >&/dev/null || true
-	docker run --pull always --rm -d --name "$(VERSION_NAME)" -e PGDATA=/tmp/pgdata --user=postgres "$(DOCKER_BUILDER_URL)" sleep 300
+	docker run --pull always --rm -d --name "$(VERSION_NAME)" -e PGDATA=/tmp/pgdata --user=postgres "$(VERSION_IMAGE)" sleep 300
 	docker cp ./cicd "$(VERSION_NAME):/cicd/"
 	docker exec "$(VERSION_NAME)" /cicd/smoketest.sh || (docker logs -n100 "$(VERSION_NAME)" && exit 1)
 	docker cp "$(VERSION_NAME):/tmp/version_info.log" "$(VAR_VERSION_INFO)"
@@ -180,30 +186,37 @@ build-oss: OSS_ONLY=true
 build-oss: DOCKER_TAG_POSTFIX=-oss
 build-oss: release
 
-.PHONY: publish
-publish: is_ci release
-
 .PHONY: publish-combined-builder-manifest
 publish-combined-builder-manifest: # publish a combined builder image manifest
+	@echo "pulling $(DOCKER_BUILDER_URL)-amd64 and $(DOCKER_BUILDER_URL)-arm64"
 	docker pull "$(DOCKER_BUILDER_URL)-amd64"
 	docker pull "$(DOCKER_BUILDER_URL)-arm64"
 	docker manifest rm "$(DOCKER_BUILDER_URL)" >& /dev/null || true
 	docker manifest create "$(DOCKER_BUILDER_URL)" --amend "$(DOCKER_BUILDER_URL)-amd64" --amend "$(DOCKER_BUILDER_URL)-arm64"
 	docker manifest push "$(DOCKER_BUILDER_URL)"
+	echo "pushed $(DOCKER_BUILDER_URL)"
+	echo "Pushed $(DOCKER_BUILDER_URL)" >> "$(GITHUB_STEP_SUMMARY)"
 
 # since we're using immutable tags, we don't need to pull/find the child image SHAs, we can just use the tags
 .PHONY: publish-combined-manifest
 publish-combined-manifest: # publish the main combined manifest that includes amd64 and arm64 images
+publish-combined-manifest: $(VAR_VERSION_INFO)
+	@echo "pulling $(DOCKER_RELEASE_URL)-amd64 and $(DOCKER_RELEASE_URL)-arm64"
 	docker pull "$(DOCKER_RELEASE_URL)-amd64"
 	docker pull "$(DOCKER_RELEASE_URL)-arm64"
 	docker manifest rm "$(DOCKER_RELEASE_URL)" >& /dev/null || true
 	docker manifest create "$(DOCKER_RELEASE_URL)" --amend "$(DOCKER_RELEASE_URL)-amd64" --amend "$(DOCKER_RELEASE_URL)-arm64"
 	docker manifest push "$(DOCKER_RELEASE_URL)"
-	for tag in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMAJOR)-ts$(VAR_TSVERSION); do
-		url="$(DOCKER_PUBLISH_URL):$${tag}$(DOCKER_TAG_POSTFIX)"
+	echo "pushed $(DOCKER_RELEASE_URL)"
+	echo "Pushed $(DOCKER_RELEASE_URL)" >> "$(GITHUB_STEP_SUMMARY)"
+	for tag in pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMAJOR)-ts$(VAR_TSVERSION); do
+		url="$(DOCKER_PUBLISH_URL):$$tag$(DOCKER_TAG_POSTFIX)"
+		echo "pushing $$url"
 		docker manifest rm "$$url" >&/dev/null || true
 		docker manifest create "$$url" --amend "$(DOCKER_RELEASE_URL)-amd64" "$(DOCKER_RELEASE_URL)-arm64"
-		docker push "$$url"
+		docker manifest push "$$url"
+		echo "pushed $$url"
+		echo "Pushed $$url" >> "$(GITHUB_STEP_SUMMARY)"
 	done
 
 .PHONY: publish-manifests
@@ -227,9 +240,9 @@ check: # check images to see if they have all the requested content
 			-e PGDATA=/tmp/pgdata \
 			--user=postgres \
 			"$(DOCKER_RELEASE_URL)" sleep 300
-		tar -cf - -C ./cicd . | docker exec -i "$$check_name" tar -C /cicd -x
-		docker exec "$$check_name" mkdir /cicd/scripts
-		tar -cf - -C ./build_scripts . | docker exec -i "$$check_name" tar -C /cicd/scripts -x
+		docker exec -u root "$$check_name" mkdir -p /cicd/scripts
+		tar -cf - -C ./cicd . | docker exec -u root -i "$$check_name" tar -C /cicd -x
+		tar -cf - -C ./build_scripts . | docker exec -u root -i "$$check_name" tar -C /cicd/scripts -x
 		docker exec -e GITHUB_STEP_SUMMARY="/tmp/step_summary-$$key" -e CI="$(CI)" "$$check_name" /cicd/install_checks -v || { docker logs -n100 "$$check_name"; exit 1; }
 		docker rm --force "$$check_name" >&/dev/null || true
 	done

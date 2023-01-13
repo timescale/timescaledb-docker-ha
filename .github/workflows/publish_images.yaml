@@ -77,7 +77,7 @@ jobs:
           ALL_VERSIONS: ${{ matrix.all_versions }}
           OSS_ONLY: ${{ matrix.oss_only }}
         run: | 
-          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder publish
+          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder publish-release
 
   publish-combined-manifests:
     name: Publish manifest pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
@@ -106,6 +106,7 @@ jobs:
       - name: Publish combined manifest for pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
           PG_MAJOR: ${{ matrix.pg_major }}
+          VERSION_TAG: pg${{ matrix.pg_major}}${{ matrix.docker_tag_postfix }}
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
         run: make publish-manifests
 
