@@ -9,6 +9,27 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.12] - 2022-10-11
+
+* Upgrade Promscale extension to 0.7.0
+
+## [v1.5.11] - 2022-10-06
+
+* Include and default to [TimescaleDB 2.8.1](https://github.com/timescale/timescaledb/releases/tag/2.8.1)
+
+## [v1.5.10] - 2022-09-29
+
+* Bump `hot_forge` to 0.1.39 for AWS Security Token Service
+
+## [v1.5.9] - 2022-09-29
+
+* Switch from docker API v1 to v2 for determining immutable tag names
+
+## [v1.5.8] - 2022-09-28
+
+* Upgrade TimescaleDB Toolkit extension to [1.11.0](https://github.com/timescale/timescaledb-toolkit/releases/tag/1.11.0)
+* Include timescaledb\_cloudutils v1.1.7
+
 ## [v1.5.7] - 2022-09-02
 
 * Include [timescaledb-tune 0.14.1](https://github.com/timescale/timescaledb-tune/releases/tag/v0.14.1)

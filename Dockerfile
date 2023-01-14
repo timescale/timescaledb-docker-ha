@@ -59,7 +59,8 @@ RUN apt-get update
 
 # The following tools are required for some of the processes we (TimescaleDB) regularly
 # run inside the containers that use this Docker Image
-RUN apt-get install -y less jq strace procps
+# awscli is useful in many situations, for example, to list backup buckets etc
+RUN apt-get install -y less jq strace procps awscli
 
 # For debugging it is very useful if the Docker Image contains gdb(server). Even though it is
 # not expected to be running gdb in a live instance often, it simplifies getting backtraces from
@@ -274,8 +275,8 @@ COPY build_scripts /build/scripts
 
 # If a specific GITHUB_TAG is provided, we will build that tag only. Otherwise
 # we build all the public (recent) releases
-#RUN TS_VERSIONS="1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0 2.5.1 2.5.2 2.6.0 2.6.1 2.7.0 2.7.1 2.7.2 2.8.0" \
-RUN TS_VERSIONS="2.8.0" \
+#RUN TS_VERSIONS="1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0 2.5.1 2.5.2 2.6.0 2.6.1 2.7.0 2.7.1 2.7.2 2.8.0 2.8.1" \
+RUN TS_VERSIONS="2.8.1" \
     && if [ "${GITHUB_TAG}" != "" ]; then TS_VERSIONS="${GITHUB_TAG}"; fi \
     && cd /build/timescaledb && git pull \
     && set -e \

@@ -8,8 +8,8 @@ POSTGIS_VERSIONS?="3"
 PG_AUTH_MON?=v1.0
 PG_STAT_MONITOR?=1.0.0-rc.1
 PG_LOGERRORS?=3c55887b
-TIMESCALE_PROMSCALE_EXTENSIONS?=0.6.0
-TIMESCALEDB_TOOLKIT_EXTENSIONS?=1.10.1
+TIMESCALE_PROMSCALE_EXTENSIONS?=0.7.0
+TIMESCALEDB_TOOLKIT_EXTENSIONS?=1.11.0
 TIMESCALE_TSDB_ADMIN?=
 TIMESCALE_HOT_FORGE?=
 TIMESCALE_PATRONI_K8S_SYNC?=
@@ -35,7 +35,7 @@ ALLOW_ADDING_EXTENSIONS?=true
 
 # We add a patch increment to all our immutable Docker Images. To figure out which patch number
 # to assign, we need 1 repository that is the canonical source of truth
-DOCKER_CANONICAL_URL?=https://index.docker.io/v1/repositories/timescale/timescaledb-ha
+DOCKER_CANONICAL_URL?=https://hub.docker.com/v2/repositories/timescale/timescaledb-ha
 
 # These variables have to do with this Docker repository
 GIT_REMOTE=$(shell git config --get remote.origin.url | sed 's/.*@//g')
