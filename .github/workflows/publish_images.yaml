@@ -76,6 +76,7 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           ALL_VERSIONS: ${{ matrix.all_versions }}
           OSS_ONLY: ${{ matrix.oss_only }}
+          USE_DOCKER_CACHE: "false"
         run: | 
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder publish-release
 

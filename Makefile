@@ -26,6 +26,13 @@ DOCKER_TAG_POSTFIX?=-multi
 ALL_VERSIONS?=false
 OSS_ONLY?=false
 
+USE_DOCKER_CACHE?=true
+ifeq ($(strip $(USE_DOCKER_CACHE)),true)
+  DOCKER_CACHE :=
+else
+  DOCKER_CACHE := --no-cache
+endif
+
 ifeq ($(ALL_VERSIONS),true)
   DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-all
   ifeq ($(PG_MAJOR),15)
@@ -84,6 +91,7 @@ export DOCKER_BUILDKIT = 1
 # afterwards, by using introspection, as minor versions may differ even when using the same
 # Dockerfile
 DOCKER_BUILD_COMMAND=docker build \
+					 $(DOCKER_CACHE) \
 					 --platform "linux/$(PLATFORM)" \
 					 --pull \
 					 --progress=plain \

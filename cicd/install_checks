@@ -11,9 +11,9 @@ for pg in $(available_pg_versions); do
     cat /dev/null > "/tmp/extversions.$ARCH.pg$pg"
 done
 
-# make sure the image we're checking is at most 2 hours old, since we're doing a pull from the repository
+# make sure the image we're checking is at most 8 hours old, since we're doing a pull from the repository
 # for the check, this should make sure we're getting the one we just built
-check_base_age 7200
+check_base_age 28800
 
 # Check for packages that aren't pg-version-specific
 check_packages
