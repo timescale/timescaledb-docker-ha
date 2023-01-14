@@ -9,8 +9,8 @@
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
 # pg_upgrade from one major version to another,
 # so we need all the postgres & timescale libraries for all versions
-ARG PG_VERSIONS="14 13"
-ARG PG_MAJOR=13
+ARG PG_VERSIONS="15 14 13"
+ARG PG_MAJOR=15
 
 ## We have many base images to choose from, (alpine, bitnami) but as we're adding a lot
 ## of tools to the image anyway, the end result is that we would only
@@ -132,7 +132,7 @@ FROM compiler as builder
 RUN for pg in ${PG_VERSIONS}; do \
         apt-get install -y postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} \
             postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack \
-            postgresql-${pg}-hypopg postgresql-${pg}-unit postgresql-${pg}-powa postgresql-${pg}-pg-wait-sampling \
+            postgresql-${pg}-hypopg postgresql-${pg}-powa postgresql-${pg}-pg-wait-sampling \
             postgresql-${pg}-extra-window-functions postgresql-${pg}-pg-track-settings postgresql-${pg}-pglogical \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger || exit 1; \
     done
@@ -151,7 +151,7 @@ RUN for postgisv in ${POSTGIS_VERSIONS}; do \
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj
 RUN echo 'deb http://cz.archive.ubuntu.com/ubuntu kinetic main universe' >> /etc/apt/sources.list && \
     apt-get update && \
-    apt-get install -y patroni=2.1.4-\* && \
+    apt-get install -y patroni && \
     head -n -1 /etc/apt/sources.list > /etc/apt/sources.list.tmp; mv /etc/apt/sources.list.tmp /etc/apt/sources.list; \
     apt-get update
 # Patch Patroni code with changes from https://github.com/zalando/patroni/pull/2318.
@@ -276,7 +276,7 @@ COPY build_scripts /build/scripts
 # If a specific GITHUB_TAG is provided, we will build that tag only. Otherwise
 # we build all the public (recent) releases
 #RUN TS_VERSIONS="1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0 2.5.1 2.5.2 2.6.0 2.6.1 2.7.0 2.7.1 2.7.2 2.8.0 2.8.1" \
-RUN TS_VERSIONS="2.8.1" \
+RUN TS_VERSIONS="2.9.1" \
     && if [ "${GITHUB_TAG}" != "" ]; then TS_VERSIONS="${GITHUB_TAG}"; fi \
     && cd /build/timescaledb && git pull \
     && set -e \

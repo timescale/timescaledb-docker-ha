@@ -1,3 +1,4 @@
 .build*
 .idea/
+.github/*
 version_info-*.log
