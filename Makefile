@@ -135,6 +135,13 @@ fast: TIMESCALE_PROMSCALE_EXTENSION=
 fast: ALLOW_ADDING_EXTENSIONS=true
 fast: build
 
+prune: # docker system prune -af
+	docker system prune -af
+
+ifeq ($(USE_DOCKER_CACHE),false)
+builder: prune
+endif
+
 .PHONY: builder
 builder: # build the `builder` target image
 builder: DOCKER_EXTRA_BUILDARGS=--target builder
@@ -196,35 +203,33 @@ build-oss: release
 
 .PHONY: publish-combined-builder-manifest
 publish-combined-builder-manifest: # publish a combined builder image manifest
-	@echo "pulling $(DOCKER_BUILDER_URL)-amd64 and $(DOCKER_BUILDER_URL)-arm64"
-	docker pull "$(DOCKER_BUILDER_URL)-amd64"
-	docker pull "$(DOCKER_BUILDER_URL)-arm64"
+	@echo "Creating manifest $(DOCKER_BUILDER_URL) that includes $(DOCKER_BUILDER_URL)-amd64 and $(DOCKER_BUILDER_URL)-arm64"
+	amddigest_image="$$(./fetch_tag_digest $(DOCKER_BUILDER_URL)-amd64)"
+	armdigest_image="$$(./fetch_tag_digest $(DOCKER_BUILDER_URL)-arm64)"
+	echo "AMD: $$amddigest_image"
+	echo "ARM: $$armdigest_image"
 	docker manifest rm "$(DOCKER_BUILDER_URL)" >& /dev/null || true
-	docker manifest create "$(DOCKER_BUILDER_URL)" --amend "$(DOCKER_BUILDER_URL)-amd64" --amend "$(DOCKER_BUILDER_URL)-arm64"
+	docker manifest create "$(DOCKER_BUILDER_URL)" --amend "$$amddigest_image" --amend "$$armdigest_image"
 	docker manifest push "$(DOCKER_BUILDER_URL)"
 	echo "pushed $(DOCKER_BUILDER_URL)"
-	echo "Pushed $(DOCKER_BUILDER_URL)" >> "$(GITHUB_STEP_SUMMARY)"
+	echo "Pushed $(DOCKER_BUILDER_URL) (amd:$$amddigest_image arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
 
 # since we're using immutable tags, we don't need to pull/find the child image SHAs, we can just use the tags
 .PHONY: publish-combined-manifest
 publish-combined-manifest: # publish the main combined manifest that includes amd64 and arm64 images
 publish-combined-manifest: $(VAR_VERSION_INFO)
-	@echo "pulling $(DOCKER_RELEASE_URL)-amd64 and $(DOCKER_RELEASE_URL)-arm64"
-	docker pull "$(DOCKER_RELEASE_URL)-amd64"
-	docker pull "$(DOCKER_RELEASE_URL)-arm64"
-	docker manifest rm "$(DOCKER_RELEASE_URL)" >& /dev/null || true
-	docker manifest create "$(DOCKER_RELEASE_URL)" --amend "$(DOCKER_RELEASE_URL)-amd64" --amend "$(DOCKER_RELEASE_URL)-arm64"
-	docker manifest push "$(DOCKER_RELEASE_URL)"
-	echo "pushed $(DOCKER_RELEASE_URL)"
-	echo "Pushed $(DOCKER_RELEASE_URL)" >> "$(GITHUB_STEP_SUMMARY)"
-	for tag in pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMAJOR)-ts$(VAR_TSVERSION); do
+	@echo "Creating manifest $(DOCKER_RELEASE_URL) that includes $(DOCKER_RELEASE_URL)-amd64 and $(DOCKER_RELEASE_URL)-arm64"
+	amddigest_image="$$(./fetch_tag_digest $(DOCKER_RELEASE_URL)-amd64)"
+	armdigest_image="$$(./fetch_tag_digest $(DOCKER_RELEASE_URL)-arm64)"
+	echo "AMD: $$amddigest_image"
+	echo "ARM: $$armdigest_image"
+	for tag in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMAJOR)-ts$(VAR_TSVERSION); do
 		url="$(DOCKER_PUBLISH_URL):$$tag$(DOCKER_TAG_POSTFIX)"
-		echo "pushing $$url"
 		docker manifest rm "$$url" >&/dev/null || true
-		docker manifest create "$$url" --amend "$(DOCKER_RELEASE_URL)-amd64" "$(DOCKER_RELEASE_URL)-arm64"
+		docker manifest create "$$url" --amend "$$amddigest_image" --amend "$$armdigest_image"
 		docker manifest push "$$url"
 		echo "pushed $$url"
-		echo "Pushed $$url" >> "$(GITHUB_STEP_SUMMARY)"
+		echo "Pushed $$url (amd:$$amddigest_image arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
 	done
 
 .PHONY: publish-manifests
@@ -252,6 +257,7 @@ check: # check images to see if they have all the requested content
 		tar -cf - -C ./cicd . | docker exec -u root -i "$$check_name" tar -C /cicd -x
 		tar -cf - -C ./build_scripts . | docker exec -u root -i "$$check_name" tar -C /cicd/scripts -x
 		docker exec -e GITHUB_STEP_SUMMARY="/tmp/step_summary-$$key" -e CI="$(CI)" "$$check_name" /cicd/install_checks -v || { docker logs -n100 "$$check_name"; exit 1; }
+		docker exec -i "$$check_name" cat "/tmp/step_summary-$$key" >> "$(GITHUB_STEP_SUMMARY)" 2>&1
 		docker rm --force "$$check_name" >&/dev/null || true
 	done
 
@@ -265,7 +271,7 @@ list-images: # list local images
 
 .PHONY: build-tag
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
-build-tag: build
+build-tag: release
 
 HELP_TARGET_DEPTH ?= \#
 help: # Show how to get started & what targets are available
