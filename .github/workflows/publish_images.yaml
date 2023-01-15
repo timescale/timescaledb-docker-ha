@@ -26,7 +26,8 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ "amd64", "arm64" ]
-        pg_major: [ "14", "15" ]
+        #pg_major: [ "14", "15" ]
+        pg_major: [ "15" ]
         all_versions: [ "false", "true" ]
         oss_only: [ "false", "true" ]
 
@@ -91,7 +92,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pg_major: [ "14", "15" ]
+        #pg_major: [ "14", "15" ]
+        pg_major: [ "15" ]
         docker_tag_postfix: ["-multi", "-multi-all", "-multi-oss", "-multi-all-oss" ]
 
     steps:
@@ -122,7 +124,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pg_major: [ "14", "15" ]
+        #pg_major: [ "14", "15" ]
+        pg_major: [ "15" ]
         docker_tag_postfix: ["-multi", "-multi-all", "-multi-oss", "-multi-all-oss" ]
 
     steps:
