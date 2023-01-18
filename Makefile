@@ -22,10 +22,12 @@ TIMESCALEDB_TOOLKIT_EXTENSIONS?=1.6.0 1.7.0 1.8.0 1.10.1 1.11.0 1.12.0 1.12.1 1.
 # This is used to build the docker --platform, so pick amd64 or arm64
 PLATFORM?=amd64
 
-DOCKER_TAG_POSTFIX?=-multi
+DOCKER_TAG_POSTFIX?=
 ALL_VERSIONS?=false
 OSS_ONLY?=false
 
+# If you're using ephemeral runners, then we want to use the cache, otherwise we don't want caching so that
+# we always get updated upstream packages
 USE_DOCKER_CACHE?=true
 ifeq ($(strip $(USE_DOCKER_CACHE)),true)
   DOCKER_CACHE :=
@@ -203,33 +205,29 @@ build-oss: release
 
 .PHONY: publish-combined-builder-manifest
 publish-combined-builder-manifest: # publish a combined builder image manifest
-	@echo "Creating manifest $(DOCKER_BUILDER_URL) that includes $(DOCKER_BUILDER_URL)-amd64 and $(DOCKER_BUILDER_URL)-arm64"
+	@echo "Creating manifest $(DOCKER_BUILDER_URL) that includes $(DOCKER_BUILDER_URL)-amd64"
 	amddigest_image="$$(./fetch_tag_digest $(DOCKER_BUILDER_URL)-amd64)"
-	armdigest_image="$$(./fetch_tag_digest $(DOCKER_BUILDER_URL)-arm64)"
 	echo "AMD: $$amddigest_image"
-	echo "ARM: $$armdigest_image"
 	docker manifest rm "$(DOCKER_BUILDER_URL)" >& /dev/null || true
-	docker manifest create "$(DOCKER_BUILDER_URL)" --amend "$$amddigest_image" --amend "$$armdigest_image"
+	docker manifest create "$(DOCKER_BUILDER_URL)" --amend "$$amddigest_image"
 	docker manifest push "$(DOCKER_BUILDER_URL)"
 	echo "pushed $(DOCKER_BUILDER_URL)"
-	echo "Pushed $(DOCKER_BUILDER_URL) (amd:$$amddigest_image arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
+	echo "Pushed $(DOCKER_BUILDER_URL) (amd:$$amddigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
 
 # since we're using immutable tags, we don't need to pull/find the child image SHAs, we can just use the tags
 .PHONY: publish-combined-manifest
 publish-combined-manifest: # publish the main combined manifest that includes amd64 and arm64 images
 publish-combined-manifest: $(VAR_VERSION_INFO)
-	@echo "Creating manifest $(DOCKER_RELEASE_URL) that includes $(DOCKER_RELEASE_URL)-amd64 and $(DOCKER_RELEASE_URL)-arm64"
+	@echo "Creating manifest $(DOCKER_RELEASE_URL) that includes $(DOCKER_RELEASE_URL)-amd64"
 	amddigest_image="$$(./fetch_tag_digest $(DOCKER_RELEASE_URL)-amd64)"
-	armdigest_image="$$(./fetch_tag_digest $(DOCKER_RELEASE_URL)-arm64)"
 	echo "AMD: $$amddigest_image"
-	echo "ARM: $$armdigest_image"
 	for tag in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMAJOR)-ts$(VAR_TSVERSION); do
 		url="$(DOCKER_PUBLISH_URL):$$tag$(DOCKER_TAG_POSTFIX)"
 		docker manifest rm "$$url" >&/dev/null || true
-		docker manifest create "$$url" --amend "$$amddigest_image" --amend "$$armdigest_image"
+		docker manifest create "$$url" --amend "$$amddigest_image"
 		docker manifest push "$$url"
 		echo "pushed $$url"
-		echo "Pushed $$url (amd:$$amddigest_image arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
+		echo "Pushed $$url (amd:$$amddigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
 	done
 
 .PHONY: publish-manifests
@@ -239,7 +237,7 @@ publish-manifests: publish-combined-builder-manifest publish-combined-manifest
 CHECK_NAME=ha-check-pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
 .PHONY: check
 check: # check images to see if they have all the requested content
-	@for arch in amd64 arm64; do \
+	@for arch in amd64; do \
 		key="$$(mktemp -u XXXXXX)"
 		check_name="$(CHECK_NAME)-$$arch-$$key"
 		echo "Checking $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY); \
