@@ -132,7 +132,7 @@ FROM compiler as builder
 RUN for pg in ${PG_VERSIONS}; do \
         apt-get install -y postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} \
             postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
-            postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger || exit 1; \
+            postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger postgresql-${pg}-pgq3 || exit 1; \
     done
 
 # We put Postgis in first, so these layers can be reused
@@ -314,10 +314,10 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token \
     if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_OSM_EXTENSION}" ]; then \
         set -e \
         && mkdir /build/osm_extension \
-        && cd /build/osm_extension \ 
+        && cd /build/osm_extension \
         && for pg in ${PG_VERSIONS}; do \
             if [ ${pg} -ge "14" ]; then \
-                # install all OSM versions for each PG version. 
+                # install all OSM versions for each PG version.
                 for osm_version in ${TIMESCALE_OSM_EXTENSION}; do \
                     /build/scripts/install_timescaledb-osm.sh ${osm_version} ${pg} ${OSM_PGX_VERSION} $(cat "${REPO_SECRET_FILE}") || exit 1 ; \
                 done; \
