@@ -33,10 +33,14 @@ ARG PG_MAJOR=13
 ## installed using external repositories.
 FROM ubuntu:22.04 AS compiler
 
+ENV PG_UID=1234
+ENV PG_GID=1234
+
 ENV DEBIAN_FRONTEND=noninteractive
 # We need full control over the running user, including the UID, therefore we
 # create the postgres user as the first thing on our list
-RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" postgres
+RUN adduser --home /home/postgres --uid $PG_UID --disabled-password --gecos "" postgres
+RUN groupmod -g $PG_GID postgres
 
 RUN echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/01norecommend
 RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
