@@ -159,7 +159,7 @@ RUN if [ "${TIMESCALE_STATIC_PRIMARY}" != "" ]; then \
     mkdir /tmp/patroni && cd /tmp/patroni && \
     git init && git remote add -f origin https://github.com/timescale/patroni.git && \
     git config core.sparseCheckout true && echo 'patroni' > .git/info/sparse-checkout && \
-    git pull origin feature-static-primaries; \
+    git pull origin dcs-failsafe-debug; \
     fi
 
 # Update Patroni package dir with new code.
