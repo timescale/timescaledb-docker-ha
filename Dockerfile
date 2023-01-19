@@ -154,6 +154,7 @@ RUN echo 'deb http://cz.archive.ubuntu.com/ubuntu kinetic main universe' >> /etc
     apt-get update
 # Patch Patroni code with changes from https://github.com/zalando/patroni/pull/2318.
 # NOTE: This is a temporary solution until changes land upstream.
+
 ARG TIMESCALE_STATIC_PRIMARY
 RUN if [ "${TIMESCALE_STATIC_PRIMARY}" != "" ]; then \
     mkdir /tmp/patroni && cd /tmp/patroni && \
