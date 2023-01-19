@@ -33,8 +33,11 @@ ARG PG_MAJOR=13
 ## installed using external repositories.
 FROM ubuntu:22.04 AS compiler
 
-ENV PG_UID=1234
-ENV PG_GID=1234
+ARG PG_UID_ARG=1000
+ARG PG_GID_ARG=1000
+
+ENV PG_UID=$PG_UID_ARG
+ENV PG_GID=$PG_GID_ARG
 
 ENV DEBIAN_FRONTEND=noninteractive
 # We need full control over the running user, including the UID, therefore we
