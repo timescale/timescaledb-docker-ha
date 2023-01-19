@@ -6,6 +6,9 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - ".github/workflows/publish*.yaml"
+      - "*.md"
 
   schedule:
     - cron: '0 2 * * 0'

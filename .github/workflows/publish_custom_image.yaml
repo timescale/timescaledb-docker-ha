@@ -22,11 +22,16 @@ on:
         required: false
         type: string
         description: docker build arguments to add to the image, empty for normal builds
+      all_versions:
+        required: false
+        type: string
+        default: false
+        description: include all PG versions, or just PG_MAJOR (true or false)
       oss_only:
         required: false
         type: string
         default: false
-        desription: enable OSS_ONLY (true or false)
+        description: enable OSS_ONLY (true or false)
       timescaledb_versions:
         required: false
         type: string
@@ -40,15 +45,10 @@ on:
         type: string
         description: which timescaledb_toolkit versions to include, the default is from the Makefile
 
-concurrency:
-  group: publish-custom-image-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   publish-image:
     name: Publish image pg${{ inputs.pg_major }}${{ inputs.tag_postfix }}
-
-    runs-on: [ "dev-eu-west-1", "x64", "non-prod" ]
+    runs-on: ubuntu-latest
 
     env:
       DOCKER_REPOSITORY: timescaledev/timescaledb-ha
@@ -64,34 +64,8 @@ jobs:
           username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
           password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
 
-      # QEMU for `make check`
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set up SSH
-        uses: MrSquaare/ssh-setup-action@v2
-        with:
-          host: "${{ secrets.ARM_RUNNER_HOST }}"
-          private-key: "${{ secrets.BK_PRIVATE_KEY }}"
-          private-key-name: action_runner
-
-      - name: Setup | Docker context for buildx
-        run: |
-          docker context rm ha-builder || true
-          docker context create ha-builder
-
-      - name: Setup Buildx
+      - name: Setup | Buildx
         uses: docker/setup-buildx-action@v2
-        with:
-          platforms: linux/amd64,linux/arm64
-          endpoint: ha-builder
-          driver: docker-container
-          append: |
-            - endpoint: "ssh://admin@${{ secrets.ARM_RUNNER_HOST }}"
-              platforms: linux/arm64
-
-      - name: Fetch runtime environment
-        uses: crazy-max/ghaction-github-runtime@v2
 
       - name: Build and publish image pg${{ inputs.pg_major }}${{ inputs.tag_postfix }}
         env:
@@ -102,6 +76,7 @@ jobs:
           PG_MAJOR: ${{ inputs.pg_major }}
           PG_VERSIONS: ${{ inputs.pg_versions }}
           OSS_ONLY: ${{ inputs.oss_only }}
+          ALL_VERSIONS: ${{ inputs.all_versions }}
         run: make publish-builder publish
 
       - name: Check image pg${{ inputs.pg_major }}${{ inputs.tag_postfix }}
