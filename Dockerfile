@@ -308,7 +308,7 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
     fi
 
 ARG TIMESCALE_OSM_EXTENSION=
-ARG OSM_PGX_VERSION=0.4.5
+ARG OSM_PGX_VERSION=0.6.1
 # build and install the timescale_osm extension
 RUN --mount=type=secret,uid=1000,id=private_repo_token \
     if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_OSM_EXTENSION}" ]; then \
