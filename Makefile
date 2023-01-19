@@ -100,9 +100,9 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 DOCKER_EXEC_COMMAND=docker exec -i $(DOCKER_TAG_PREPARE) timeout 90
 
 # We provide the fast target as the first (=default) target, as it will skip installing
-# many optional extensions, and it will only install a single timescaledb (master) version.
+# many optional extensions, and it will only install a single timescaledb (main) version.
 # This is basically useful for developers of this repository, to allow fast feedback cycles.
-fast: DOCKER_EXTRA_BUILDARGS= --build-arg GITHUB_TAG=master
+fast: DOCKER_EXTRA_BUILDARGS= --build-arg GITHUB_TAG=main
 fast: PG_AUTH_MON=
 fast: PG_LOGERRORS=
 fast: PG_VERSIONS=14
