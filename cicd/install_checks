@@ -8,7 +8,7 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 [ "$1" = -v ] && { VERBOSE=1; shift; }
 
 for pg in $(available_pg_versions); do
-    cat /dev/null > "/tmp/extversions.$ARCH.pg$pg"
+    cat /dev/null > "$EXTVERSIONS"
 done
 
 # make sure the image we're checking is at most 8 hours old, since we're doing a pull from the repository
