@@ -79,7 +79,7 @@ RUN set -eux; \
     apt-get upgrade -y; \
     apt-get install -y \
         less jq strace procps awscli vim-tiny gdb gdbserver dumb-init daemontools \
-        postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop
+        postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop libnss-wrapper gosu
 
 # forbid creation of a main cluster when package is installed
 RUN sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
@@ -155,7 +155,7 @@ RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-ku
 
 RUN apt-get install -y timescaledb-tools
 
-## Entrypoints as they are from the Timescale image and its default alpine upstream repositories.
+## Entrypoints as they are from the Timescale image and its default upstream repositories.
 ## This ensures the default interface (entrypoint) equals the one of the github.com/timescale/timescaledb-docker one,
 ## which allows this Docker Image to be a drop-in replacement for those Docker Images.
 ARG GITHUB_TIMESCALEDB_DOCKER_REF=main
@@ -166,15 +166,14 @@ RUN set -ex; \
     git clone https://github.com/timescale/timescaledb-docker; \
     cd timescaledb-docker; \
     git checkout ${GITHUB_TIMESCALEDB_DOCKER_REF}; \
-    cp -a docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/
+    cp -a docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/; \
+    ln -s /usr/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
 
 # Add custom entrypoint to install timescaledb_toolkit
 COPY scripts/010_install_timescaledb_toolkit.sh /docker-entrypoint-initdb.d/
 
-RUN set -ex; \
-    curl -s -o /usr/local/bin/docker-entrypoint.sh https://raw.githubusercontent.com/docker-library/postgres/${GITHUB_DOCKERLIB_POSTGRES_REF}/14/alpine/docker-entrypoint.sh; \
-    chmod +x /usr/local/bin/docker-entrypoint.sh; \
-    ln -s /usr/bin/timescaledb-tune /usr/local/bin/timescaledb-tune; \
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh; \
     ln -s /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 
 # The following allows *new* files to be created, so that extensions can be added to a running container.
@@ -359,7 +358,9 @@ RUN for i in $(seq 0 7); do touch "${PGLOG}/postgresql-$i.log" "${PGLOG}/postgre
 RUN set -e; \
     chown -R postgres:postgres "${PGLOG}" "${PGROOT}" "${PGDATA}" /var/run/postgresql/; \
     chown -R postgres:postgres /var/log/pgbackrest/ /var/lib/pgbackrest /var/spool/pgbackrest; \
-    chmod -x /usr/lib/postgresql/*/lib/*.so
+    chmod -x /usr/lib/postgresql/*/lib/*.so; \
+    chmod 1777 /var/run/postgresql; \
+    chmod 755 "${PGROOT}"
 
 # return /etc/apt/sources.list back to a non-AWS version for anybody that wants to use this image elsewhere
 RUN set -eux; \
