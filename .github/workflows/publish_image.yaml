@@ -29,8 +29,8 @@ jobs:
         # This is the 'default' image, along with Patroni changes to support static primaries
         - pg_major: "14"
           pg_versions: "14 13 12"
-          patroni_static_primary: "true"
-          docker_tag_postfix: "-patroni-static-primary"
+          patroni_dcs_failsafe: "true"
+          docker_tag_postfix: "-patroni-dcs-failsafe"
         # This is the PostgreSQL 14 image containing only oss software
         - pg_major: "14"
           pg_versions: "14 13 12"
@@ -83,7 +83,7 @@ jobs:
           DOCKER_ECR_URL: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          TIMESCALE_STATIC_PRIMARY: ${{ matrix.patroni_static_primary }}
+          TIMESCALE_DCS_FAILSAFE: ${{ matrix.patroni_dcs_failsafe }}
         # Note that our ECR registry has immutability guarantees, therefore we do not push
         # the mutable ('latest') tags to the ECR registry
         run: |

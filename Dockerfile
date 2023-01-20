@@ -152,18 +152,19 @@ RUN echo 'deb http://cz.archive.ubuntu.com/ubuntu kinetic main universe' >> /etc
     apt-get install -y patroni=2.1.4-\* && \
     head -n -1 /etc/apt/sources.list > /etc/apt/sources.list.tmp; mv /etc/apt/sources.list.tmp /etc/apt/sources.list; \
     apt-get update
-# Patch Patroni code with changes from https://github.com/zalando/patroni/pull/2318.
+
+# Patch Patroni code with changes from https://github.com/zalando/patroni/pull/2379.
 # NOTE: This is a temporary solution until changes land upstream.
-ARG TIMESCALE_STATIC_PRIMARY
-RUN if [ "${TIMESCALE_STATIC_PRIMARY}" != "" ]; then \
+ARG TIMESCALE_DCS_FAILSAFE
+RUN if [ "${TIMESCALE_DCS_FAILSAFE}" != "" ]; then \
     mkdir /tmp/patroni && cd /tmp/patroni && \
     git init && git remote add -f origin https://github.com/timescale/patroni.git && \
     git config core.sparseCheckout true && echo 'patroni' > .git/info/sparse-checkout && \
-    git pull origin feature-static-primaries; \
+    git pull origin dcs-failsafe-mode; \
     fi
 
 # Update Patroni package dir with new code.
-RUN if [ "${TIMESCALE_STATIC_PRIMARY}" != "" ]; then \
+RUN if [ "${TIMESCALE_DCS_FAILSAFE}" != "" ]; then \
     rm -rf /usr/lib/python3/dist-packages/patroni && \
     mv /tmp/patroni/patroni /usr/lib/python3/dist-packages; \
     fi
