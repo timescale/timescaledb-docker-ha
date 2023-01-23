@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# This file started out as:
+# https://github.com/docker-library/postgres/blob/41bd7bf3f487e6dc0036fd73efaff6ccb6fbbacd/15/bullseye/docker-entrypoint.sh
+
 set -Eeo pipefail
 # TODO swap to -Eeuo pipefail above (after handling all potentially-unset variables)
 
@@ -32,31 +36,72 @@ _is_sourced() {
 		&& [ "${FUNCNAME[1]}" = 'source' ]
 }
 
+permission_wait_loop() {
+    # This wait loop is due to macos's docker implementation, where the filesystem syncing can be too slow for
+    # postgres to see the real ownership of the $PGDATA directory right away. We check for 10s to see if the ownership
+    # changes to what we expect, and if it doesn't, we just continue and let postgres deal with it (or not)
+    local uid gid tries=40; uid="$(id -u)"; gid="$(id -g)"
+    [ "$(stat -c%u:%g "$PGDATA")" = "$uid:$gid" ] && return
+
+    echo -n "Waiting for permissions on $PGDATA ($(stat -c%u:%g "$PGDATA") -> $uid:$gid)"
+    while [[ "$(stat -c%u:%g "$PGDATA")" != "$uid:$gid" && $tries -gt 0 ]]; do
+        echo -n .
+        sleep 0.25
+        ((tries--))
+    done
+    echo
+}
+
+setup_nss_wrapper() {
+    local uid gid; uid="$(id -u)"; gid="$(id -g)"
+    local pg_uid pg_gid; IFS=: read -sr _ _ pg_uid pg_gid _ <<<"$(getent passwd "$POSTGRES_USER")"
+
+    if [[ "$uid" -ne "$pg_uid" || "$gid" -ne "$pg_gid" ]]; then
+        # we're running under docker with `--user`, and it doesn't match the `postgres` user, so we have to update
+        # "initdb" is particular about the current user existing in "/etc/passwd", so we use "nss_wrapper" to fake that if necessary
+        # see https://github.com/docker-library/postgres/pull/253, https://github.com/docker-library/postgres/issues/359, https://cwrap.org/nss_wrapper.html
+        # see if we can find a suitable "libnss_wrapper.so" (https://salsa.debian.org/sssd-team/nss-wrapper/-/commit/b9925a653a54e24d09d9b498a2d913729f7abb15)
+        local wrapper
+        for wrapper in {/usr,}/lib{/*,}/libnss_wrapper.so; do
+            if [ -s "$wrapper" ]; then
+                NSS_WRAPPER_PASSWD="$(mktemp /tmp/passwd.XXXXXX)"
+                NSS_WRAPPER_GROUP="$(mktemp /tmp/group.XXXXXX)"
+                export LD_PRELOAD="$wrapper" NSS_WRAPPER_PASSWD NSS_WRAPPER_GROUP
+                printf 'postgres:x:%s:%s:PostgreSQL:%s:/bin/false\n' "$uid" "$gid" "$PGDATA" > "$NSS_WRAPPER_PASSWD"
+                printf 'postgres:x:%s:\n' "$gid" > "$NSS_WRAPPER_GROUP"
+                echo "using nss-wrapper"
+                break
+            fi
+        done
+    fi
+}
+
 # used to create initial postgres directories and if run as root, ensure ownership to the "postgres" user
 docker_create_db_directories() {
-	local user; user="$(id -u)"
+    local uid; uid="$(id -u)"
 
-	mkdir -p "$PGDATA"
+	[ ! -d "$PGDATA" ] && mkdir -p "$PGDATA"
+
 	# ignore failure since there are cases where we can't chmod (and PostgreSQL might fail later anyhow - it's picky about permissions of this directory)
-	chmod 700 "$PGDATA" || :
+	chmod 700 "$PGDATA" 2>/dev/null || :
 
 	# ignore failure since it will be fine when using the image provided directory; see also https://github.com/docker-library/postgres/pull/289
-	mkdir -p /var/run/postgresql || :
-	chmod 775 /var/run/postgresql || :
+	mkdir -p /var/run/postgresql 2>/dev/null || :
+	chmod 1777 /var/run/postgresql 2>/dev/null || :
 
 	# Create the transaction log directory before initdb is run so the directory is owned by the correct user
 	if [ -n "${POSTGRES_INITDB_WALDIR:-}" ]; then
 		mkdir -p "$POSTGRES_INITDB_WALDIR"
-		if [ "$user" = '0' ]; then
+		if [ "$uid" -eq 0 ]; then
 			find "$POSTGRES_INITDB_WALDIR" \! -user postgres -exec chown postgres '{}' +
 		fi
 		chmod 700 "$POSTGRES_INITDB_WALDIR"
 	fi
 
 	# allow the container to be started with `--user`
-	if [ "$user" = '0' ]; then
-		find "$PGDATA" \! -user postgres -exec chown postgres '{}' +
-		find /var/run/postgresql \! -user postgres -exec chown postgres '{}' +
+	if [ "$uid" -eq 0 ]; then
+		find "$PGDATA" \! -user postgres -exec chown postgres: '{}' +
+		find /var/run/postgresql \! -user postgres -exec chown postgres: '{}' +
 	fi
 }
 
@@ -65,37 +110,12 @@ docker_create_db_directories() {
 # `initdb` automatically creates the "postgres", "template0", and "template1" dbnames
 # this is also where the database user is created, specified by `POSTGRES_USER` env
 docker_init_database_dir() {
-	# "initdb" is particular about the current user existing in "/etc/passwd", so we use "nss_wrapper" to fake that if necessary
-	# see https://github.com/docker-library/postgres/pull/253, https://github.com/docker-library/postgres/issues/359, https://cwrap.org/nss_wrapper.html
-	local uid; uid="$(id -u)"
-	if ! getent passwd "$uid" &> /dev/null; then
-		# see if we can find a suitable "libnss_wrapper.so" (https://salsa.debian.org/sssd-team/nss-wrapper/-/commit/b9925a653a54e24d09d9b498a2d913729f7abb15)
-		local wrapper
-		for wrapper in {/usr,}/lib{/*,}/libnss_wrapper.so; do
-			if [ -s "$wrapper" ]; then
-				NSS_WRAPPER_PASSWD="$(mktemp)"
-				NSS_WRAPPER_GROUP="$(mktemp)"
-				export LD_PRELOAD="$wrapper" NSS_WRAPPER_PASSWD NSS_WRAPPER_GROUP
-				local gid; gid="$(id -g)"
-				printf 'postgres:x:%s:%s:PostgreSQL:%s:/bin/false\n' "$uid" "$gid" "$PGDATA" > "$NSS_WRAPPER_PASSWD"
-				printf 'postgres:x:%s:\n' "$gid" > "$NSS_WRAPPER_GROUP"
-				break
-			fi
-		done
-	fi
-
 	if [ -n "${POSTGRES_INITDB_WALDIR:-}" ]; then
 		set -- --waldir "$POSTGRES_INITDB_WALDIR" "$@"
 	fi
 
 	# --pwfile refuses to handle a properly-empty file (hence the "\n"): https://github.com/docker-library/postgres/issues/1025
 	eval 'initdb --username="$POSTGRES_USER" --pwfile=<(printf "%s\n" "$POSTGRES_PASSWORD") '"$POSTGRES_INITDB_ARGS"' "$@"'
-
-	# unset/cleanup "nss_wrapper" bits
-	if [[ "${LD_PRELOAD:-}" == */libnss_wrapper.so ]]; then
-		rm -f "$NSS_WRAPPER_PASSWD" "$NSS_WRAPPER_GROUP"
-		unset LD_PRELOAD NSS_WRAPPER_PASSWD NSS_WRAPPER_GROUP
-	fi
 }
 
 # print large warning if POSTGRES_PASSWORD is long
@@ -294,6 +314,8 @@ _pg_want_help() {
 }
 
 _main() {
+    local uid; uid="$(id -u)"
+
 	# if first arg looks like a flag, assume we want to run postgres server
 	if [ "${1:0:1}" = '-' ]; then
 		set -- postgres "$@"
@@ -301,12 +323,15 @@ _main() {
 
 	if [ "$1" = 'postgres' ] && ! _pg_want_help "$@"; then
 		docker_setup_env
+
 		# setup data directories and permissions (when run as root)
 		docker_create_db_directories
-		if [ "$(id -u)" = '0' ]; then
+		if [ "$uid" -eq 0 ]; then
 			# then restart script as postgres user
 			exec gosu postgres "$BASH_SOURCE" "$@"
 		fi
+
+        [ "$uid" -ne 0 ] && setup_nss_wrapper
 
 		# only run initialization on an empty data directory
 		if [ -z "$DATABASE_ALREADY_EXISTS" ]; then
@@ -341,6 +366,10 @@ _main() {
 
 			EOM
 		fi
+
+		# Note- this permission wait loop is not a duplicate- due to the timing issue with docker, only one might not
+		# be good enough
+		permission_wait_loop
 	fi
 
 	exec "$@"
