@@ -83,8 +83,8 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg TIMESCALE_PROMSCALE_EXTENSIONS="$(TIMESCALE_PROMSCALE_EXTENSIONS)" \
 					 --build-arg TIMESCALE_TSDB_ADMIN="$(TIMESCALE_TSDB_ADMIN)" \
 					 --build-arg TIMESCALE_TS_STAT_STATEMENTS="$(TIMESCALE_TS_STAT_STATEMENTS)" \
+					 --build-arg TIMESCALE_DCS_FAILSAFE="$(TIMESCALE_DCS_FAILSAFE)" \
 					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSIONS="$(TIMESCALEDB_TOOLKIT_EXTENSIONS)" \
-					 --build-arg TIMESCALE_STATIC_PRIMARY="$(TIMESCALE_STATIC_PRIMARY)" \
 					 --cache-from "$(DOCKER_CACHE_FROM)" \
 					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds --utc)" \
