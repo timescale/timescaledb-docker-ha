@@ -96,7 +96,7 @@ RUN set -eux; \
 # These packages allow for a better integration for some containers, for example
 # daemontools provides envdir, which is very convenient for passing backup
 # environment variables around.
-RUN apt-get update && apt-get install -y dumb-init daemontools
+RUN apt-get update && apt-get install -y dumb-init daemontools libnss-wrapper gosu
 
 RUN apt-get update \
     && apt-get install -y postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop \
@@ -195,7 +195,7 @@ RUN cd /build && git clone https://github.com/timescale/timescaledb-docker && cd
 RUN cp -a /build/timescaledb-docker/docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/
 # Add custom entrypoint to install timescaledb_toolkit
 COPY scripts/010_install_timescaledb_toolkit.sh /docker-entrypoint-initdb.d/
-RUN curl -s -o /usr/local/bin/docker-entrypoint.sh https://raw.githubusercontent.com/docker-library/postgres/${GITHUB_DOCKERLIB_POSTGRES_REF}/13/alpine/docker-entrypoint.sh
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # Satisfy assumptions of the entrypoint scripts
 RUN ln -s /usr/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
@@ -499,7 +499,7 @@ ENV PGROOT=/home/postgres \
 
 ## The Zalando postgres-operator has strong opinions about the HOME directory of postgres,
 ## whereas we do not. Make the operator happy then
-RUN usermod postgres --home ${PGROOT} --move-home
+RUN usermod postgres --home "${PGROOT}" --move-home
 
 ## The /etc/supervisor/conf.d directory is a very Spilo (Zalando postgres-operator) oriented directory.
 ## However, to make things work the user postgres currently needs to have write access to this directory
@@ -516,6 +516,8 @@ RUN for i in $(seq 0 7); do touch "${PGLOG}/postgresql-$i.log" "${PGLOG}/postgre
 ## Fix permissions
 RUN chown postgres:postgres "${PGLOG}" "${PGROOT}" "${PGDATA}" /var/run/postgresql/ -R
 RUN chown postgres:postgres /var/log/pgbackrest/ /var/lib/pgbackrest /var/spool/pgbackrest -R
+RUN chmod 1777 /var/run/postgresql
+RUN chmod 755 "${PGROOT}"
 
 WORKDIR /home/postgres
 EXPOSE 5432 8008 8081
