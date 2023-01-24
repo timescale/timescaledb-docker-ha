@@ -9,6 +9,12 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.5.22] - 2023-01-24
+
+* Include and default to [TimescaleDB 2.9.2](https://github.com/timescale/timescaledb/releases/tag/2.9.2)
+
+## [v1.5.21] - 2023-01-06
+
 * Upgrade Promscale extension to 0.8.0
 
 ## [v1.5.20] - 2023-01-02
