@@ -308,19 +308,19 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
         done; \
     fi
 
-ARG TIMESCALE_OSM_EXTENSION=
+ARG TIMESCALE_OSM_EXTENSION
 ARG OSM_PGX_VERSION=0.6.1
 # build and install the timescale_osm extension
 RUN --mount=type=secret,uid=1000,id=private_repo_token \
-    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_OSM_EXTENSION}" ]; then \
-        set -e \
-        && mkdir /build/osm_extension \
-        && cd /build/osm_extension \ 
-        && for pg in ${PG_VERSIONS}; do \
-            if [ ${pg} -ge "14" ]; then \
+    set -ex; \
+    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a -n "${TIMESCALE_OSM_EXTENSION}" ]; then \
+        mkdir /build/osm_extension; \
+        cd /build/osm_extension; \
+            for pg in ${PG_VERSIONS}; do \
+            if [ "${pg}" -ge "14" ]; then \
                 # install all OSM versions for each PG version. 
                 for osm_version in ${TIMESCALE_OSM_EXTENSION}; do \
-                    /build/scripts/install_timescaledb-osm.sh ${osm_version} ${pg} ${OSM_PGX_VERSION} $(cat "${REPO_SECRET_FILE}") || exit 1 ; \
+                    /build/scripts/install_timescaledb-osm.sh "${osm_version}" "${pg}" "${OSM_PGX_VERSION}" "$(cat "${REPO_SECRET_FILE}")" || exit 1 ; \
                 done; \
             fi; \
         done; \
