@@ -153,6 +153,21 @@ RUN set -eux; \
 # to ensure we have the preferred libpq installations etc.
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj patroni
 
+# Patch Patroni code with changes from https://github.com/zalando/patroni/pull/2379.
+# NOTE: This is a temporary solution until changes land upstream.
+ARG TIMESCALE_DCS_FAILSAFE
+RUN if [ -n "${TIMESCALE_DCS_FAILSAFE}" ]; then \
+        mkdir /tmp/patroni; \
+        cd /tmp/patroni; \
+        git init; \
+        git remote add -f origin https://github.com/timescale/patroni.git; \
+        git config core.sparseCheckout true; \
+        echo 'patroni' > .git/info/sparse-checkout; \
+        git pull origin dcs-failsafe-mode; \
+        rm -rf /usr/lib/python3/dist-packages/patroni; \
+        mv /tmp/patroni/patroni /usr/lib/python3/dist-packages; \
+    fi
+
 RUN apt-get install -y timescaledb-tools
 
 ## Entrypoints as they are from the Timescale image and its default upstream repositories.
@@ -373,6 +388,7 @@ ARG BUILDER_URL
 ARG RELEASE_URL
 RUN echo "TIMESCALEDB_VERSIONS=\"${TIMESCALEDB_VERSIONS}\"" > /.image_config; \
     echo "OSS_ONLY=\"$OSS_ONLY\"" >> /.image_config; \
+    echo "TIMESCALE_DCS_FAILSAFE=\"${TIMESCALE_DCS_FAILSAFE}\"" >> /.image_config; \
     echo "PROMSCALE_VERSIONS=\"${TIMESCALE_PROMSCALE_EXTENSIONS}\"" >> /.image_config; \
     echo "TOOLKIT_VERSIONS=\"${TIMESCALEDB_TOOLKIT_EXTENSIONS}\"" >> /.image_config; \
     echo "PG_LOGERRORS=\"${PG_LOGERRORS}\"" >> /.image_config; \
