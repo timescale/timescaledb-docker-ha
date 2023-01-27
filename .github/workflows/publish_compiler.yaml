@@ -9,7 +9,7 @@ on:
 env:
   DOCKER_HUB_URL: docker.io/timescale/timescaledb-ha
   INSTALL_METHOD: docker-ha
-  TIMESCALE_CLOUDUTILS: "v1.1.9"
+  TIMESCALE_CLOUDUTILS: "v1.1.11"
   TIMESCALE_HOT_FORGE: "v0.1.39"
   TIMESCALE_PATRONI_K8S_SYNC: "v0.1.2"
   TIMESCALE_OOM_GUARD:  "v1.4.2"
