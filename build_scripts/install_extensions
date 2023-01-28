@@ -13,8 +13,6 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 # - PROMSCALE_VERSIONS
 # - TOOLKIT_VERSIONS
 
-ORIGINAL_PATH="$PATH"
-
 [ "$1" = -n ] && { DRYRUN=true; shift; }
 
 declare -A pgx_versions=()

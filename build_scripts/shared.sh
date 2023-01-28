@@ -2,6 +2,8 @@
 
 set -e -o pipefail
 
+ORIGINAL_PATH="$PATH"
+
 log() {
     echo "$ARCH: $*" >&2
 }
@@ -27,7 +29,7 @@ git_clone() {
 git_checkout() {
     local repo=/build/"$1" tag="$2" err
 
-    git -C "$repo" checkout "$tag"
+    git -C "$repo" checkout -f "$tag"
     err=$?
     if [ $err -ne 0 ]; then
         error "error checking out $tag for $repo ($err)"
@@ -156,22 +158,23 @@ find_deb() {
 install_deb() {
     local pkg="$1" version="$2" err
     local tmpdir="/tmp/deb-$pkg.$$"
+    [ -n "$version" ] && version="=$version"
 
     mkdir "$tmpdir"
     (
         cd "$tmpdir"
-        apt-get download "$pkg"="$version"
+        apt-get download "$pkg""$version"
         dpkg --install --log="$tmpdir"/dpkg.log --admindir="$tmpdir" --force-depends --force-not-root --force-overwrite "$pkg"_*.deb
         err=$?
         if [ $err -ne 0 ]; then
-            error "failed installing debian package $pkg-$version ($err)"
+            error "failed installing debian package $pkg$version ($err)"
             exit $err
         fi
         exit 0
     )
     err=$?
     rm -rf "$tmpdir"
-    if [ $err -eq 0 ]; then log "installed debian package $pkg-$version"; fi
+    if [ $err -eq 0 ]; then log "installed debian package $pkg$version"; fi
     return $err
 }
 

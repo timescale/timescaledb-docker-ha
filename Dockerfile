@@ -279,15 +279,7 @@ ARG RUST_RELEASE=release
 # TimescaleDB:
 ARG TIMESCALEDB_VERSIONS
 ARG GITHUB_REPO=timescale/timescaledb
-RUN set -eux; \
-    git clone "https://github.com/${GITHUB_REPO}" /build/timescaledb; \
-    cd /build/timescaledb; \
-    for pg in ${PG_VERSIONS}; do \
-        OSS_ONLY="${OSS_ONLY}" /build/scripts/install_timescaledb "${pg}" ${TIMESCALEDB_VERSIONS}; \
-    done; \
-    if [ "${OSS_ONLY}" = true ]; then \
-        rm -f /usr/lib/postgresql/*/lib/timescaledb-tsl-*; \
-    fi
+RUN OSS_ONLY="${OSS_ONLY}" /build/scripts/install_timescaledb ${TIMESCALEDB_VERSIONS}
 
 ARG TIMESCALE_PROMSCALE_EXTENSIONS
 ARG TIMESCALEDB_TOOLKIT_EXTENSIONS
@@ -314,15 +306,7 @@ RUN set -eu; \
         done; \
     fi
 
-RUN set -eu; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/* \
-            /var/cache/debconf/* \
-            /usr/share/doc \
-            /usr/share/man \
-            /usr/share/locale/?? \
-            /usr/share/locale/??_??; \
-    find /var/log -type f -exec truncate --size 0 {} \;
+RUN apt-get clean
 
 ARG PG_MAJOR
 ENTRYPOINT ["/docker-entrypoint.sh"]

@@ -13,7 +13,7 @@ declare -A pgx_toolkit_versions=(
 declare -A pgx_promscale_versions=(
     ["0.3.1"]="0.5.*"
     ["0.4.5"]="0.[67].0"
-    ["0.6.1"]="master|0.7.([1-9]).*|0.8.*"
+    ["0.6.1"]="master|0.7.([1-9]).*|0.8.0"
 )
 
 # Check to make sure these extensions are available in all pg versions

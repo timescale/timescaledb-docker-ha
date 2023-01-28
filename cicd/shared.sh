@@ -91,7 +91,7 @@ check_timescaledb() {
         if [[ -s "$lib/timescaledb-$ver.so" ]]; then
             if [ "$OSS_ONLY" = true ]; then
                 if [ -s "$lib/timescaledb-tsl-$ver.so" ]; then
-                    error "found timescaledb-tsl-$ver for pg$pg"
+                    error "found non-OSS timescaledb-tsl-$ver for pg$pg"
                 else
                     #log "found timescaledb-$ver for pg$pg"
                     found=true
