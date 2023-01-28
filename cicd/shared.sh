@@ -79,6 +79,10 @@ check_timescaledb() {
     # record an empty version so we'll get an empty table row if we don't have any versions
     record_ext_version timescaledb "$pg" ""
 
+    if [ ! -s "$lib/timescaledb.so" ]; then
+        error "no timescaledb loader found for pg$pg"
+    fi
+
     for ver in $TIMESCALEDB_VERSIONS; do
         if [[ "$ver" = master || "$ver" = main ]]; then
             #log "skipping looking for timescaledb-$ver"
