@@ -10,7 +10,7 @@ on:
       - "*.md"
 
   schedule:
-    - cron: '0 2 * * 0'
+    - cron: '0 7 * * 2'
 
 concurrency:
   group: publish-ha-images-${{ github.ref }}
