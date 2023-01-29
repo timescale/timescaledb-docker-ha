@@ -255,14 +255,15 @@ publish-combined-manifest: $(VAR_VERSION_INFO)
 publish-manifests: # publish the combined manifests for the builder and the release images
 publish-manifests: publish-combined-builder-manifest publish-combined-manifest
 
-CHECK_NAME=ha-check-pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
+CHECK_NAME=ha-check
 .PHONY: check
 check: # check images to see if they have all the requested content
-	@for arch in amd64; do \
+	@set -x
+	for arch in amd64; do \
 		key="$$(mktemp -u XXXXXX)"
-		check_name="$(CHECK_NAME)-$$arch-$$key"
+		check_name="$(CHECK_NAME)-$$key"
 		echo "### Checking $$arch $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY); \
-		docker rm --force "$(CHECK_NAME)" >&/dev/null || true
+		docker rm --force "$$check_name" >&/dev/null || true
 		docker run \
 			--platform linux/"$$arch" \
 			--pull always \
@@ -272,36 +273,39 @@ check: # check images to see if they have all the requested content
 			--user=postgres \
 			"$(DOCKER_RELEASE_URL)" sleep 300
 		docker exec -u root "$$check_name" mkdir -p /cicd/scripts
-		tar -cf - -C ./cicd . | docker exec -u root -i "$$check_name" tar -C /cicd -x
-		tar -cf - -C ./build_scripts . | docker exec -u root -i "$$check_name" tar -C /cicd/scripts -x
+		docker exec -u root "$$check_name" chown -R postgres: /cicd
+		tar -cf - -C ./cicd . | docker exec -i "$$check_name" tar -C /cicd -x
+		tar -cf - -C ./build_scripts . | docker exec -i "$$check_name" tar -C /cicd/scripts -x
 		docker exec -e GITHUB_STEP_SUMMARY="/tmp/step_summary-$$key" -e CI="$(CI)" "$$check_name" /cicd/install_checks -v || { docker logs -n100 "$$check_name"; exit 1; }
-		docker exec -i "$$check_name" cat "/tmp/step_summary-$$key" >> "$(GITHUB_STEP_SUMMARY)" 2>&1
+		docker exec "$$check_name" cat "/tmp/step_summary-$$key" >> "$(GITHUB_STEP_SUMMARY)" 2>&1
 		docker rm --force "$$check_name" >&/dev/null || true
 	done
 
 .PHONY: check-sha
 check-sha: # check a specific git commit-based image
-		@echo "### Checking $(CICD_URL)" >> $(GITHUB_STEP_SUMMARY)
-		case "$(CICD_URL)" in
-		*-amd64) arch=amd64;;
-		*-arm64) arch=arm64;;
-		*) echo "unknown architecture for $(CICD_URL)" >&2; exit 1;;
-		esac
-		check_name=check-$$GITHUB_SHA-$$arch
-		docker rm --force "$$check_name" >&/dev/null || true
-		docker run \
-			--platform linux/"$$arch" \
-			-d \
-			--name "$$check_name" \
-			-e PGDATA=/tmp/pgdata \
-			--user=postgres \
-			"$(CICD_URL)" sleep 300
-		docker exec -u root "$$check_name" mkdir -p /cicd/scripts
-		tar -cf - -C ./cicd . | docker exec -u root -i "$$check_name" tar -C /cicd -x
-		tar -cf - -C ./build_scripts . | docker exec -u root -i "$$check_name" tar -C /cicd/scripts -x
-		docker exec -e GITHUB_STEP_SUMMARY="/tmp/step_summary" -e CI="$(CI)" "$$check_name" /cicd/install_checks -v || { docker logs -n100 "$$check_name"; exit 1; }
-		docker exec -i "$$check_name" cat "/tmp/step_summary" >> "$(GITHUB_STEP_SUMMARY)" 2>&1
-		docker rm --force "$$check_name" >&/dev/null || true
+	@echo "### Checking $(CICD_URL)" >> $(GITHUB_STEP_SUMMARY)
+	case "$(CICD_URL)" in
+	*-amd64) arch=amd64;;
+	*-arm64) arch=arm64;;
+	*) echo "unknown architecture for $(CICD_URL)" >&2; exit 1;;
+	esac
+	key="$$(mktemp -u XXXXXX)"
+	check_name="$(CHECK_NAME)-$$key"
+	docker rm --force "$$check_name" >&/dev/null || true
+	docker run \
+		--platform linux/"$$arch" \
+		-d \
+		--name "$$check_name" \
+		-e PGDATA=/tmp/pgdata \
+		--user=postgres \
+		"$(CICD_URL)" sleep 300
+	docker exec -u root "$$check_name" mkdir -p /cicd/scripts
+	docker exec -u root "$$check_name" chown -R postgres: /cicd
+	tar -cf - -C ./cicd . | docker exec -i "$$check_name" tar -C /cicd -x
+	tar -cf - -C ./build_scripts . | docker exec -i "$$check_name" tar -C /cicd/scripts -x
+	docker exec -e GITHUB_STEP_SUMMARY="/tmp/step_summary-$$key" -e CI="$(CI)" "$$check_name" /cicd/install_checks -v || { docker logs -n100 "$$check_name"; exit 1; }
+	docker exec -i "$$check_name" cat "/tmp/step_summary-$$key" >> "$(GITHUB_STEP_SUMMARY)" 2>&1
+	docker rm --force "$$check_name" >&/dev/null || true
 
 .PHONY: is_ci
 is_ci:

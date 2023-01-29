@@ -269,19 +269,19 @@ check_packages() {
     done
 }
 
-EXTVERSIONS="/tmp/extversions.$ARCH.pg$pg"
+EXTVERSIONS="$(mktemp -t extversions.$ARCH.XXXX)"
 cleanup() {
-    rm -f "$EXTVERSIONS" >&/dev/null
+    rm -f "$EXTVERSIONS".* >&/dev/null
 }
 trap cleanup ERR EXIT
 
 record_ext_version() {
     local pkg="$1" pg="$2" version="$3"
-    echo "$pkg|$version" >> "$EXTVERSIONS"
+    echo "$pkg|$version" >> "$EXTVERSIONS".pg"$pg"
 }
 
 sort_keys() {
-    for k in "$@"; do echo "$k"; done | xargs | sort -ifVu
+    for k in "$@"; do echo "$k"; done | xargs -n 1 | sort -ifVu
 }
 
 ext_version_table() {
@@ -296,7 +296,7 @@ ext_version_table() {
         while read -r line; do
             IFS=\| read -rs pkg version <<< "$line"
             pkgs["$pkg"]+=" $version"
-        done < "$EXTVERSIONS"
+        done < "$EXTVERSIONS".pg"$pg"
 
         for pkg in $(sort_keys "${!pkgs[@]}"); do
             versions="$(sort_keys "${pkgs[$pkg]}")"
