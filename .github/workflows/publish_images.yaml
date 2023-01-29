@@ -88,7 +88,7 @@ jobs:
       - name: Publish combined manifest for pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
           PG_MAJOR: ${{ matrix.pg_major }}
-          VERSION_TAG: pg${{ matrix.pg_major}}${{ matrix.docker_tag_postfix }}
+          VERSION_TAG: pg${{ matrix.pg_major}}${{ matrix.docker_tag_postfix }}-builder
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
         run: make publish-manifests
 
