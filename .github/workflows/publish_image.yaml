@@ -58,7 +58,7 @@ jobs:
           pg_versions: "12"
           docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
           docker_tag_postfix: '-oss'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
