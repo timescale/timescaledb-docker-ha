@@ -19,15 +19,25 @@ set -e
 export PATH="/usr/lib/postgresql/${PGVERSION}/bin:${PATH}"
 mkdir -p /home/postgres/.pgx
 
+INSTALLED=false
 for TOOLKIT_VERSION in "$@"; do
     # The packages aren't named totally consistent, therefore we ask - using apt info -
     # to describe all the versions that are there, which we then pattern match.
     DEBVERSION="$(apt info -a timescaledb-toolkit-postgresql-${PGVERSION} | awk '/Version:/ {print $2}' | grep "${TOOLKIT_VERSION}" | grep -v forge | head -n 1)"
-    mkdir /tmp/dpkg
-    apt-get download timescaledb-toolkit-postgresql-${PGVERSION}=${DEBVERSION}
-    dpkg --install --admindir /tmp/dpkg --force-depends --force-not-root --force-overwrite timescaledb-toolkit-postgresql-${PGVERSION}*${TOOLKIT_VERSION}*.deb
-    rm -rf /tmp/dpkg
+    if apt-get download timescaledb-toolkit-postgresql-${PGVERSION}=${DEBVERSION}; then
+        mkdir /tmp/dpkg
+        dpkg --install --admindir /tmp/dpkg --force-depends --force-not-root --force-overwrite timescaledb-toolkit-postgresql-${PGVERSION}*${TOOLKIT_VERSION}*.deb
+        rm -rf /tmp/dpkg
+        INSTALLED=true
+    else
+        echo "couldn't find toolkit version $TOOLKIT_VERSION for pg$PGVERSION"
+    fi
 done
+
+if [ "$INSTALLED" = false ]; then
+    echo "No toolkit versions installed!"
+    exit 1
+fi
 
 # We want to enforce users that install toolkit 1.5+ when upgrading or reinstalling.
 # NOTE: This does not affect versions that have already been installed, it only blocks

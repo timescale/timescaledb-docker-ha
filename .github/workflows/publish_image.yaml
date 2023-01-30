@@ -8,14 +8,14 @@ on:
 env:
   DOCKER_HUB_URL: docker.io/timescale/timescaledb-ha
   INSTALL_METHOD: docker-ha
-  TIMESCALE_CLOUDUTILS: "v1.1.10"
+  TIMESCALE_CLOUDUTILS: "v1.1.11"
   TIMESCALE_HOT_FORGE: "v0.1.39"
   TIMESCALE_PATRONI_K8S_SYNC: "v0.1.2"
   TIMESCALE_OOM_GUARD:  "v1.4.2"
   TIMESCALE_DCS_FAILSAFE: ''
-  TIMESCALE_TSDB_ADMIN: "1.0.0"
-  TIMESCALEDB_TOOLKIT_EXTENSIONS: 1.6.0 1.7.0 1.8.0 1.10.1 1.11.0 1.12.0 1.12.1 1.13.0
-  TIMESCALE_OSM_EXTENSION: "0.0.6"
+  TIMESCALE_TSDB_ADMIN: "1.0.1"
+  TIMESCALEDB_TOOLKIT_EXTENSIONS: 1.6.0 1.7.0 1.8.0 1.10.1 1.11.0 1.12.0 1.12.1 1.13.0 1.13.1
+  TIMESCALE_OSM_EXTENSION: "0.0.7"
   TIMESCALE_TS_STAT_STATEMENTS: "0.0.2"
 jobs:
   publish-image:
@@ -23,10 +23,20 @@ jobs:
     strategy:
       matrix:
         include:
-        # This is the 'default' image, it contains PostgreSQL 14 13 and 12, and defaults to PostgreSQL 14 binaries
-        - pg_major: "14"
-          pg_versions: "14 13 12"
+        # This is the 'default' image, it contains PostgreSQL 15 14 13 and 12, and defaults to PostgreSQL 15 binaries
+        - pg_major: "15"
+          pg_versions: "15 14 13 12"
         # This is the 'default' image, along with Patroni changes to support static primaries
+        - pg_major: "15"
+          pg_versions: "15 14 13 12"
+          patroni_dcs_failsafe: "true"
+          docker_tag_postfix: "-patroni-dcs-failsafe"
+        # This is the PostgreSQL 15 image containing only oss software
+        - pg_major: "15"
+          pg_versions: "15 14 13 12"
+          docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
+          docker_tag_postfix: '-oss'
+        # This is the previous default image, along with Patroni changes to support static primaries
         - pg_major: "14"
           pg_versions: "14 13 12"
           patroni_dcs_failsafe: "true"
@@ -36,10 +46,8 @@ jobs:
           pg_versions: "14 13 12"
           docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'
           docker_tag_postfix: '-oss'
-        # This is the older 'default' image, it contains PostgreSQL 12 and 13, and defaults to PostgreSQL 13 binaries
         - pg_major: "13"
           pg_versions: "13 12"
-        # This is the older PostgreSQL 13 image containing only oss software
         - pg_major: "13"
           pg_versions: "13 12"
           docker_extra_buildargs: ' --build-arg OSS_ONLY=" -DAPACHE_ONLY=1"'

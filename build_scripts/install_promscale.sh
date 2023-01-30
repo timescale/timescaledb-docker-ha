@@ -19,11 +19,20 @@ set -e
 export PATH="/usr/lib/postgresql/${PGVERSION}/bin:${PATH}"
 mkdir -p /home/postgres/.pgx
 
+INSTALLED=false
 for PROMSCALE_VERSION in "$@"; do
     DEBVERSION="$(apt info -a promscale-extension-postgresql-${PGVERSION} | awk '/Version:/ {print $2}' | grep "${PROMSCALE_VERSION}" | head -n 1)"
-    apt-get download promscale-extension-postgresql-${PGVERSION}=${DEBVERSION}
-    mkdir /tmp/dpkg
-    dpkg --install --admindir /tmp/dpkg --force-depends --force-not-root --force-overwrite promscale-extension-postgresql-${PGVERSION}*${DEBVERSION}*.deb
-    rm -rf /tmp/dpkg
+    if apt-get download promscale-extension-postgresql-${PGVERSION}=${DEBVERSION}; then
+        mkdir /tmp/dpkg
+        dpkg --install --admindir /tmp/dpkg --force-depends --force-not-root --force-overwrite promscale-extension-postgresql-${PGVERSION}*${DEBVERSION}*.deb
+        rm -rf /tmp/dpkg
+        INSTALLED=true
+    else
+        echo "couldn't find promscale-extension version $PROMSCALE_VERSION for pg$PGVERSION"
+    fi
 done
 
+if [ "$INSTALLED" = false ]; then
+    echo "No promscale versions installed!"
+    exit 1
+fi

@@ -1,28 +1,67 @@
-#!/bin/sh
-# This script was created to reduce the complexity of the RUN command
-# that installs all combinations of PostgreSQL and TimescaleDB
+#!/bin/bash
 
-set -e
+set -e -o pipefail
 
 if [ -z "$2" ]; then
-    echo "Usage: $0 PGVERSION [TSVERSION..]"
+    error "Usage: $0 PGVERSION [TSVERSION..]"
     exit 1
 fi
 
 PGVERSION="$1"
 shift
 
+log() {
+    echo "$ARCH: $*" >&2
+}
+
+error() {
+    echo "** $ARCH: ERROR: $* **" >&2
+}
+
+supported_timescaledb() {
+    local pg="$1" ver="$2" major minor
+
+    if [ "$pg" -lt 12 ]; then
+        echo "timescaledb not supported in pg$pg (<12)"
+        return
+    fi
+
+    if [ "$ver" = "main" ]; then
+        # just attempt the build for main
+        return
+    fi
+
+    major="$(echo "$ver" | cut -d. -f1)"
+    minor="$(echo "$ver" | cut -d. -f2)"
+
+    case "$pg" in
+    15) if [[ "$major" -lt 2 || ( "$major" -eq 2 && "$minor" -lt 9 ) ]]; then
+            echo "timescaledb-$ver not supported on pg15, requires 2.9+"
+        fi;;
+
+    14) if [[ "$major" -lt 2 || ( "$major" -eq 2 && "$minor" -lt 5 ) ]]; then
+            echo "timescaledb-$ver not supported on pg14, requires 2.5+"
+        fi;;
+
+    13) if [ "$major" -lt 2 ]; then
+            echo "timescaledb-$ver not supported on pg13, requires 2.0+"
+        fi;;
+
+    12) # pg12 builds all the versions
+        ;;
+
+    *) echo "timescaledb-$ver not supported on pg$pg, requires pg12+";;
+    esac
+}
+
 export PATH="/usr/lib/postgresql/${PGVERSION}/bin:${PATH}"
 
-is_supported() {
-    MAJOR="$(echo "$1" | cut -d. -f1)"
-    MINOR="$(echo "$1" | cut -d. -f2)"
-    if [ "${PGVERSION}" -ge 13 ] && [ "${MAJOR}" -eq 1 ]; then return 1; fi
-    if [ "${PGVERSION}" -lt 12 ] && [ "${MINOR}" -ge 4 ]; then return 1; fi
-    if [ "${PGVERSION}" -ge 14 ] && [ "${MINOR}" -lt 5 ]; then return 1; fi
-    if [ "${PGVERSION}" -ge 13 ] && [ "${MINOR}" -lt 1 ]; then return 1; fi
-    return 0
-}
+if [ -n "$OSS_ONLY" ]; then
+    log "building timescaledb for OSS_ONLY"
+    OSS_ONLY="-DAPACHE_ONLY=1"
+else
+    OSS_ONLY=""
+fi
 
 for TAG in "$@"; do
     git reset HEAD --hard
@@ -33,26 +72,36 @@ for TAG in "$@"; do
 
     if [ "${TAG}" = "2.2.0" ]; then sed -i 's/RelWithDebugInfo/RelWithDebInfo/g' CMakeLists.txt; fi
 
-    if is_supported "${MAJOR_MINOR}"; then
-        ./bootstrap \
-            -DTAP_CHECKS=OFF \
-            -DWARNINGS_AS_ERRORS=off \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DREGRESS_CHECKS=OFF \
-            -DGENERATE_DOWNGRADE_SCRIPT=ON \
-            -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}${OSS_ONLY}"
-        cd build
-
-        make
-
-        # https://github.com/timescale/timescaledb/commit/531f7ed8b16e4d1a99021d3d2b843bbc939798e3
-        if [ "${TAG}" = "2.5.2" ]; then sed -i 's/pg_temp./_timescaledb_internal./g' sql/**/*.sql; fi
-
-        make install
-        cd ..
-    else
-        echo "TimescaleDB ${TAG} is not supported on PostgreSQL ${PGVERSION}"
+    unsupported_reason="$(supported_timescaledb "$PGVERSION" "${MAJOR_MINOR}")"
+    if [ -n "$unsupported_reason" ]; then
+        error "$unsupported_reason"
+        continue
     fi
+
+    ./bootstrap \
+        -DTAP_CHECKS=OFF \
+        -DWARNINGS_AS_ERRORS=off \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DREGRESS_CHECKS=OFF \
+        -DGENERATE_DOWNGRADE_SCRIPT=ON \
+        -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}" \
+        ${OSS_ONLY}
+
+    cd build
+
+    make
+
+    # https://github.com/timescale/timescaledb/commit/531f7ed8b16e4d1a99021d3d2b843bbc939798e3
+    if [ "${TAG}" = "2.5.2" ]; then sed -i 's/pg_temp./_timescaledb_internal./g' sql/**/*.sql; fi
+
+    make install
+
+    if [ -n "$OSS_ONLY" ]; then
+        log "removing timescaledb-tsl due to OSS_ONLY"
+        rm -f /usr/lib/postgresql/"$PGVERSION"/lib/timescaledb-tsl-*
+    fi
+
+    cd ..
 done
 
 # https://github.com/timescale/timescaledb/commit/6dddfaa54e8f29e3ea41dab2fe7d9f3e37cd3aae
