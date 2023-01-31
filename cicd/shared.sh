@@ -281,7 +281,7 @@ record_ext_version() {
 }
 
 sort_keys() {
-    for k in "$@"; do echo "$k"; done | xargs -n 1 | sort -ifVu
+    for k in "$@"; do echo "$k"; done | xargs -n 1 | sort -ifVu | xargs
 }
 
 ext_version_table() {
