@@ -23,6 +23,9 @@ install_timescaledb() {
         if [[ -n "$dpkg" && -n "$deb_version" ]]; then
             [[ "$DRYRUN" = true ]] && { log "would install debian package $dpkg-$deb_version"; continue; }
             if install_deb "$dpkg" "$deb_version"; then continue; fi
+            log "failed installing $dpkg $deb_version"
+        else
+            log "couldn't find debian package for $search_name $version"
         fi
 
         log "building $pkg-$version for pg$pg"
@@ -91,6 +94,9 @@ install_toolkit() {
         if [[ -n "$dpkg" && -n "$deb_version" ]]; then
             [[ "$DRYRUN" = true ]] && { log "would install debian package $dpkg-$deb_version (cargo-pgx: $cargo_pgx_version)"; continue; }
             if install_deb "$dpkg" "$deb_version"; then continue; fi
+            log "failed installing $dpkg $deb_version"
+        else
+            log "couldn't find debian package for timescaleb-toolkit-postgresql-$pg $version"
         fi
 
         log "building $pkg-$version for pg$pg (cargo-pgx: $cargo_pgx_version)"
@@ -135,6 +141,9 @@ install_promscale() {
         if [[ -n "$dpkg" && -n "$deb_version" ]]; then
             [[ "$DRYRUN" = true ]] && { log "would install debian package $dpkg-$deb_version (cargo-pgx: $cargo_pgx_version)"; continue; }
             if install_deb "$dpkg" "$deb_version"; then continue; fi
+            log "failed installing $dpkg $deb_version"
+        else
+            log "couldn't find debian package for promscale-extension-postgresql-$pg $version"
         fi
 
         log "building $pkg version $version for pg$pg (cargo-pgx: $cargo_pgx_version)"
