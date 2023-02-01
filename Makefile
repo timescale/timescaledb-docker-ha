@@ -42,6 +42,10 @@ ifeq ($(ALL_VERSIONS),true)
     PG_VERSIONS := 15 14 13 12
   else ifeq ($(PG_MAJOR),14)
     PG_VERSIONS := 14 13 12
+  else ifeq ($(PG_MAJOR),13)
+    PG_VERSIONS := 13 12
+  else ifeq ($(PG_MAJOR),12)
+    PG_VERSIONS := 12
   endif
 else
   PG_VERSIONS := $(PG_MAJOR)
