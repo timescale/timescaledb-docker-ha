@@ -5,21 +5,19 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 
 set -e -o pipefail
 
-if [ -z "$2" ]; then
+if [ $# -eq 0 ]; then
     error "Usage: $0 <TSVERSION..>"
     exit 1
 fi
 
 [ "$OSS_ONLY" = true ] && log "installing timescaledb for OSS_ONLY"
 
-for version in "$@"; do
-    install_timescaledb "$version"
-done
+for version in "$@"; do install_timescaledb "$version"; done
 
 # https://github.com/timescale/timescaledb/commit/6dddfaa54e8f29e3ea41dab2fe7d9f3e37cd3aae
 for pg in $(available_pg_versions); do
     for file in "/usr/share/postgresql/$pg/extension/timescaledb--"*.sql; do
-        cat >> "${file}" << "__SQL__"
+        cat >>"${file}" <<"__SQL__"
 DO $dynsql$
 DECLARE
     alter_sql text;
@@ -99,4 +97,4 @@ END;
 $dynsql$;
 __SQL__
     done # for file
-done # for pg
+done     # for pg
