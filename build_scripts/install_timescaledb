@@ -18,14 +18,6 @@ done
 
 # https://github.com/timescale/timescaledb/commit/6dddfaa54e8f29e3ea41dab2fe7d9f3e37cd3aae
 for pg in $(available_pg_versions); do
-    # we don't specify a version here, so we get the latest loader version
-    install_deb "timescaledb-2-loader-postgresql-$pg"
-    if [ "$OSS_ONLY" = true ]; then
-        install_deb "timescaledb-2-oss-postgresql-$pg"
-    else
-        install_deb "timescaledb-2-postgresql-$pg"
-    fi
-
     for file in "/usr/share/postgresql/$pg/extension/timescaledb--"*.sql; do
         cat >> "${file}" << "__SQL__"
 DO $dynsql$

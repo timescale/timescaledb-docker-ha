@@ -3,7 +3,7 @@
 # these are the functions that perform the actual installations/builds of the extensions
 
 install_timescaledb() {
-    local version="$1" pg pkg=timescaledb dpkg deb_version unsupported_reason oss_only="" search_name
+    local version="$1" pg pkg=timescaledb unsupported_reason oss_only=""
     [ "$OSS_ONLY" = true ] && oss_only="-DAPACHE_ONLY=1"
 
     for pg in $(available_pg_versions); do
@@ -11,21 +11,6 @@ install_timescaledb() {
         if [ -n "$supported" ]; then
             log "$pkg-$version: $supported"
             continue
-        fi
-
-        if [ "$OSS_ONLY" = true ]; then
-            search_name="timescaledb-2-oss-$version-postgresql-$pg"
-        else
-            search_name="timescaledb-2-$version-postgresql-$pg"
-        fi
-
-        read -rs dpkg deb_version <<< "$(find_deb "$search_name" "$version")"
-        if [[ -n "$dpkg" && -n "$deb_version" ]]; then
-            [[ "$DRYRUN" = true ]] && { log "would install debian package $dpkg-$deb_version"; continue; }
-            if install_deb "$dpkg" "$deb_version"; then continue; fi
-            log "failed installing $dpkg $deb_version"
-        else
-            log "couldn't find debian package for $search_name $version"
         fi
 
         log "building $pkg-$version for pg$pg"
