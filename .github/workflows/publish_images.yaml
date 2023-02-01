@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - brent/base
     paths-ignore:
       - "*.md"
 
