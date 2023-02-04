@@ -1,21 +1,5 @@
 #!/bin/bash
 
-# These associative arrays declare which version of cargo-pgx is required for versions of toolkit and promscale. The
-# values are regular expressions that need to match all the version tags for the cargo-pgx versions in the keys
-# shellcheck disable=SC2034 # used by callers
-declare -A pgx_toolkit_versions=(
-    ["0.2.4"]="1.[67].0"
-    ["0.4.5"]="1.(8|9|10|11).*"
-    ["0.5.4"]="1.12.[01]"
-    ["0.6.1"]="main|1.1[34].*"
-)
-# shellcheck disable=SC2034 # used by callers
-declare -A pgx_promscale_versions=(
-    ["0.3.1"]="0.5.*"
-    ["0.4.5"]="0.[67].0"
-    ["0.6.1"]="master|0.7.([1-9]).*|0.8.0"
-)
-
 # Check to make sure these extensions are available in all pg versions
 PG_WANTED_EXTENSIONS="pglogical wal2json pgextwlist pgrouting pg-stat-kcache cron pldebugger hypopg unit repack hll"
 
@@ -40,80 +24,132 @@ require_supported_arch() {
     fi
 }
 
+if [ -s /build/scripts/versions.yaml ]; then
+    VERSION_DATA="$(< /build/scripts/versions.yaml)"
+elif [ -s /cicd/scripts/versions.yaml ]; then
+    VERSION_DATA="$(< /cicd/scripts/versions.yaml)"
+elif [ -s versions.yaml ]; then
+    VERSION_DATA="$(< versions.yaml)"
+else
+    error "could not locate versions.yaml"
+    exit 1
+fi
+
+DEFAULT_PG_MIN="$(yq .default-pg-min <<< "$VERSION_DATA")"
+[ -z "$DEFAULT_PG_MIN" ] && { error "default-pg-min required in versions.yaml"; exit 1; }
+DEFAULT_PG_MAX="$(yq .default-pg-max <<< "$VERSION_DATA")"
+[ -z "$DEFAULT_PG_MAX" ] && { error "default-pg-max required in versions.yaml"; exit 1; }
+DEFAULT_CARGO_PGX="$(yq .default-cargo-pgx <<< "$VERSION_DATA")"
+[ -z "$DEFAULT_CARGO_PGX" ] && { error "default-cargo-pgx required in versions.yaml"; exit 1; }
+
+# locate the cargo-pgx key from versions.yaml
+pkg_cargo_pgx_version() {
+    local pkg="$1" ver="$2" cargopgx
+
+    cargopgx="$(yq ".$pkg | pick([\"$ver\"]) | .[].cargo-pgx" <<<"$VERSION_DATA")"
+    if [ "$cargopgx" = null ]; then
+        echo "$DEFAULT_CARGO_PGX"
+    else
+        echo "$cargopgx"
+    fi
+}
+
+# install the rust extensions ordered from oldest required cargo-pgx to newest to keep
+# the number of rebuilds for cargo-pgx to a minimum
+install_rust_extensions() {
+    local cargopgx
+    declare -A pgx_versions=()
+
+    for ver in $TOOLKIT_VERSIONS; do
+        cargopgx="$(pkg_cargo_pgx_version "toolkit" "$ver")"
+        if [ "$cargopgx" = null ]; then
+            error "no cargo-pgx version found for toolkit-$ver"
+            continue
+        fi
+        pgx_versions[$cargopgx]+=" toolkit-$ver"
+    done
+
+    for ver in $PROMSCALE_VERSIONS; do
+        cargopgx="$(pkg_cargo_pgx_version "promscale" "$ver")"
+        if [ -z "$cargopgx" ]; then
+            error "no cargo-pgx version found for promscale-$ver"
+            continue
+        fi
+        pgx_versions[$cargopgx]+=" promscale-$ver"
+    done
+
+    sorted_pgx_versions="$(for pgx_ver in "${!pgx_versions[@]}"; do echo "$pgx_ver"; done | sort -Vu)"
+    for pgx_ver in $sorted_pgx_versions; do
+        ext_versions="$(for ext_ver in ${pgx_versions[$pgx_ver]}; do echo "$ext_ver"; done | sort -Vu)"
+        for ext_ver in $ext_versions; do
+            ext="$(echo "$ext_ver" | cut -d- -f1)"
+            ver="$(echo "$ext_ver" | cut -d- -f2-)"
+            case "$ext" in
+            toolkit)   install_toolkit   "$pgx_ver" "$ver";;
+            promscale) install_promscale "$pgx_ver" "$ver";;
+            esac
+        done
+    done
+}
+
+version_is_supported() {
+    local pkg="$1" pg="$2" ver="$3" pdata pgmin pgmax cargopgx
+    local -a pgversions
+
+    pdata="$(yq ".$pkg | pick([\"$ver\"]) | .[]" <<<"$VERSION_DATA")"
+    if [ "$pdata" = null ]; then
+        echo "not found in versions.yaml"
+        return
+    fi
+
+    pgmin="$(yq .pg-min <<<"$pdata")"
+    if [ "$pgmin" = null ]; then pgmin="$DEFAULT_PG_MIN"; fi
+    if [ "$pg" -lt "$pgmin" ]; then echo "pg$pg is too old"; return; fi
+
+    pgmax="$(yq .pg-max <<<"$pdata")"
+    if [ "$pgmax" = null ]; then pgmax="$DEFAULT_PG_MAX"; fi
+    if [ "$pg" -gt "$pgmax" ]; then echo "pg$pg is too new"; return; fi
+
+    pdata="$(yq .pg[] <<<"$pdata")"
+    if [ -n "$pdata" ]; then
+        local found=false
+        readarray -t pgversions <<<"$pdata"
+        for pgv in "${pgversions[@]}"; do
+            if [ "$pgv" = "$pg" ]; then found=true; break; fi
+        done
+        if [ "$found" = "false" ]; then echo "does not support pg$pg"; return; fi
+    fi
+}
+
 supported_timescaledb() {
-    local pg="$1" ver="$2" major minor
+    local pg="$1" ver="$2"
 
-    if [ "$pg" -lt 12 ]; then
-        echo "timescaledb not supported in pg$pg (<12)"
+    # just attempt the build for main/master/or other branch build
+    if [[ "$ver" = main || "$ver" = master || "$ver" =~ [a-z_-]*/[A-Za-z0-9_-]* ]]; then
         return
     fi
 
-    if [ "$ver" = "main" ]; then
-        # just attempt the build for main
-        return
-    fi
-
-    major="$(echo "$ver" | cut -d. -f1)"
-    minor="$(echo "$ver" | cut -d. -f2)"
-
-    case "$pg" in
-    15) if [[ "$major" -lt 2 || ( "$major" -eq 2 && "$minor" -lt 9 ) ]]; then
-            echo "timescaledb-$ver not supported on pg15, requires 2.9+"
-        fi;;
-
-    14) if [[ "$major" -lt 2 || ( "$major" -eq 2 && "$minor" -lt 5 ) ]]; then
-            echo "timescaledb-$ver not supported on pg14, requires 2.5+"
-        fi;;
-
-    13) if [ "$major" -lt 2 ]; then
-            echo "timescaledb-$ver not supported on pg13, requires 2.0+"
-        fi;;
-
-    12) # pg12 builds all the versions
-        ;;
-
-    *) echo "timescaledb-$ver not supported on pg$pg, requires pg12+";;
-    esac
+    version_is_supported timescaledb "$pg" "$ver"
 }
 
 supported_toolkit() {
     local pg="$1" ver="$2"
 
-    if [ "$OSS_ONLY" = true ]; then
-        echo "toolkit isn't supported for OSS_ONLY"
-    elif [[ "$ver" = master || "$ver" = main ]]; then
-        : # just attempt the build
-    elif [[ "$pg" -lt 12 ]]; then
-        echo "pg$pg is not supported, 12+ required"
-    elif [[ "$pg" -gt 15 ]]; then
-        echo "pg$pg is not supported, 15 and lower are required"
-    elif [[ "$ver" =~ ^(0\.*|1\.[0-5]\.) ]]; then
-        echo "toolkit-$ver is not supported"
-    elif [[ "$pg" -eq 15 && ( "$ver" =~ 1\.([6-9]|10|11|12)\.* || $ver = 1.13.0 ) ]]; then
-        echo "pg15 requires 1.13.1+"
-    elif [[ "$ARCH" = aarch64 && ( "$ver" =~ 1\.([6-9]|10|11|12)\.* || $ver = 1.13.0 ) ]]; then
-        echo "toolkit-$ver not supported on aarch64, 1.13.1+ is required"
+    # just attempt the build for main/master/or other branch build
+    if [[ "$ver" = main || "$ver" = master || "$ver" =~ [a-z_-]*/[A-Za-z0-9_-]* ]]; then
+        return
     fi
+
+    version_is_supported toolkit "$pg" "$ver"
 }
 
 supported_promscale() {
     local pg="$1" ver="$2"
 
-    if [ "$OSS_ONLY" = true ]; then
-        echo "promscale isn't supported for OSS_ONLY"
-    elif [[ "$ver" = master || "$ver" = main ]]; then
-        : # just attempt the build
-    elif [[ "$pg" -lt 12 ]]; then
-        echo "pg$pg is not supported"
-    elif [[ "$pg" -gt 15 ]]; then
-        echo "pg$pg is not supported"
-    elif [[ "$ver" =~ ^0\.[0-4]\. ]]; then
-        echo "promscale-$ver is too old"
-    elif [[ "$pg" -eq 15 && "$ver" =~ ^0\.[0-7].* ]]; then
-        echo "promscale-$ver is too old for pg$pg, requires 0.8.0+"
-    elif [[ "$ARCH" = aarch64 ]]; then
-        if [[ "$ver" =~ ^0\.[0-7]\.* ]]; then
-            echo "promscale on aarch64 for versions prior to 0.8.0 aren't supported"
-        fi
+    # just attempt the build for main/master/or other branch build
+    if [[ "$ver" = main || "$ver" = master || "$ver" =~ [a-z_-]*/[A-Za-z0-9_-]* ]]; then
+        return
     fi
+
+    version_is_supported promscale "$pg" "$ver"
 }

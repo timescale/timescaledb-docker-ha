@@ -79,7 +79,9 @@ RUN set -eux; \
     apt-get upgrade -y; \
     apt-get install -y \
         less jq strace procps awscli vim-tiny gdb gdbserver dumb-init daemontools \
-        postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop libnss-wrapper gosu
+        postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop libnss-wrapper gosu; \
+    curl -Lso /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_"$(dpkg --print-architecture)"; \
+    chmod 755 /usr/local/bin/yq
 
 # forbid creation of a main cluster when package is installed
 RUN sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
@@ -139,6 +141,7 @@ RUN set -eux; \
             postgresql-${pg}-pglogical postgresql-${pg}-wal2json postgresql-${pg}-pgq3"; \
     done; \
     apt-get install -y $packages
+
 
 ARG POSTGIS_VERSIONS="3"
 RUN set -eux; \
@@ -276,20 +279,24 @@ ARG OSS_ONLY
 # release mode, and if it's empty, then debug mode.
 ARG RUST_RELEASE=release
 
-# TimescaleDB:
-ARG TIMESCALEDB_VERSIONS
+# split the extension builds into two steps to allow caching of successful steps
 ARG GITHUB_REPO=timescale/timescaledb
-RUN OSS_ONLY="${OSS_ONLY}" /build/scripts/install_timescaledb ${TIMESCALEDB_VERSIONS}
+ARG TIMESCALEDB_VERSIONS
+RUN set -ex; \
+    OSS_ONLY="${OSS_ONLY}" \
+        GITHUB_REPO="${GITHUB_REPO}" \
+        TIMESCALEDB_VERSIONS="${TIMESCALEDB_VERSIONS}" \
+        /build/scripts/install_extensions timescaledb
 
+# install all rust packages in the same step to allow it to optimize for cargo-pgx installs
 ARG TIMESCALE_PROMSCALE_EXTENSIONS
 ARG TIMESCALEDB_TOOLKIT_EXTENSIONS
 RUN set -ex; \
-    if [ "${OSS_ONLY}" != true ]; then \
+    OSS_ONLY="${OSS_ONLY}" \
         RUST_RELEASE="${RUST_RELEASE}" \
-            PROMSCALE_VERSIONS="${TIMESCALE_PROMSCALE_EXTENSIONS}" \
-            TOOLKIT_VERSIONS="${TIMESCALEDB_TOOLKIT_EXTENSIONS}" \
-            /build/scripts/install_extensions; \
-    fi
+        PROMSCALE_VERSIONS="${TIMESCALE_PROMSCALE_EXTENSIONS}" \
+        TOOLKIT_VERSIONS="${TIMESCALEDB_TOOLKIT_EXTENSIONS}" \
+        /build/scripts/install_extensions rust
 
 USER root
 

@@ -15,42 +15,28 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 
 [ "$1" = -n ] && { DRYRUN=true; shift; }
 
-declare -A pgx_versions=()
-for ver in $TOOLKIT_VERSIONS; do
-    matched=false
-    for pgx_ver in "${!pgx_toolkit_versions[@]}"; do
-        re="${pgx_toolkit_versions[$pgx_ver]}"
-        if [[ $ver =~ $re ]]; then
-            pgx_versions[$pgx_ver]+=" toolkit-$ver"
-            matched=true
-            continue 2
-        fi
-    done
-    [[ $matched = false ]] && echo "no match for $ver"
-done
+[ "$OSS_ONLY" = true ] && log "installing extensions for OSS_ONLY"
 
-for ver in $PROMSCALE_VERSIONS; do
-    matched=false
-    for pgx_ver in "${!pgx_promscale_versions[@]}"; do
-        re="${pgx_promscale_versions[$pgx_ver]}"
-        if [[ $ver =~ $re ]]; then
-            pgx_versions[$pgx_ver]+=" promscale-$ver"
-            matched=true
-            continue 2
-        fi
-    done
-    [[ $matched = false ]] && echo "no match for $ver"
-done
+what="$1"
+[ -z "$what" ] && what=all
+if [[ ! "$what" =~ ^timescaledb|rust|all|promscale|toolkit$ ]]; then
+    echo "usage: $0 [-n] [timescaledb|rust|all|promscale|toolkit]" >&2
+    exit 1
+fi
 
-sorted_pgx_versions="$(for pgx_ver in "${!pgx_versions[@]}"; do echo "$pgx_ver"; done | sort -V | uniq)"
-for pgx_ver in $sorted_pgx_versions; do
-    ext_versions="$(for ext_ver in ${pgx_versions[$pgx_ver]}; do echo "$ext_ver"; done | sort -V | uniq)"
-    for ext_ver in $ext_versions; do
-        ext="$(echo "$ext_ver" | cut -d- -f1)"
-        ver="$(echo "$ext_ver" | cut -d- -f2-)"
-        case "$ext" in
-        toolkit)   install_toolkit   "$pgx_ver" "$ver";;
-        promscale) install_promscale "$pgx_ver" "$ver";;
-        esac
+case "$what" in
+timescaledb | all)
+    for ver in $TIMESCALEDB_VERSIONS; do
+        install_timescaledb "$ver"
     done
-done
+    timescaledb_post_install
+
+    ;;& # fallthrough to get rust as well if we're called with 'all'
+
+rust | all) install_rust_extensions;;
+
+promscale) TOOLKIT_VERSIONS="" install_rust_extensions;;
+
+toolkit) PROMSCALE_VERSIONS="" install_rust_extensions;;
+
+esac

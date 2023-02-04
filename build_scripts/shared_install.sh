@@ -7,9 +7,9 @@ install_timescaledb() {
     [ "$OSS_ONLY" = true ] && oss_only="-DAPACHE_ONLY=1"
 
     for pg in $(available_pg_versions); do
-        supported="$(supported_timescaledb "$pg" "$version")"
-        if [ -n "$supported" ]; then
-            log "$pkg-$version: $supported"
+        unsupported_reason="$(supported_timescaledb "$pg" "$version")"
+        if [ -n "$unsupported_reason" ]; then
+            log "$pkg-$version: $unsupported_reason"
             continue
         fi
 
@@ -69,9 +69,9 @@ install_toolkit() {
     fi
 
     for pg in $(available_pg_versions); do
-        supported="$(supported_toolkit "$pg" "$version")"
-        if [ -n "$supported" ]; then
-            log "$pkg-$version: $supported"
+        unsupported_reason="$(supported_toolkit "$pg" "$version")"
+        if [ -n "$unsupported_reason" ]; then
+            log "$pkg-$version: $unsupported_reason"
             continue
         fi
 
@@ -86,7 +86,7 @@ install_toolkit() {
 
         log "building $pkg-$version for pg$pg (cargo-pgx: $cargo_pgx_version)"
 
-        [[ "$DRYRUN" = true ]] && continue
+        [ "$DRYRUN" = true ] && continue
 
         PATH="/usr/lib/postgresql/$pg/bin:${ORIGINAL_PATH}"
         cargo_pgx_init "$cargo_pgx_version" "$pg" || continue
@@ -133,7 +133,7 @@ install_promscale() {
 
         log "building $pkg version $version for pg$pg (cargo-pgx: $cargo_pgx_version)"
 
-        [[ "$DRYRUN" = true ]] && continue
+        [ "$DRYRUN" = true ] && continue
 
         PATH="/usr/lib/postgresql/$pg/bin:${ORIGINAL_PATH}"
         cargo_pgx_init "$cargo_pgx_version" "$pg" || continue
@@ -152,4 +152,92 @@ install_promscale() {
         fi
     done
     PATH="$ORIGINAL_PATH"
+}
+
+timescaledb_post_install() {
+    local pg
+    # https://github.com/timescale/timescaledb/commit/6dddfaa54e8f29e3ea41dab2fe7d9f3e37cd3aae
+    for pg in $(available_pg_versions); do
+        for file in "/usr/share/postgresql/$pg/extension/timescaledb--"*.sql; do
+            cat >>"${file}" <<"__SQL__"
+DO $dynsql$
+DECLARE
+    alter_sql text;
+BEGIN
+
+    SET local search_path to 'pg_catalog';
+
+    FOR alter_sql IN
+        SELECT
+            format(
+                $$ALTER FUNCTION %I.%I(%s) SET search_path = 'pg_catalog'$$,
+                nspname,
+                proname,
+                pg_catalog.pg_get_function_identity_arguments(pp.oid)
+            )
+        FROM
+            pg_depend
+        JOIN
+            pg_extension ON (oid=refobjid)
+        JOIN
+            pg_proc pp ON (objid=pp.oid)
+        JOIN
+            pg_namespace pn ON (pronamespace=pn.oid)
+        JOIN
+            pg_language pl ON (prolang=pl.oid)
+        LEFT JOIN LATERAL (
+                SELECT * FROM unnest(proconfig) WHERE unnest LIKE 'search_path=%'
+            ) sp(search_path) ON (true)
+        WHERE
+            deptype='e'
+            AND extname='timescaledb'
+            AND extversion < '2.5.2'
+            AND lanname NOT IN ('c', 'internal')
+            AND prokind = 'f'
+            -- Only those functions/procedures that do not yet have their search_path fixed
+            AND search_path IS NULL
+            AND proname != 'time_bucket'
+        ORDER BY
+            search_path
+    LOOP
+        EXECUTE alter_sql;
+    END LOOP;
+
+    -- And for the sql time_bucket functions we prefer to *not* set the search_path to
+    -- allow inlining of these functions
+    WITH sql_time_bucket_fn AS (
+        SELECT
+            pp.oid
+        FROM
+            pg_depend
+        JOIN
+            pg_extension ON (oid=refobjid)
+        JOIN
+            pg_proc pp ON (objid=pp.oid)
+        JOIN
+            pg_namespace pn ON (pronamespace=pn.oid)
+        JOIN
+            pg_language pl ON (prolang=pl.oid)
+        WHERE
+            deptype = 'e'
+            AND extname='timescaledb'
+            AND extversion < '2.5.2'
+            AND lanname = 'sql'
+            AND proname = 'time_bucket'
+            AND prokind = 'f'
+            AND prosrc NOT LIKE '%OPERATOR(pg_catalog.%'
+    )
+    UPDATE
+        pg_proc
+    SET
+        prosrc = regexp_replace(prosrc, '([-+]{1})', ' OPERATOR(pg_catalog.\1) ', 'g')
+    FROM
+        sql_time_bucket_fn AS s
+    WHERE
+        s.oid = pg_proc.oid;
+END;
+$dynsql$;
+__SQL__
+        done # for file
+    done     # for pg
 }

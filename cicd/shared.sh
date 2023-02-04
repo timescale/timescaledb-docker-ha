@@ -109,7 +109,7 @@ check_timescaledb() {
         else
             unsupported_reason="$(supported_timescaledb "$pg" "$ver")"
             if [ -n "$unsupported_reason" ]; then
-                log "skipped: $unsupported_reason"
+                log "skipped: timescaledb-$ver: $unsupported_reason"
             else
                 error "timescaledb-$ver not found for pg$pg"
             fi
