@@ -17,13 +17,6 @@ elif [ "$ARCH" = x86_64 ]; then
     ARCH=amd64
 fi
 
-require_supported_arch() {
-    if [[ "$ARCH" != amd64 && "$ARCH" != aarch64 ]]; then
-        echo "unsupported architecture: $ARCH" >&2
-        exit 1
-    fi
-}
-
 if [ -s /build/scripts/versions.yaml ]; then
     VERSION_DATA="$(< /build/scripts/versions.yaml)"
 elif [ -s /cicd/scripts/versions.yaml ]; then
@@ -41,6 +34,34 @@ DEFAULT_PG_MAX="$(yq .default-pg-max <<< "$VERSION_DATA")"
 [ -z "$DEFAULT_PG_MAX" ] && { error "default-pg-max required in versions.yaml"; exit 1; }
 DEFAULT_CARGO_PGX="$(yq .default-cargo-pgx <<< "$VERSION_DATA")"
 [ -z "$DEFAULT_CARGO_PGX" ] && { error "default-cargo-pgx required in versions.yaml"; exit 1; }
+
+pkg_versions() {
+    local pkg="$1"
+    yq ".$pkg | keys | .[]" <<<"$VERSION_DATA" | xargs
+}
+
+# expand the list of requested package versions (usage: $1=pkg $2=single argument with the contents of the environment
+# variable containing the requested versions)
+requested_pkg_versions() {
+    local pkg="$1" envvar="$2"
+    local -a versions
+    readarray -t versions <<< "$envvar"
+    case "${#versions[@]}" in
+    0) return;;
+    1)  case "${versions[0]}" in
+        all) pkg_versions "$pkg"; return;;
+        latest) latest_pkg_version "$pkg"; return;;
+        esac;;
+    esac
+    echo "$envvar"
+}
+
+latest_pkg_version() {
+    local pkg="$1"
+    local -a versions
+    readarray -t versions <<< "$(yq ".$pkg | keys | .[]" <<<"$VERSION_DATA")"
+    echo "${versions[-1]}"
+}
 
 # locate the cargo-pgx key from versions.yaml
 pkg_cargo_pgx_version() {
@@ -153,3 +174,14 @@ supported_promscale() {
 
     version_is_supported promscale "$pg" "$ver"
 }
+
+require_supported_arch() {
+    if [[ "$ARCH" != amd64 && "$ARCH" != aarch64 ]]; then
+        echo "unsupported architecture: $ARCH" >&2
+        exit 1
+    fi
+}
+
+TIMESCALEDB_VERSIONS="$(requested_pkg_versions timescaledb "$TIMESCALEDB_VERSIONS")"
+TOOLKIT_VERSIONS="$(requested_pkg_versions toolkit "$TOOLKIT_VERSIONS")"
+PROMSCALE_VERSIONS="$(requested_pkg_versions promscale "$PROMSCALE_VERSIONS")"

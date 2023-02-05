@@ -17,8 +17,6 @@ else
     exit 1
 fi
 
-require_supported_arch
-
 VERBOSE=""
 EXIT_STATUS=0
 
@@ -130,7 +128,7 @@ check_oss_extensions() {
 }
 
 check_promscale() {
-    if [ -z "$PROMSCALE_VERSIONS" ]; then return 0; fi
+    if [ -z "$PROMSCALE_VERSIONS" ]; then return; fi
     local pg="$1" lib="$2" ver found=false
 
     if [ "$OSS_ONLY" = true ]; then
@@ -164,7 +162,7 @@ check_promscale() {
 }
 
 check_toolkit() {
-    if [ -z "$TOOLKIT_VERSIONS" ]; then return 0; fi
+    if [ -z "$TOOLKIT_VERSIONS" ]; then return; fi
     local pg="$1" lib="$2" found=false
 
     if [ "$OSS_ONLY" = true ]; then

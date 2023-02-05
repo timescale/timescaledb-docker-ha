@@ -289,13 +289,13 @@ RUN set -ex; \
         /build/scripts/install_extensions timescaledb
 
 # install all rust packages in the same step to allow it to optimize for cargo-pgx installs
-ARG TIMESCALE_PROMSCALE_EXTENSIONS
-ARG TIMESCALEDB_TOOLKIT_EXTENSIONS
+ARG PROMSCALE_VERSIONS
+ARG TOOLKIT_VERSIONS
 RUN set -ex; \
     OSS_ONLY="${OSS_ONLY}" \
         RUST_RELEASE="${RUST_RELEASE}" \
-        PROMSCALE_VERSIONS="${TIMESCALE_PROMSCALE_EXTENSIONS}" \
-        TOOLKIT_VERSIONS="${TIMESCALEDB_TOOLKIT_EXTENSIONS}" \
+        PROMSCALE_VERSIONS="${PROMSCALE_VERSIONS}" \
+        TOOLKIT_VERSIONS="${TOOLKIT_VERSIONS}" \
         /build/scripts/install_extensions rust
 
 USER root
@@ -380,8 +380,8 @@ ARG RELEASE_URL
 RUN echo "TIMESCALEDB_VERSIONS=\"${TIMESCALEDB_VERSIONS}\"" > /.image_config; \
     echo "OSS_ONLY=\"$OSS_ONLY\"" >> /.image_config; \
     echo "TIMESCALE_DCS_FAILSAFE=\"${TIMESCALE_DCS_FAILSAFE}\"" >> /.image_config; \
-    echo "PROMSCALE_VERSIONS=\"${TIMESCALE_PROMSCALE_EXTENSIONS}\"" >> /.image_config; \
-    echo "TOOLKIT_VERSIONS=\"${TIMESCALEDB_TOOLKIT_EXTENSIONS}\"" >> /.image_config; \
+    echo "PROMSCALE_VERSIONS=\"${PROMSCALE_VERSIONS}\"" >> /.image_config; \
+    echo "TOOLKIT_VERSIONS=\"${TOOLKIT_VERSIONS}\"" >> /.image_config; \
     echo "PG_LOGERRORS=\"${PG_LOGERRORS}\"" >> /.image_config; \
     echo "PG_STAT_MONITOR=\"${PG_STAT_MONITOR}\"" >> /.image_config; \
     echo "POSTGIS_VERSIONS=\"${POSTGIS_VERSIONS}\"" >> /.image_config; \

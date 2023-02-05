@@ -15,9 +15,9 @@ POSTGIS_VERSIONS?="3"
 PG_AUTH_MON?=v2.0
 PG_STAT_MONITOR?=1.1.1
 PG_LOGERRORS?=3c55887b
-TIMESCALEDB_VERSIONS?=1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0 2.5.1 2.5.2 2.6.0 2.6.1 2.7.0 2.7.1 2.7.2 2.8.0 2.8.1 2.9.0 2.9.1 2.9.2
-TIMESCALE_PROMSCALE_EXTENSIONS?=0.5.0 0.5.1 0.5.2 0.5.4 0.6.0 0.7.0 0.8.0
-TIMESCALEDB_TOOLKIT_EXTENSIONS?=1.6.0 1.7.0 1.8.0 1.10.1 1.11.0 1.12.0 1.12.1 1.13.0 1.13.1 1.14.0 1.15.0 1.16.0
+TIMESCALEDB_VERSIONS?=all
+PROMSCALE_VERSIONS?=all
+TOOLKIT_VERSIONS?=all
 TIMESCALE_DCS_FAILSAFE?=true
 
 # This is used to build the docker --platform, so pick amd64 or arm64
@@ -117,8 +117,8 @@ DOCKER_BUILD_COMMAND=docker build \
 					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
 					 --build-arg OSS_ONLY="$(OSS_ONLY)" \
 					 --build-arg TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" \
-					 --build-arg TIMESCALE_PROMSCALE_EXTENSIONS="$(TIMESCALE_PROMSCALE_EXTENSIONS)" \
-					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSIONS="$(TIMESCALEDB_TOOLKIT_EXTENSIONS)" \
+					 --build-arg PROMSCALE_VERSIONS="$(PROMSCALE_VERSIONS)" \
+					 --build-arg TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" \
 					 --build-arg TIMESCALE_DCS_FAILSAFE="$(TIMESCALE_DCS_FAILSAFE)" \
 					 --build-arg RELEASE_URL="$(DOCKER_RELEASE_URL)" \
 					 --build-arg BUILDER_URL="$(DOCKER_BUILDER_URL)" \
@@ -135,14 +135,21 @@ DOCKER_BUILD_COMMAND=docker build \
 # This is basically useful for developers of this repository, to allow fast feedback cycles.
 .PHONY: fast
 fast: DOCKER_EXTRA_BUILDARGS= --build-arg GITHUB_TAG=master
+fast: ALL_VERSIONS=false
 fast: PG_AUTH_MON=
 fast: PG_LOGERRORS=
 fast: PG_VERSIONS=15
 fast: POSTGIS_VERSIONS=
-fast: TIMESCALEDB_TOOLKIT_EXTENSIONS=
-fast: TIMESCALE_PROMSCALE_EXTENSION=
-fast: ALLOW_ADDING_EXTENSIONS=true
+fast: TOOLKIT_VERSIONS=
+fast: PROMSCALE_VERSIONS=
 fast: build
+
+.PHONY: latest
+latest: ALL_VERSIONS=false
+latest: TIMESCALEDB_VERSIONS=latest
+latest: TOOLKIT_VERSIONS=latest
+latest: PROMSCALE_VERSIONS=latest
+latest: build
 
 prune: # docker system prune -af
 	docker system prune -af

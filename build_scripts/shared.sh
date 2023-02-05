@@ -109,7 +109,12 @@ require_cargo_pgx_version() {
 }
 
 available_pg_versions() {
-    (cd /usr/lib/postgresql && ls)
+    # this allows running out-of-container with dry-run to test script logic
+    if [[ "$DRYRUN" = true && ! -d /usr/lib/postgresql ]]; then
+        echo 12 13 14 15
+    else
+        (cd /usr/lib/postgresql && ls)
+    fi
 }
 
 cargo_pgx_init() {
@@ -179,9 +184,9 @@ install_deb() {
 }
 
 # This is where we set arch/pg/extension version support checks, used by install and cicd
-. "$SCRIPT_DIR"/shared_versions.sh
+[ -s "$SCRIPT_DIR/shared_versions.sh" ] && . "$SCRIPT_DIR"/shared_versions.sh
 
 # This is where the actual installation functions are
-. "$SCRIPT_DIR"/shared_install.sh
+[ -s "$SCRIPT_DIR/shared_install.sh" ] && . "$SCRIPT_DIR"/shared_install.sh
 
 require_supported_arch

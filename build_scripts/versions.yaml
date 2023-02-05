@@ -87,7 +87,6 @@ promscale:
     pg-max: 14
     cargo-pgx: 0.4.5
   0.8.0:
-  master:
 
 toolkit:
   1.6.0:
@@ -114,4 +113,3 @@ toolkit:
   1.13.0:
     pg-max: 14
   1.13.1:
-  main:

@@ -29,8 +29,7 @@ timescaledb | all)
     for ver in $TIMESCALEDB_VERSIONS; do
         install_timescaledb "$ver"
     done
-    timescaledb_post_install
-
+    if [ "$DRYRUN" != true ]; then timescaledb_post_install; fi
     ;;& # fallthrough to get rust as well if we're called with 'all'
 
 rust | all) install_rust_extensions;;
