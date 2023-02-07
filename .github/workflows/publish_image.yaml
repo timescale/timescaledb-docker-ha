@@ -82,7 +82,7 @@ jobs:
       - name: Publish PostgreSQL Docker Images to their registries
         env:
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
-          PRIVATE_REPO_TOKEN: ${{ secrets.GH_PRIVATE_TOKEN }}
+          PRIVATE_REPO_TOKEN: ${{ secrets.API_TOKEN_GITHUB_PACKAGE }}
           DOCKER_EXTRA_BUILDARGS: ${{ matrix.docker_extra_buildargs }}
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
           PG_MAJOR: ${{ matrix.pg_major }}
