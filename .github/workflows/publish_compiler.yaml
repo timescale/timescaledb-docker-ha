@@ -36,7 +36,7 @@ jobs:
       - name: Publish Compiler Image to Docker Hub
         env:
           GIT_REV: ${{ steps.tag_name.outputs.GIT_TAG }}
-          PRIVATE_REPO_TOKEN: ${{ secrets.GH_PRIVATE_TOKEN }}
+          PRIVATE_REPO_TOKEN: ${{ secrets.API_TOKEN_GITHUB_PACKAGE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
