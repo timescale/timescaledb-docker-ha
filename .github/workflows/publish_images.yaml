@@ -117,4 +117,4 @@ jobs:
         env:
           PG_MAJOR: ${{ matrix.pg_major }}
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
-        run: make check
+        run: make get-image-config check

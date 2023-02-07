@@ -158,6 +158,10 @@ ifeq ($(USE_DOCKER_CACHE),false)
 builder: prune
 endif
 
+.PHONY: get-image-config
+get-image-config:
+	docker run --pull always --platform "linux/$(PLATFORM)" --rm $(DOCKER_RELEASE_URL) cat /.image_config
+
 .PHONY: builder
 builder: # build the `builder` target image
 builder: DOCKER_EXTRA_BUILDARGS=--target builder
