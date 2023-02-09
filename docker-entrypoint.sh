@@ -93,15 +93,15 @@ docker_create_db_directories() {
 	if [ -n "${POSTGRES_INITDB_WALDIR:-}" ]; then
 		mkdir -p "$POSTGRES_INITDB_WALDIR"
 		if [ "$uid" -eq 0 ]; then
-			find "$POSTGRES_INITDB_WALDIR" \! -user postgres -exec chown postgres '{}' +
+			find "$POSTGRES_INITDB_WALDIR" \! -user postgres -exec chown postgres '{}' + || :
 		fi
-		chmod 700 "$POSTGRES_INITDB_WALDIR"
+		chmod 700 "$POSTGRES_INITDB_WALDIR" || :
 	fi
 
 	# allow the container to be started with `--user`
 	if [ "$uid" -eq 0 ]; then
-		find "$PGDATA" \! -user postgres -exec chown postgres: '{}' +
-		find /var/run/postgresql \! -user postgres -exec chown postgres: '{}' +
+		find "$PGDATA" \! -user postgres -exec chown postgres: '{}' + || :
+		find /var/run/postgresql \! -user postgres -exec chown postgres: '{}' + || :
 	fi
 }
 
