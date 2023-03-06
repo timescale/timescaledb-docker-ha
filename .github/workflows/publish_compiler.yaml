@@ -14,7 +14,7 @@ env:
   TIMESCALE_PATRONI_K8S_SYNC: "v0.1.2"
   TIMESCALE_OOM_GUARD:  "v1.4.2"
   TIMESCALE_TSDB_ADMIN: "1.0.1"
-  TIMESCALE_TS_STAT_STATEMENTS: "0.0.2"
+  TIMESCALE_TS_STAT_STATEMENTS: "0.0.3"
 
   # This compiler image is used to create patches in other environments.
   # Some of these patches still require PostgreSQL 12 support, therefore,

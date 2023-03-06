@@ -424,7 +424,7 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token \
       cd /build \
               && git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/ts_stat_statements \
               && for pg in ${PG_VERSIONS}; do \
-                    if [ ${pg} -ge "14" ]; then \
+                    if [ ${pg} -ge "13" ]; then \
                       cd /build/ts_stat_statements && git reset HEAD --hard && git checkout ${TIMESCALE_TS_STAT_STATEMENTS} \
                       && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
                     fi; \
