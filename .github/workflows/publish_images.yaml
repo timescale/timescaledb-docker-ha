@@ -29,7 +29,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ "amd64" ]
-        pg_major: [ "15" ]
+        pg_major: [ "15", "14", "13", "12" ]
         all_versions: [ "false", "true" ]
         oss_only: [ "false", "true" ]
 
@@ -65,7 +65,7 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           ALL_VERSIONS: ${{ matrix.all_versions }}
           OSS_ONLY: ${{ matrix.oss_only }}
-        run: | 
+        run: |
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder publish-release
 
   publish-combined-manifests:
@@ -75,7 +75,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pg_major: [ "15" ]
+        pg_major: [ "15", "14", "13", "12" ]
         docker_tag_postfix: ["", "-all", "-oss", "-all-oss" ]
 
     steps:
@@ -100,7 +100,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pg_major: [ "15" ]
+        pg_major: [ "15", "14", "13", "12" ]
         docker_tag_postfix: ["", "-all", "-oss", "-all-oss" ]
 
     steps:
