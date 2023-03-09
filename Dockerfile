@@ -132,7 +132,7 @@ FROM compiler as builder
 RUN for pg in ${PG_VERSIONS}; do \
         apt-get install -y postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} \
             postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
-            postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger || exit 1; \
+            postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger postgresql-${pg}-pgpcre || exit 1; \
     done
 
 # We put Postgis in first, so these layers can be reused
