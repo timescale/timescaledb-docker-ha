@@ -83,7 +83,6 @@ check_timescaledb() {
 
     for ver in $TIMESCALEDB_VERSIONS; do
         if [[ "$ver" = master || "$ver" = main ]]; then
-            #log "skipping looking for timescaledb-$ver"
             continue
         fi
         if [[ -s "$lib/timescaledb-$ver.so" ]]; then
@@ -91,13 +90,11 @@ check_timescaledb() {
                 if [ -s "$lib/timescaledb-tsl-$ver.so" ]; then
                     error "found non-OSS timescaledb-tsl-$ver for pg$pg"
                 else
-                    #log "found timescaledb-$ver for pg$pg"
                     found=true
                     record_ext_version timescaledb "$pg" "$ver"
                 fi
             else
                 if [ -s "$lib/timescaledb-tsl-$ver.so" ]; then
-                    #log "found timescaledb-$ver and tsl-$ver for pg$pg"
                     found=true
                     record_ext_version timescaledb "$pg" "$ver"
                 else
@@ -145,7 +142,6 @@ check_promscale() {
             continue
         fi
         if [ -s "$lib/promscale-$ver.so" ]; then
-            #log "found promscale-$ver for pg$pg"
             found=true
             record_ext_version promscale_extension "$pg" "$ver"
         else
@@ -180,7 +176,6 @@ check_toolkit() {
         fi
 
         if [ -s "$lib/timescaledb_toolkit-$ver.so" ]; then
-            #log "found toolkit-$ver for pg$pg"
             found=true
             record_ext_version toolkit "$pg" "$ver"
         else
@@ -203,7 +198,6 @@ check_others() {
     record_ext_version logerrors "$pg" ""
     if [ -n "$PG_LOGERRORS" ]; then
         if [ -s "$lib/logerrors.so" ]; then
-            #log "found logerrors for pg$pg"
             record_ext_version logerrors "$pg" "$PG_LOGERRORS"
         else
             error "logerrors not found for pg$pg"
@@ -213,7 +207,6 @@ check_others() {
     record_ext_version pg_stat_monitor "$pg" ""
     if [ -n "$PG_STAT_MONITOR" ]; then
         if [ -s "$lib/pg_stat_monitor.so" ]; then
-            #log "found pg_stat_monitor for pg$pg"
             record_ext_version pg_stat_monitor "$pg" "$PG_STAT_MONITOR"
         else
             error "pg_stat_monitor not found for pg$pg"
@@ -223,7 +216,6 @@ check_others() {
     record_ext_version pg_auth_mon "$pg" ""
     if [ -n "$PG_AUTH_MON" ]; then
         if [ -s "$lib/pg_auth_mon.so" ]; then
-            #log "found pg_auth_mon for pg$pg"
             record_ext_version pg_auth_mon "$pg" "$PG_AUTH_MON"
         else
             error "pg_auth_mon not found for pg$pg"
@@ -235,7 +227,6 @@ check_others() {
         for ver in $POSTGIS_VERSIONS; do
             IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "postgresql-$pg-postgis-$ver")"
             if [ "$status" = "install ok installed" ]; then
-                #log "found pg$pg extension postgis-$version"
                 record_ext_version postgis "$pg" "$version"
             else
                 error "pg$pg extension postgis-$ver not found: $status"
@@ -247,7 +238,6 @@ check_others() {
         record_ext_version "$extname" "$pg" ""
         IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "postgresql-$pg-$extname")"
         if [ "$status" = "install ok installed" ]; then
-            #log "found pg$pg extension $extname-$version"
             record_ext_version $extname "$pg" "$version"
         else
             error "pg$pg extension $extname not found: $status"
