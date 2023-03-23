@@ -15,9 +15,13 @@
 # pg-min: <version>  (defaults to 12 if not specified)
 # pg-max: <version>  (defaults to 15 if not specified)
 # pg: [ 12, 13, 14, 15 ] (pick specific versions to build this extension with)
+#
+# arch: <amd64|aarch64|both>
 
 default-pg-min: 12
 default-pg-max: 15
+default-cargo-pgx: 0.6.1
+default-arch: both
 
 timescaledb:
   1.7.5:
@@ -99,49 +103,64 @@ timescaledb:
 
 promscale:
   0.5.0:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.3.1
   0.5.1:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.3.1
   0.5.2:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.3.1
   0.5.4:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.3.1
   0.6.0:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.4.5
   0.7.0:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.4.5
   0.8.0:
+    arch: amd64
     cargo-pgrx: 0.6.1
 
 toolkit:
   1.6.0:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.2.4
   1.7.0:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.2.4
   1.8.0:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.4.5
   1.10.1:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.4.5
   1.11.0:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.4.5
   1.12.0:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.5.4
   1.12.1:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.5.4
   1.13.0:
+    arch: amd64
     pg-max: 14
     cargo-pgrx: 0.6.1
   1.13.1:
