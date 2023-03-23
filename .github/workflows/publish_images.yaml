@@ -17,17 +17,17 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOCKER_REPOSITORY: timescale/timescaledb-ha
+  DOCKER_REPOSITORY: timescaledev/timescaledb-ha
   DOCKER_REGISTRY: docker.io
 
 jobs:
   publish:
-    name: Publish pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }}
+    name: Publish pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }}
 
     strategy:
       fail-fast: false
       matrix:
-        platform: [ "amd64" ]
+        platform: [ "amd64", "arm64" ]
         pg_major: [ "16", "15", "14", "13", "12" ]
         all_versions: [ "false", "true" ]
         oss_only: [ "false", "true" ]
@@ -37,8 +37,12 @@ jobs:
             oss: "-oss"
           - all_versions: "true"
             all: "-all"
+          - platform: amd64
+            runner_type: x64
+          - platform: arm64
+            runner_type: arm64
 
-    runs-on: ubuntu-latest
+    runs-on: [ "self-hosted", "ephemeral", "${{ matrix.runner_type }}" ]
 
     steps:
       - name: Checkout code
@@ -58,7 +62,7 @@ jobs:
         with:
           endpoint: ha-builder
 
-      - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }})
+      - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
         env:
           PLATFORM: ${{ matrix.platform }}
           PG_MAJOR: ${{ matrix.pg_major }}
@@ -80,11 +84,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
           password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+
+      # QEMU for multiplatform, which should be quick enough for pulling version information out of the images
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
       - name: Publish combined manifest for pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
           PG_MAJOR: ${{ matrix.pg_major }}
@@ -111,6 +121,10 @@ jobs:
         with:
           username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
           password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+
+      # QEMU for multiplatform, which should be quick enough for just the checks
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
       - name: Check pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:

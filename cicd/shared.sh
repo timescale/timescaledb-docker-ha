@@ -133,6 +133,11 @@ check_promscale() {
         return
     fi
 
+    if [ "$ARCH" != amd64 ]; then
+        # no arm64 promscale packages
+        return
+    fi
+
     # record an empty version so we'll get an empty table row if we don't have any versions
     record_ext_version promscale_extension "$pg" ""
 
