@@ -149,7 +149,7 @@ RUN for postgisv in ${POSTGIS_VERSIONS}; do \
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj
 RUN echo 'deb http://cz.archive.ubuntu.com/ubuntu kinetic main universe' >> /etc/apt/sources.list && \
     apt-get update && \
-    apt-get install -y patroni=2.1.4-\* && \
+    apt-get install -y patroni=2.1.6-\* && \
     head -n -1 /etc/apt/sources.list > /etc/apt/sources.list.tmp; mv /etc/apt/sources.list.tmp /etc/apt/sources.list; \
     apt-get update
 
