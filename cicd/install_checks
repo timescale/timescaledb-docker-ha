@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# Check for the things that are supposed to be installed in the image
+
+SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
+. "$SCRIPT_DIR"/shared.sh
+
+[ "$1" = -v ] && { VERBOSE=1; shift; }
+
+for pg in $(available_pg_versions); do
+    cat /dev/null > "$EXTVERSIONS".pg"$pg"
+done
+
+# make sure the image we're checking is at most 8 hours old, since we're doing a pull from the repository
+# for the check, this should make sure we're getting the one we just built
+check_base_age 28800
+
+# Check for packages that aren't pg-version-specific
+check_packages
+
+for pg in $(available_pg_versions); do
+    check_base_components "$pg" "/usr/lib/postgresql/$pg/lib"
+done
+
+if [ -n "$GITHUB_STEP_SUMMARY" ]; then
+    ext_version_table >> "$GITHUB_STEP_SUMMARY"
+fi
+
+exit $EXIT_STATUS

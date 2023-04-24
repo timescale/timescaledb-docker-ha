@@ -1,0 +1,120 @@
+name: Publish images
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+      - brent/base
+    paths-ignore:
+      - "*.md"
+
+  schedule:
+    - cron: '0 7 * * 2'
+
+concurrency:
+  group: publish-ha-images-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCKER_REPOSITORY: timescale/timescaledb-ha
+  DOCKER_REGISTRY: docker.io
+
+jobs:
+  publish:
+    name: Publish pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ "amd64" ]
+        pg_major: [ "15", "14", "13", "12" ]
+        all_versions: [ "false", "true" ]
+        oss_only: [ "false", "true" ]
+
+        include:
+          - oss_only: "true"
+            oss: "-oss"
+          - all_versions: "true"
+            all: "-all"
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Setup | Docker Context
+        run: if ! docker context use ha-builder; then docker context create ha-builder; fi
+
+      - name: Setup | Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          endpoint: ha-builder
+
+      - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }})
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          PG_MAJOR: ${{ matrix.pg_major }}
+          ALL_VERSIONS: ${{ matrix.all_versions }}
+          OSS_ONLY: ${{ matrix.oss_only }}
+        run: |
+          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder publish-release
+
+  publish-combined-manifests:
+    name: Publish manifest pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
+    needs: [ "publish" ]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pg_major: [ "15", "14", "13", "12" ]
+        docker_tag_postfix: ["", "-all", "-oss", "-all-oss" ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Publish combined manifest for pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
+        env:
+          PG_MAJOR: ${{ matrix.pg_major }}
+          VERSION_TAG: pg${{ matrix.pg_major}}${{ matrix.docker_tag_postfix }}-builder
+          DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
+        run: make publish-manifests
+
+  check:
+    name: Check image pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
+    needs: [ "publish-combined-manifests" ]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pg_major: [ "15", "14", "13", "12" ]
+        docker_tag_postfix: ["", "-all", "-oss", "-all-oss" ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Check pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
+        env:
+          PG_MAJOR: ${{ matrix.pg_major }}
+          DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
+        run: make get-image-config check

@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
+. "$SCRIPT_DIR"/shared.sh
+
+# This takes the requested toolkit and promscale extensions, figures out what versions of cargo-pgx those
+# versions want, and then build from the oldest pgx to the newest so that `cargo install cargo-pgx --version`
+# commands are only ran once. Once cargo-pgx has been installed, run the installation for the extensions,
+# and then continue through the next cargo-pgx version. At the end, we're left with the latest version of
+# cargo-pgx so that the builder image can be used to test master/main branches.
+
+# we use the following variables to decide on if/what to install:
+# - PROMSCALE_VERSIONS
+# - TOOLKIT_VERSIONS
+
+[ "$1" = -n ] && { DRYRUN=true; shift; }
+
+[ "$OSS_ONLY" = true ] && log "installing extensions for OSS_ONLY"
+
+what="$1"
+[ -z "$what" ] && what=all
+if [[ ! "$what" =~ ^versions|timescaledb|rust|all|promscale|toolkit$ ]]; then
+    echo "usage: $0 [-n] [versions|timescaledb|rust|all|promscale|toolkit]" >&2
+    exit 1
+fi
+
+case "$what" in
+versions)
+    # this outputs the expanded versions
+    echo "TIMESCALEDB_VERSIONS=\"$TIMESCALEDB_VERSIONS\""
+    echo "TOOLKIT_VERSIONS=\"$TOOLKIT_VERSIONS\""
+    echo "PROMSCALE_VERSIONS=\"$PROMSCALE_VERSIONS\""
+    ;;
+
+timescaledb | all)
+    for ver in $TIMESCALEDB_VERSIONS; do
+        install_timescaledb "$ver"
+    done
+    if [ "$DRYRUN" != true ]; then timescaledb_post_install; fi
+    ;;& # fallthrough to get rust as well if we're called with 'all'
+
+rust | all) install_rust_extensions;;
+
+promscale) TOOLKIT_VERSIONS="" install_rust_extensions;;
+
+toolkit) PROMSCALE_VERSIONS="" install_rust_extensions;;
+
+esac

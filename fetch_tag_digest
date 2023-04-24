@@ -1,0 +1,44 @@
+#!/bin/bash
+
+set -eo pipefail
+
+# fetch the SHA digest of a tag
+#
+# example input: docker.io/timescale/timescaledb-ha:pg15-multi-builder-amd64
+
+url="$1"
+if [ -z "$url" ]; then
+    echo "usage: $0 <full image URL with tag>" >&2
+    exit 1
+fi
+
+registry=docker.io # default
+tag="${url##*:}"
+path="${url%%:$tag}"
+slashes="${url//[^\/]}"
+
+case "${#slashes}" in
+0)  echo "the given url requires at least one / character" >&2
+    exit 1;;
+1)  # nothing to do
+    ;;
+2)  registry="${path%%/*}"
+    if [ "$registry" != docker.io ]; then
+        echo "this script only supports docker.io registries ($registry from $url)" >&2
+        exit 1
+    fi
+    path="${path##$registry/}";;
+*)  echo "invalid url ($url)" >&2
+    exit 1;;
+esac
+
+namespace="${path%%/*}"
+repo="${path##*/}"
+
+digest="$(curl -s "https://hub.docker.com/v2/namespaces/$namespace/repositories/$repo/tags/$tag" | jq -r ".digest")"
+if [ "${#digest}" -ne 71 ]; then
+    echo "invalid digest found: $digest" >&2
+    exit 1
+fi
+
+echo "$registry/$namespace/$repo@$digest"
