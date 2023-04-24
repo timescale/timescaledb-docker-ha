@@ -238,6 +238,21 @@ RUN set -ex; \
         done; \
     fi
 
+# pgvector is an open-source vector similarity search for Postgres
+# https://github.com/pgvector/pgvector
+ARG PGVECTOR
+RUN set -ex; \
+    if [ -n "${PGVECTOR}" ]; then \
+        git clone https://github.com/pgvector/pgvector /build/pgvector; \
+        cd /build/pgvector; \
+        git checkout "${PGVECTOR}"; \
+        for pg in ${PG_VERSIONS}; do \
+            git reset HEAD --hard; \
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make all; \
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install; \
+        done; \
+    fi
+
 # pg_auth_mon is an extension to monitor authentication attempts
 # It is also useful to determine whether the DB is actively used
 # https://github.com/RafiaSabih/pg_auth_mon
@@ -382,6 +397,7 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "TIMESCALE_DCS_FAILSAFE=\"${TIMESCALE_DCS_FAILSAFE}\"" >> /.image_config; \
     echo "PG_LOGERRORS=\"${PG_LOGERRORS}\"" >> /.image_config; \
     echo "PG_STAT_MONITOR=\"${PG_STAT_MONITOR}\"" >> /.image_config; \
+    echo "PGVECTOR=\"${PGVECTOR}\"" >> /.image_config; \
     echo "POSTGIS_VERSIONS=\"${POSTGIS_VERSIONS}\"" >> /.image_config; \
     echo "PG_AUTH_MON=\"${PG_AUTH_MON}\"" >> /.image_config; \
     echo "PG_MAJOR=\"${PG_MAJOR}\"" >> /.image_config; \
