@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOCKER_REPOSITORY: timescaledev/timescaledb-ha
+  DOCKER_REPOSITORY: timescale/timescaledb-ha
   DOCKER_REGISTRY: docker.io
 
 jobs:

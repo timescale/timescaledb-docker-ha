@@ -4,7 +4,7 @@ set -eo pipefail
 
 # fetch the SHA digest of a tag
 #
-# example input: docker.io/timescaledev/timescaledb-ha:pg15-multi-builder-amd64
+# example input: docker.io/timescale/timescaledb-ha:pg15-multi-builder-amd64
 
 url="$1"
 if [ -z "$url" ]; then
