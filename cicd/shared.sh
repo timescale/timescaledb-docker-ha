@@ -213,6 +213,15 @@ check_others() {
         fi
     fi
 
+    record_ext_version pgvector "$pg" ""
+    if [ -n "$PGVECTOR" ]; then
+        if [ -s "$lib/vector.so" ]; then
+            record_ext_version pgvector "$pg" "$PGVECTOR"
+        else
+            error "pgvector not found for pg$pg"
+        fi
+    fi
+
     record_ext_version pg_auth_mon "$pg" ""
     if [ -n "$PG_AUTH_MON" ]; then
         if [ -s "$lib/pg_auth_mon.so" ]; then
