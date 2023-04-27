@@ -9,6 +9,11 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+## [v1.6.10] - 2023-04-27
+
+* [Refactor base HA image](https://github.com/timescale/timescaledb-docker-ha/pull/355)
+* Include and default to [TimescaleDB 2.10.3](https://github.com/timescale/timescaledb/releases/tag/2.10.3)
+
 ## [v1.6.9] - 2023-04-21
 
 * Include and default to [TimescaleDB 2.10.2](https://github.com/timescale/timescaledb/releases/tag/2.10.2)
