@@ -138,7 +138,7 @@ RUN set -eux; \
             postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-${pg}-pgextwlist postgresql-${pg}-hll \
             postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger postgresql-${pg}-pgpcre \
-            postgresql-${pg}-pglogical postgresql-${pg}-wal2json postgresql-${pg}-pgq3"; \
+            postgresql-${pg}-pglogical postgresql-${pg}-wal2json postgresql-${pg}-pgq3 postgresql-${pg}-cron"; \
     done; \
     apt-get install -y $packages
 
