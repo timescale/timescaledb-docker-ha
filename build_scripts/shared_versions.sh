@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Check to make sure these extensions are available in all pg versions
-PG_WANTED_EXTENSIONS="pglogical wal2json pgextwlist pgrouting pg-stat-kcache cron pldebugger hypopg unit repack hll pgpcre"
+PG_WANTED_EXTENSIONS="pglogical wal2json pgextwlist pgrouting pg-stat-kcache cron pldebugger hypopg unit \
+    repack hll pgpcre vector pg_cron"
 
 WANTED_PACKAGES="patroni pgbackrest timescaledb-tools"
 
