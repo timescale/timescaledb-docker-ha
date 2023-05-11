@@ -239,7 +239,14 @@ version_info-%.log:
 build-oss: # build an OSS-only image
 build-oss: OSS_ONLY=true
 build-oss: DOCKER_TAG_POSTFIX=-oss
-build-oss: release
+build-oss:
+	$(DOCKER_BUILD_COMMAND)
+
+.PHONY: build
+build: # build a local docker image
+build: DOCKER_TAG_POSTFIX=-local
+build:
+	$(DOCKER_BUILD_COMMAND)
 
 .PHONY: publish-combined-builder-manifest
 publish-combined-builder-manifest: # publish a combined builder image manifest

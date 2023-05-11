@@ -47,20 +47,15 @@ POSTGIS_VERSIONS="" make build
 
 For further environment variables that can be set, we point you to the [Makefile](Makefile) itself.
 
+For updating changes in versions for timescaledb, promscale, or toolkit, update `build_scripts/versions.yaml`
+
 ## Verify your work
 
-For every pushed commit to this repository, a Docker Image will be built and is available at a private
-Amazon Elastic Container Registry (ECR).
-
-### Find the image tag for your commit
-
-> Replace *** with the AWS Account ID.
-
-Once your commit is pushed, a Docker Image will be built, and if successful, will be pushed.
-The tag of this Docker Image will be `cicd-<first 8 chars of commit sha>`, for example, for commit `baddcafe...`, the tag will look like:
-
+For every pushed commit to this repository, a Docker Image will be built. Once your commit is pushed, a Docker Image will
+be built, and if successful, will be pushed. The tag of this Docker Image will be `cicd-<first 7 chars of commit sha>-amd64`,
+for example, for commit `baddcafe...`, the tag will look like:
 ```text
-***.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha:cicd-deadbeef
+timescale/timescaledb-ha:cicd-baddcaf-amd64
 ```
 
 #### Find out tag using commandline
@@ -68,42 +63,41 @@ The tag of this Docker Image will be `cicd-<first 8 chars of commit sha>`, for e
 Assuming your current working directory is on the same commit as the one you pushed
 
 ```console
-echo "***.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha:cicd-$(git rev-parse HEAD | cut -c 1-8)"
+echo "timescale/timescaledb-ha:cicd-$(git rev-parse HEAD | cut -c 1-7)"
 ```
 
 #### Find tag using GitHub Web interface
 
 - Actions
-- Click on the **Build Image** Workflow for your commit/branch
-- Expand **List docker Images**
+- Click on the **Build branch** Workflow for your commit/branch
+- Look at the `Build and push branch summary` for the tag
 
 ##### Example output
 
-```console
-Run make list-images
-docker images --filter [...]
-REPOSITORY                                           TAG             IMAGE ID       CREATED          SIZE
-***.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha   cicd-d20dc5c5   2c81b58b4a59   54 seconds ago   1.06GB
+```text
+Checking docker.io/timescale/timescaledb-ha:cicd-8578fce-amd64
+
+amd64: the base image was built 93 seconds ago
+...
 ```
 
-In the above example, your Docker tag is `cicd-d20dc5c5` and your full image url is:
+In the above example, your Docker tag is `cicd-8578fce-amd64` and your full image url is:
 
 ```text
-***.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha:cicd-d20dc5c5
+docker.io/timescale/timescaledb-ha:cicd-8578fce-amd64
 ```
 
 ## Test your Docker Image
 
 ```console
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ***.dkr.ecr.us-east-1.amazonaws.com
-docker run --rm -ti -e POSTGRES_PASSWORD=smoketest ***.dkr.ecr.us-east-1.amazonaws.com/timescaledb-ha:cicd-baddcafe
+docker run --rm -ti -e POSTGRES_PASSWORD=smoketest docker.io/timescale/timescaledb-ha:cicd-baddcaf-amd64
 ```
 
 ## Versioning and Releases
 
 ### Release Process
 
-Between releases we keep track of notable changes in CHANGELOG.md.
+Between releases, we keep track of notable changes in CHANGELOG.md.
 
 When we want to make a release we should update CHANGELOG.md to contain the release notes for the planned release in a section for
 the proposed release number. This update is the commit that will be tagged with as the actual release which ensures that each release
@@ -124,17 +118,22 @@ using the tag commit text.
 
 ### Publish the images to Docker Hub and other registries
 
-Only if you push a tag starting with `v`, for example: `v0.8.3` to the GitHub repository, will new images will be published to docker hub automatically.
+They will be written under quite a few aliases, for example, for PostgreSQL 15.2 and Timescale 2.10.3, the following images will be built and pushed/overwritten:
 
-They will be written under quite a few aliases, for example, for PostgreSQL 12.6 and Timescale 2.0.1, the following images will be built and pushed/overwritten:
+- timescale/timescaledb-ha:pg15
+- timescale/timescaledb-ha:pg15-all
+- timescale/timescaledb-ha:pg15-ts2.10
+- timescale/timescaledb-ha:pg15-ts2.10-all
+- timescale/timescaledb-ha:pg15.2-ts2.10.3
+- timescale/timescaledb-ha:pg15.2-ts2.10.3-all
 
-- timescale/timescaledb-ha:pg12-latest
-- timescale/timescaledb-ha:pg12-ts2.0-latest
-- timescale/timescaledb-ha:pg12.6-ts2.0-latest
-- timescale/timescaledb-ha:pg12.6-ts2.0.1-latest
+For `OSS_ONLY` builds, the following tags will be published:
+- timescale/timescaledb-ha:pg15-oss
+- timescale/timescaledb-ha:pg15-all-oss
+- timescale/timescaledb-ha:pg15-ts2.10-oss
+- timescale/timescaledb-ha:pg15-ts2.10-all-oss
+- timescale/timescaledb-ha:pg15.2-ts2.10.3-oss
+- timescale/timescaledb-ha:pg15.2-ts2.10.3-all-oss
 
-> the `-latest` suffix here indicates the latest docker build, not the latest commit. In particular, images built from a tag will be published with the `-latest` suffix in addition to the tag-based suffix.
-
-In addition, for every build, an immutable image will be created and pushed, which will carry a patch version at the end. These are most suited for production releases, for example:
-
-- timescale/timescaledb-ha:pg12.6-ts2.0.1-p0
+The `-all` portion of the tags specifies that the image contains pg15, as well as version 12, 13, and 14. Otherwise, only
+the single version of PostgreSQL is included in the image.
