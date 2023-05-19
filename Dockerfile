@@ -144,7 +144,6 @@ RUN set -eux; \
     done; \
     apt-get install -y $packages
 
-
 ARG POSTGIS_VERSIONS="3"
 RUN set -eux; \
     for postgisv in ${POSTGIS_VERSIONS}; do \
@@ -152,6 +151,11 @@ RUN set -eux; \
             apt-get install -y postgresql-${pg}-postgis-${postgisv}; \
         done; \
     done
+
+# Add a couple 3rd party extension managers to make extension additions easier
+RUN set -eux; \
+    apt-get install -y pgxnclient; \
+    cargo install pg-trunk
 
 # Some Patroni prerequisites
 # This need to be done after the PostgreSQL packages have been installed,
