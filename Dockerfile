@@ -140,7 +140,7 @@ RUN set -eux; \
             postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger postgresql-${pg}-pgpcre \
             postgresql-${pg}-pglogical postgresql-${pg}-wal2json postgresql-${pg}-pgq3 postgresql-${pg}-pg-qualstats \
-            postgresql-${pg}-pgaudit"; \
+            postgresql-${pg}-pgaudit postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-orafce"; \
     done; \
     apt-get install -y $packages
 
@@ -156,6 +156,16 @@ RUN set -eux; \
 RUN set -eux; \
     apt-get install -y pgxnclient; \
     cargo install pg-trunk
+
+RUN set -eux; \
+    for pg in ${PG_VERSIONS}; do \
+        for pkg in h3; do \
+            pgxn install --pg_config "/usr/lib/postgresql/${pg}/bin/pg_config" "$pkg"; \
+        done; \
+        for pkg in pg_uuidv7; do \
+            trunk install --pg-config "/usr/lib/postgresql/${pg}/bin/pg_config" "$pkg"; \
+        done; \
+    done
 
 # Some Patroni prerequisites
 # This need to be done after the PostgreSQL packages have been installed,
