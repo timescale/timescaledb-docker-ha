@@ -242,6 +242,11 @@ RUN set -ex; \
 
 # pgvector is an open-source vector similarity search for Postgres
 # https://github.com/pgvector/pgvector
+# As pgvector assumes running on the same system it was build at,
+# and this is not always our case (since AWS has instances with
+# different types of CPU, disable CPU-specific optimizations by
+# supplying OPTFLAGS="".
+# See https://github.com/pgvector/pgvector/issues/143
 ARG PGVECTOR
 RUN set -ex; \
     if [ -n "${PGVECTOR}" ]; then \
@@ -250,8 +255,8 @@ RUN set -ex; \
         git checkout "${PGVECTOR}"; \
         for pg in ${PG_VERSIONS}; do \
             git reset HEAD --hard; \
-            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make all; \
-            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install; \
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make OPTFLAGS="" all; \
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make OPTFLAGS="" install; \
         done; \
     fi
 
