@@ -24,7 +24,7 @@
 ## the changes required are not that big for this Docker Image. Most of the
 ## tools we use will be the same across the board, as most of our tools our
 ## installed using external repositories.
-ARG DOCKER_FROM=ubuntu:22.04
+ARG DOCKER_FROM=debian:bookworm
 FROM ${DOCKER_FROM} AS builder
 
 # By including multiple versions of PostgreSQL we can use the same Docker image,
@@ -69,7 +69,7 @@ RUN for t in deb deb-src; do \
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
 RUN curl -Ls https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor --output /usr/share/keyrings/timescaledb.keyring
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/timescaledb.keyring] https://packagecloud.io/timescale/timescaledb/ubuntu/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/timescaledb.list
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/timescaledb.keyring] https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/timescaledb.list
 
 # The following tools are required for some of the processes we (TimescaleDB) regularly
 # run inside the containers that use this Docker Image
