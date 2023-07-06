@@ -19,7 +19,6 @@ PGVECTOR?=v0.4.1
 TIMESCALEDB_VERSIONS?=all
 PROMSCALE_VERSIONS?=all
 TOOLKIT_VERSIONS?=all
-TIMESCALE_DCS_FAILSAFE?=true
 
 # This is used to build the docker --platform, so pick amd64 or arm64
 PLATFORM?=amd64
@@ -121,7 +120,6 @@ DOCKER_BUILD_COMMAND=docker build \
 					 --build-arg PROMSCALE_VERSIONS="$(PROMSCALE_VERSIONS)" \
 					 --build-arg TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" \
 					 --build-arg PGVECTOR="$(PGVECTOR)" \
-					 --build-arg TIMESCALE_DCS_FAILSAFE="$(TIMESCALE_DCS_FAILSAFE)" \
 					 --build-arg RELEASE_URL="$(DOCKER_RELEASE_URL)" \
 					 --build-arg BUILDER_URL="$(DOCKER_BUILDER_URL)" \
 					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
