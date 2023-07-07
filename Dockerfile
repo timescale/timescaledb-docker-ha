@@ -171,22 +171,6 @@ RUN set -eux; \
 # This need to be done after the PostgreSQL packages have been installed,
 # to ensure we have the preferred libpq installations etc.
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj patroni
-
-# Patch Patroni code with changes from https://github.com/zalando/patroni/pull/2379.
-# NOTE: This is a temporary solution until changes land upstream.
-ARG TIMESCALE_DCS_FAILSAFE
-RUN if [ -n "${TIMESCALE_DCS_FAILSAFE}" ]; then \
-        mkdir /tmp/patroni; \
-        cd /tmp/patroni; \
-        git init; \
-        git remote add -f origin https://github.com/timescale/patroni.git; \
-        git config core.sparseCheckout true; \
-        echo 'patroni' > .git/info/sparse-checkout; \
-        git pull origin dcs-failsafe-mode; \
-        rm -rf /usr/lib/python3/dist-packages/patroni; \
-        mv /tmp/patroni/patroni /usr/lib/python3/dist-packages; \
-    fi
-
 RUN apt-get install -y timescaledb-tools
 
 ## Entrypoints as they are from the Timescale image and its default upstream repositories.
