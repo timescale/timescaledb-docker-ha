@@ -1,13 +1,15 @@
 # We need to describe various things for each version of each extension:
-# 1. which version of cargo-pgx is required
+# 1. which version of cargo-pgrx is required
 # 2. which version of pg is supported
 
 # extension:
 #   version:
 #     key/values
-# 
-# Specify which version of cargo-pgx is required for this extension:
-# cargo-pgx: <version> 
+#
+# Specify which version of cargo-pgrx is required for this extension
+# versions < 0.8.0 were called pgx, but the scripts automatically pick
+# the correct name based on the version.
+# cargo-pgrx: <version>
 #
 # Specify which version of postgresql this version supports:
 # pg-min: <version>  (defaults to 12 if not specified)
@@ -16,7 +18,6 @@
 
 default-pg-min: 12
 default-pg-max: 15
-default-cargo-pgx: 0.6.1
 
 timescaledb:
   1.7.5:
@@ -77,51 +78,57 @@ timescaledb:
 promscale:
   0.5.0:
     pg-max: 14
-    cargo-pgx: 0.3.1
+    cargo-pgrx: 0.3.1
   0.5.1:
     pg-max: 14
-    cargo-pgx: 0.3.1
+    cargo-pgrx: 0.3.1
   0.5.2:
     pg-max: 14
-    cargo-pgx: 0.3.1
+    cargo-pgrx: 0.3.1
   0.5.4:
     pg-max: 14
-    cargo-pgx: 0.3.1
+    cargo-pgrx: 0.3.1
   0.6.0:
     pg-max: 14
-    cargo-pgx: 0.4.5
+    cargo-pgrx: 0.4.5
   0.7.0:
     pg-max: 14
-    cargo-pgx: 0.4.5
+    cargo-pgrx: 0.4.5
   0.8.0:
+    cargo-pgrx: 0.6.1
 
 toolkit:
   1.6.0:
     pg-max: 14
-    cargo-pgx: 0.2.4
+    cargo-pgrx: 0.2.4
   1.7.0:
     pg-max: 14
-    cargo-pgx: 0.2.4
+    cargo-pgrx: 0.2.4
   1.8.0:
     pg-max: 14
-    cargo-pgx: 0.4.5
+    cargo-pgrx: 0.4.5
   1.10.1:
     pg-max: 14
-    cargo-pgx: 0.4.5
+    cargo-pgrx: 0.4.5
   1.11.0:
     pg-max: 14
-    cargo-pgx: 0.4.5
+    cargo-pgrx: 0.4.5
   1.12.0:
     pg-max: 14
-    cargo-pgx: 0.5.4
+    cargo-pgrx: 0.5.4
   1.12.1:
     pg-max: 14
-    cargo-pgx: 0.5.4
+    cargo-pgrx: 0.5.4
   1.13.0:
     pg-max: 14
+    cargo-pgrx: 0.6.1
   1.13.1:
+    cargo-pgrx: 0.6.1
   1.14.0:
+    cargo-pgrx: 0.6.1
   1.15.0:
-    cargo-pgx: 0.7.1
+    cargo-pgrx: 0.7.1
   1.16.0:
-    cargo-pgx: 0.7.1
+    cargo-pgrx: 0.7.1
+  1.17.0:
+    cargo-pgrx: 0.9.7
