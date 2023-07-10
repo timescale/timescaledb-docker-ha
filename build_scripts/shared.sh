@@ -61,6 +61,16 @@ cargo_pgx_installed() {
     return 1
 }
 
+cargo_pgrx_installed() {
+    if ! cargo_installed; then
+        return 1
+    fi
+    if test cargo pgrx --version >&/dev/null; then
+        return 0
+    fi
+    return 1
+}
+
 cargo_pgx_version() {
     if ! cargo_pgx_installed; then
         return 1
@@ -72,6 +82,21 @@ cargo_pgx_version() {
     fi
     if [ "$current_pgx" != "uninstalled" ]; then
         echo "$current_pgx"
+    fi
+    return 0
+}
+
+cargo_pgrx_version() {
+    if ! cargo_pgrx_installed; then
+        return 1
+    fi
+
+    local current_pgrx=uninstalled
+    if test cargo pgrx --version >&/dev/null; then
+        current_pgrx="$(cargo pgrx --version | awk '{print $2}')"
+    fi
+    if [ "$current_pgrx" != "uninstalled" ]; then
+        echo "$current_pgrx"
     fi
     return 0
 }
@@ -108,6 +133,38 @@ require_cargo_pgx_version() {
     return 0
 }
 
+require_cargo_pgrx_version() {
+    local version="$1" err
+    [ -z "$version" ] && return 1
+
+    if ! cargo_installed; then
+        error "cargo is not available, cannot install cargo-pgrx"
+        return 1
+    fi
+    if ! cargo_pgrx_installed; then
+        cargo install cargo-pgrx --version "=$version"
+        err=$?
+        if [ $err -ne 0 ]; then
+            error "failed installing cargo-pgrx-$version ($err)"
+            return $err
+        fi
+        log "installed cargo-pgrx-$version"
+    fi
+
+    local current_version
+    current_version="$(cargo_pgrx_version)"
+    if [[ -z "$current_version" || "$current_version" != "$version" ]]; then
+        cargo install cargo-pgrx --version "=$version"
+        err=$?
+        if [ $err -ne 0 ]; then
+            error "failed installing cargo-pgrx-$version ($err)"
+            return $err
+        fi
+        log "installed cargo-pgrx-$version"
+    fi
+    return 0
+}
+
 available_pg_versions() {
     # this allows running out-of-container with dry-run to test script logic
     if [[ "$DRYRUN" = true && ! -d /usr/lib/postgresql ]]; then
@@ -117,31 +174,44 @@ available_pg_versions() {
     fi
 }
 
-cargo_pgx_init() {
-    local pgx_version="$1" pg_ver="$2" pg_versions
+cargo_pgrx_cmd() {
+    local pgrx_version="$1"
+    if [[ "$pgrx_version" =~ ^0\.[0-7]\.* ]]; then echo "pgx"; else echo "pgrx"; fi
+}
 
-    if ! require_cargo_pgx_version "$pgx_version"; then
-        error "failed requiring cargo-pgx-$pgx_version ($?)"
-        return 1
+cargo_pgrx_init() {
+    local pgrx_version="$1" pg_ver="$2" pg_versions pgrx_cmd
+    pgrx_cmd="$(cargo_pgrx_cmd "$pgrx_version")"
+
+    if [ "$pgrx_cmd" = pgx ]; then
+        if ! require_cargo_pgx_version "$pgrx_version"; then
+            error "failed requiring cargo-pgx-$pgrx_version ($?)"
+            return 1
+        fi
+    else
+        if ! require_cargo_pgrx_version "$pgrx_version"; then
+            error "failed requiring cargo-pgrx-$pgrx_version ($?)"
+            return 1
+        fi
     fi
 
-    if [[ -z "$pg_ver" || "$pg" -eq 15 && "$pgx_version" =~ ^0\.[0-5]\.* ]]; then
+    if [[ -z "$pg_ver" || "$pg" -eq 15 && "$pgrx_version" =~ ^0\.[0-5]\.* ]]; then
         pg_versions="$(available_pg_versions)"
     else
         pg_versions="$pg_ver"
     fi
     args=()
     for pg in $pg_versions; do
-        # pgx only got the pg15 feature in 0.6.0
-        [[ "$pgx_version" =~ ^0\.[0-5]\.* && $pg -eq 15 ]] && continue
+        # pgrx only got the pg15 feature in 0.6.0
+        [[ "$pgrx_version" =~ ^0\.[0-5]\.* && $pg -eq 15 ]] && continue
 
         args+=("--pg${pg}" "/usr/lib/postgresql/${pg}/bin/pg_config")
     done
-    rm -f /home/postgres/.pgx/config.toml
-    cargo pgx init "${args[@]}"
+    rm -f "/home/postgres/.$pgrx_cmd/config.toml"
+    cargo "$pgrx_cmd" init "${args[@]}"
     err=$?
     if [ $err -ne 0 ]; then
-        error "failed cargo pgx init ${args[*]} ($err)"
+        error "failed cargo $pgrx_cmd init ${args[*]} ($err)"
         return $err
     fi
     return 0

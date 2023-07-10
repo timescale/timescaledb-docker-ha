@@ -3,11 +3,11 @@
 SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 . "$SCRIPT_DIR"/shared.sh
 
-# This takes the requested toolkit and promscale extensions, figures out what versions of cargo-pgx those
-# versions want, and then build from the oldest pgx to the newest so that `cargo install cargo-pgx --version`
-# commands are only ran once. Once cargo-pgx has been installed, run the installation for the extensions,
-# and then continue through the next cargo-pgx version. At the end, we're left with the latest version of
-# cargo-pgx so that the builder image can be used to test master/main branches.
+# This takes the requested toolkit and promscale extensions, figures out what versions of cargo-pgx/pgrx those
+# versions want, and then build from the oldest pgx/pgrx to the newest so that `cargo install cargo-pgx/pgrx --version`
+# commands are only ran once. Once cargo-pgrx has been installed, run the installation for the extensions,
+# and then continue through the next cargo-pgrx version. At the end, we're left with the latest version of
+# cargo-pgrx so that the builder image can be used to test master/main branches.
 
 # we use the following variables to decide on if/what to install:
 # - PROMSCALE_VERSIONS

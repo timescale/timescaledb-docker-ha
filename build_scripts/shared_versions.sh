@@ -32,8 +32,6 @@ DEFAULT_PG_MIN="$(yq .default-pg-min <<< "$VERSION_DATA")"
 [ -z "$DEFAULT_PG_MIN" ] && { error "default-pg-min required in versions.yaml"; exit 1; }
 DEFAULT_PG_MAX="$(yq .default-pg-max <<< "$VERSION_DATA")"
 [ -z "$DEFAULT_PG_MAX" ] && { error "default-pg-max required in versions.yaml"; exit 1; }
-DEFAULT_CARGO_PGX="$(yq .default-cargo-pgx <<< "$VERSION_DATA")"
-[ -z "$DEFAULT_CARGO_PGX" ] && { error "default-cargo-pgx required in versions.yaml"; exit 1; }
 
 pkg_versions() {
     local pkg="$1"
@@ -63,58 +61,54 @@ latest_pkg_version() {
     echo "${versions[-1]}"
 }
 
-# locate the cargo-pgx key from versions.yaml
-pkg_cargo_pgx_version() {
-    local pkg="$1" ver="$2" cargopgx
+# locate the cargo-pgrx key from versions.yaml
+pkg_cargo_pgrx_version() {
+    local pkg="$1" ver="$2" cargopgrx
 
-    cargopgx="$(yq ".$pkg | pick([\"$ver\"]) | .[].cargo-pgx" <<<"$VERSION_DATA")"
-    if [ "$cargopgx" = null ]; then
-        echo "$DEFAULT_CARGO_PGX"
-    else
-        echo "$cargopgx"
-    fi
+    cargopgrx="$(yq ".$pkg | pick([\"$ver\"]) | .[].cargo-pgrx" <<<"$VERSION_DATA")"
+    if [ "$cargopgrx" = null ]; then return; else echo "$cargopgrx"; fi
 }
 
-# install the rust extensions ordered from oldest required cargo-pgx to newest to keep
-# the number of rebuilds for cargo-pgx to a minimum
+# install the rust extensions ordered from oldest required cargo-pgrx to newest to keep
+# the number of rebuilds for cargo-pgrx to a minimum
 install_rust_extensions() {
-    local cargopgx
-    declare -A pgx_versions=()
+    local cargopgrx sorted_pgrx_versions
+    declare -A pgrx_versions=()
 
     for ver in $TOOLKIT_VERSIONS; do
-        cargopgx="$(pkg_cargo_pgx_version "toolkit" "$ver")"
-        if [ "$cargopgx" = null ]; then
-            error "no cargo-pgx version found for toolkit-$ver"
+        cargopgrx="$(pkg_cargo_pgrx_version "toolkit" "$ver")"
+        if [ -z "$cargopgrx" ]; then
+            error "no cargo-pgrx version found for toolkit-$ver"
             continue
         fi
-        pgx_versions[$cargopgx]+=" toolkit-$ver"
+        pgrx_versions[$cargopgrx]+=" toolkit-$ver"
     done
 
     for ver in $PROMSCALE_VERSIONS; do
-        cargopgx="$(pkg_cargo_pgx_version "promscale" "$ver")"
-        if [ -z "$cargopgx" ]; then
-            error "no cargo-pgx version found for promscale-$ver"
+        cargopgrx="$(pkg_cargo_pgrx_version "promscale" "$ver")"
+        if [ -z "$cargopgrx" ]; then
+            error "no cargo-pgrx version found for promscale-$ver"
             continue
         fi
-        pgx_versions[$cargopgx]+=" promscale-$ver"
+        pgrx_versions[$cargopgrx]+=" promscale-$ver"
     done
 
-    sorted_pgx_versions="$(for pgx_ver in "${!pgx_versions[@]}"; do echo "$pgx_ver"; done | sort -Vu)"
-    for pgx_ver in $sorted_pgx_versions; do
-        ext_versions="$(for ext_ver in ${pgx_versions[$pgx_ver]}; do echo "$ext_ver"; done | sort -Vu)"
+    sorted_pgrx_versions="$(for pgrx_ver in "${!pgrx_versions[@]}"; do echo "$pgrx_ver"; done | sort -Vu)"
+    for pgrx_ver in $sorted_pgrx_versions; do
+        ext_versions="$(for ext_ver in ${pgrx_versions[$pgrx_ver]}; do echo "$ext_ver"; done | sort -Vu)"
         for ext_ver in $ext_versions; do
             ext="$(echo "$ext_ver" | cut -d- -f1)"
             ver="$(echo "$ext_ver" | cut -d- -f2-)"
             case "$ext" in
-            toolkit)   install_toolkit   "$pgx_ver" "$ver";;
-            promscale) install_promscale "$pgx_ver" "$ver";;
+            toolkit)   install_toolkit   "$pgrx_ver" "$ver";;
+            promscale) install_promscale "$pgrx_ver" "$ver";;
             esac
         done
     done
 }
 
 version_is_supported() {
-    local pkg="$1" pg="$2" ver="$3" pdata pgmin pgmax cargopgx
+    local pkg="$1" pg="$2" ver="$3" pdata pgmin pgmax
     local -a pgversions
 
     pdata="$(yq ".$pkg | pick([\"$ver\"]) | .[]" <<<"$VERSION_DATA")"

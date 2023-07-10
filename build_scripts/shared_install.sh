@@ -60,8 +60,9 @@ install_timescaledb() {
 }
 
 install_toolkit() {
-    local rust_release cargo_pgx_version="$1" version="$2" pg pkg=toolkit dpkg deb_version unsupported_reason
+    local rust_release cargo_pgrx_version="$1" version="$2" pg pkg=toolkit dpkg deb_version unsupported_reason pgrx_cmd
     [ -n "$RUST_RELEASE" ] && rust_release=release || rust_release=debug
+    pgrx_cmd="$(cargo_pgrx_cmd "$cargo_pgrx_version")"
 
     if [ "$OSS_ONLY" = true ]; then
         log "skipped toolkit-$version due to OSS_ONLY"
@@ -77,24 +78,24 @@ install_toolkit() {
 
         read -rs dpkg deb_version <<< "$(find_deb "timescaledb-toolkit-postgresql-$pg" "$version")"
         if [[ -n "$dpkg" && -n "$deb_version" ]]; then
-            [[ "$DRYRUN" = true ]] && { log "would install debian package $dpkg-$deb_version (cargo-pgx: $cargo_pgx_version)"; continue; }
+            [[ "$DRYRUN" = true ]] && { log "would install debian package $dpkg-$deb_version (cargo-$cargo_pgrx_cmd: $cargo_pgrx_version)"; continue; }
             if install_deb "$dpkg" "$deb_version"; then continue; fi
             log "failed installing $dpkg $deb_version"
         else
             log "couldn't find debian package for timescaleb-toolkit-postgresql-$pg $version"
         fi
 
-        log "building $pkg-$version for pg$pg (cargo-pgx: $cargo_pgx_version)"
+        log "building $pkg-$version for pg$pg (cargo-$pgrx_cmd: $cargo_pgrx_version)"
 
         [ "$DRYRUN" = true ] && continue
 
         PATH="/usr/lib/postgresql/$pg/bin:${ORIGINAL_PATH}"
-        cargo_pgx_init "$cargo_pgx_version" "$pg" || continue
+        cargo_pgrx_init "$cargo_pgrx_version" "$pg" || continue
         git_clone https://github.com/timescale/timescaledb-toolkit.git $pkg || continue
         git_checkout $pkg "$version" || continue
         (
             cd /build/$pkg || exit 1
-            CARGO_TARGET_DIR_NAME=target ./tools/build "-pg$pg" -profile "$rust_release" install || { echo "failed cargo pgx install for pg$pg, $pkg-$version"; exit 1; }
+            CARGO_TARGET_DIR_NAME=target ./tools/build "-pg$pg" -profile "$rust_release" install || { echo "failed toolkig build for pg$pg, $pkg-$version"; exit 1; }
         )
         err=$?
         if [ $err -eq 0 ]; then
@@ -107,8 +108,9 @@ install_toolkit() {
 }
 
 install_promscale() {
-    local rust_release cargo_pgx_version="$1" version="$2" pg pkg=promscale dpkg deb_version unsupported_reason
+    local rust_release cargo_pgrx_version="$1" version="$2" pg pkg=promscale dpkg deb_version unsupported_reason pgrx_cmd
     [ -n "$RUST_RELEASE" ] && rust_release=-r || rust_release=""
+    pgrx_cmd="$(cargo_pgrx_cmd "$cargo_pgrx_version")"
 
     if [ "$OSS_ONLY" = true ]; then
         log "skipped toolkit-$version due to OSS_ONLY"
@@ -124,25 +126,25 @@ install_promscale() {
 
         read -rs dpkg deb_version <<< "$(find_deb "promscale-extension-postgresql-$pg" "$version")"
         if [[ -n "$dpkg" && -n "$deb_version" ]]; then
-            [[ "$DRYRUN" = true ]] && { log "would install debian package $dpkg-$deb_version (cargo-pgx: $cargo_pgx_version)"; continue; }
+            [[ "$DRYRUN" = true ]] && { log "would install debian package $dpkg-$deb_version (cargo-$pgrx_cmd: $cargo_pgrx_version)"; continue; }
             if install_deb "$dpkg" "$deb_version"; then continue; fi
             log "failed installing $dpkg $deb_version"
         else
             log "couldn't find debian package for promscale-extension-postgresql-$pg $version"
         fi
 
-        log "building $pkg version $version for pg$pg (cargo-pgx: $cargo_pgx_version)"
+        log "building $pkg version $version for pg$pg (cargo-$pgrx_cmd: $cargo_pgrx_version)"
 
         [ "$DRYRUN" = true ] && continue
 
         PATH="/usr/lib/postgresql/$pg/bin:${ORIGINAL_PATH}"
-        cargo_pgx_init "$cargo_pgx_version" "$pg" || continue
+        cargo_pgrx_init "$cargo_pgrx_version" "$pg" || continue
         git_clone https://github.com/timescale/promscale_extension.git $pkg || continue
         git_checkout $pkg "$version" || continue
         (
             cd /build/$pkg || exit 1
             cp templates/promscale.control ./promscale.control
-            cargo pgx install ${rust_release} --features "pg$pg" || { echo "failed cargo pgx install for pg$pg, $pkg-$version"; exit 1; }
+            cargo "$pgrx_cmd" install ${rust_release} --features "pg$pg" || { echo "failed cargo $pgrx_cmd install for pg$pg, $pkg-$version"; exit 1; }
         )
         err=$?
         if [ $err -eq 0 ]; then
