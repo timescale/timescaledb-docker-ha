@@ -78,7 +78,7 @@ install_toolkit() {
 
         read -rs dpkg deb_version <<< "$(find_deb "timescaledb-toolkit-postgresql-$pg" "$version")"
         if [[ -n "$dpkg" && -n "$deb_version" ]]; then
-            [[ "$DRYRUN" = true ]] && { log "would install debian package $dpkg-$deb_version (cargo-$cargo_pgrx_cmd: $cargo_pgrx_version)"; continue; }
+            [[ "$DRYRUN" = true ]] && { log "would install debian package $dpkg-$deb_version (cargo-$pgrx_cmd: $cargo_pgrx_version)"; continue; }
             if install_deb "$dpkg" "$deb_version"; then continue; fi
             log "failed installing $dpkg $deb_version"
         else
