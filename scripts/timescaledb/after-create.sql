@@ -24,14 +24,3 @@ BEGIN
         END LOOP;
 END$$;
 
--- Grant pg_replication permissions to tsdbadmin to allow logical decoding.
-DO $$DECLARE r record;
-BEGIN
-    FOR r IN SELECT func from unnest(ARRAY[
-            'pg_replication_origin_oid(text)', 'pg_replication_origin_create(text)', 'pg_replication_origin_advance(text, pg_lsn)',
-            'pg_replication_origin_progress(text, boolean)', 'pg_replication_origin_drop(text)', 'pg_replication_origin_session_setup(text)',
-            'pg_replication_origin_xact_setup(pg_lsn, timestamp with time zone)']) tsch
-        LOOP
-            EXECUTE 'GRANT EXECUTE ON FUNCTION ' || r.func || ' TO @database_owner@';
-        END LOOP;
-END$$;
