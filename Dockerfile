@@ -145,27 +145,41 @@ RUN set -eux; \
     apt-get install -y $packages
 
 ARG POSTGIS_VERSIONS="3"
-RUN set -eux; \
-    for postgisv in ${POSTGIS_VERSIONS}; do \
-        for pg in ${PG_VERSIONS}; do \
-            apt-get install -y postgresql-${pg}-postgis-${postgisv}; \
+RUN set -ex; \
+    if [ -n "${POSTGIS_VERSIONS}" ]; then \
+        for postgisv in ${POSTGIS_VERSIONS}; do \
+            for pg in ${PG_VERSIONS}; do \
+                apt-get install -y postgresql-${pg}-postgis-${postgisv}; \
+            done; \
         done; \
-    done
+    fi
 
 # Add a couple 3rd party extension managers to make extension additions easier
 RUN set -eux; \
-    apt-get install -y pgxnclient; \
-    cargo install pg-trunk
+    apt-get install -y pgxnclient
 
 RUN set -eux; \
     for pg in ${PG_VERSIONS}; do \
-        for pkg in h3; do \
-            pgxn install --pg_config "/usr/lib/postgresql/${pg}/bin/pg_config" "$pkg"; \
-        done; \
         for pkg in pg_uuidv7; do \
-            trunk install --pg-config "/usr/lib/postgresql/${pg}/bin/pg_config" "$pkg"; \
+            PATH="/usr/lib/postgresql/${pg}/bin:$PATH" pgxnclient install --pg_config "/usr/lib/postgresql/${pg}/bin/pg_config" "$pkg"; \
         done; \
     done
+
+# h3 has to use cmake in order to allow installing on anything but the latest version of pg that it finds
+ARG H3
+RUN set -ex; \
+    if [ -n "${H3}" ]; then \
+        cd /build; \
+        git clone https://github.com/zachasme/h3-pg.git; \
+        cd h3-pg; \
+        git checkout "${H3}"; \
+        for pg in ${PG_VERSIONS}; do \
+            rm -fr build* >/dev/null 2>&1; \
+            cmake -B build -DCMAKE_BUILD_TYPE=Release -DPostgreSQL_ADDITIONAL_VERSIONS="${pg}"; \
+            cmake --build build; \
+            cmake --install build --component h3-pg; \
+        done; \
+    fi
 
 # Some Patroni prerequisites
 # This need to be done after the PostgreSQL packages have been installed,

@@ -245,11 +245,17 @@ check_others() {
 
     for extname in $PG_WANTED_EXTENSIONS; do
         record_ext_version "$extname" "$pg" ""
-        IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "postgresql-$pg-$extname")"
+        IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "postgresql-$pg-$extname" 2>/dev/null)"
         if [ "$status" = "install ok installed" ]; then
-            record_ext_version $extname "$pg" "$version"
+            record_ext_version "$extname" "$pg" "$version"
         else
-            error "pg$pg extension $extname not found: $status"
+            # it's not a debian package, but is it still installed via other means?
+            if [ -f "$lib/${extname}.so" ]; then
+                record_ext_version "$extname" "$pg" "unknown"
+            else
+                ls "$lib"
+                error "pg$pg extension $extname not found: $status (and not at $lib/${extname}.so"
+            fi
         fi
     done
 }
