@@ -413,7 +413,6 @@ ARG BUILDER_URL
 ARG RELEASE_URL
 RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "OSS_ONLY=\"$OSS_ONLY\"" >> /.image_config; \
-    echo "TIMESCALE_DCS_FAILSAFE=\"${TIMESCALE_DCS_FAILSAFE}\"" >> /.image_config; \
     echo "PG_LOGERRORS=\"${PG_LOGERRORS}\"" >> /.image_config; \
     echo "PG_STAT_MONITOR=\"${PG_STAT_MONITOR}\"" >> /.image_config; \
     echo "PGVECTOR=\"${PGVECTOR}\"" >> /.image_config; \
