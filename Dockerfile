@@ -89,7 +89,7 @@ ARG PGBOUNCER_EXPORTER_VERSION="0.7.0"
 RUN curl --silent \
         --location \
         --output /tmp/pkg.tgz \
-        https://github.com/prometheus-community/pgbouncer_exporter/releases/download/v${PGBOUNCER_EXPORTER_VERSION}/pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-amd64.tar.gz && \
+        https://github.com/prometheus-community/pgbouncer_exporter/releases/download/v${PGBOUNCER_EXPORTER_VERSION}/pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-$(dpkg --print-architecture).tar.gz && \
     cd /tmp && \
     tar xvzf /tmp/pkg.tgz pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-amd64/pgbouncer_exporter && \
     mv -v /tmp/pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-amd64/pgbouncer_exporter /usr/local/bin/pgbouncer_exporter && \
