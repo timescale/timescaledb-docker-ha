@@ -84,6 +84,17 @@ RUN set -eux; \
     curl -Lso /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_"$(dpkg --print-architecture)"; \
     chmod 755 /usr/local/bin/yq
 
+# pgbouncer-exporter
+ARG PGBOUNCER_EXPORTER_VERSION="0.7.0"
+RUN curl --silent \
+        --location \
+        --output /tmp/pkg.tgz \
+        https://github.com/prometheus-community/pgbouncer_exporter/releases/download/v${PGBOUNCER_EXPORTER_VERSION}/pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-amd64.tar.gz && \
+    cd /tmp && \
+    tar xvzf /tmp/pkg.tgz pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-amd64/pgbouncer_exporter && \
+    mv -v /tmp/pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-amd64/pgbouncer_exporter /usr/local/bin/pgbouncer_exporter && \
+    rm -rfv /tmp/pkg.tgz /tmp/pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-amd64
+
 # forbid creation of a main cluster when package is installed
 RUN sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
 
