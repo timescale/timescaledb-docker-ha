@@ -20,6 +20,7 @@ H3?=v4.1.2
 TIMESCALEDB_VERSIONS?=all
 PROMSCALE_VERSIONS?=all
 TOOLKIT_VERSIONS?=all
+PGBOUNCER_EXPORTER_VERSION?=0.7.0
 
 # This is used to build the docker --platform, so pick amd64 or arm64
 PLATFORM?=amd64
@@ -124,6 +125,7 @@ DOCKER_BUILD_COMMAND=docker build \
 					 --build-arg H3="$(H3)" \
 					 --build-arg RELEASE_URL="$(DOCKER_RELEASE_URL)" \
 					 --build-arg BUILDER_URL="$(DOCKER_BUILDER_URL)" \
+					 --build-arg PGBOUNCER_EXPORTER_VERSION=$(PGBOUNCER_EXPORTER_VERSION) \
 					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds -u)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
