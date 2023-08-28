@@ -86,14 +86,16 @@ RUN set -eux; \
 
 # pgbouncer-exporter
 ARG PGBOUNCER_EXPORTER_VERSION="0.7.0"
-RUN curl --silent \
+RUN set -eux; \
+    pkg="pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-$(dpkg --print-architecture)"; \
+    curl --silent \
         --location \
         --output /tmp/pkg.tgz \
-        https://github.com/prometheus-community/pgbouncer_exporter/releases/download/v${PGBOUNCER_EXPORTER_VERSION}/pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-$(dpkg --print-architecture).tar.gz && \
-    cd /tmp && \
-    tar xvzf /tmp/pkg.tgz pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-amd64/pgbouncer_exporter && \
-    mv -v /tmp/pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-amd64/pgbouncer_exporter /usr/local/bin/pgbouncer_exporter && \
-    rm -rfv /tmp/pkg.tgz /tmp/pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-amd64
+        "https://github.com/prometheus-community/pgbouncer_exporter/releases/download/v${PGBOUNCER_EXPORTER_VERSION}/${pkg}.tar.gz"; \
+    cd /tmp; \
+    tar xvzf /tmp/pkg.tgz "$pkg"/pgbouncer_exporter; \
+    mv -v /tmp/"$pkg"/pgbouncer_exporter /usr/local/bin/pgbouncer_exporter; \
+    rm -rfv /tmp/pkg.tgz /tmp/"$pkg"
 
 # forbid creation of a main cluster when package is installed
 RUN sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
