@@ -192,10 +192,14 @@ RUN set -ex; \
         done; \
     fi
 
+COPY --chown=postgres:postgres build_scripts /build/scripts/
+
 # Some Patroni prerequisites
 # This need to be done after the PostgreSQL packages have been installed,
 # to ensure we have the preferred libpq installations etc.
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj patroni
+RUN cd /usr/lib/python3/dist-packages/patroni && git apply /build/scripts/patroni_issue_2837.patch
+
 RUN apt-get install -y timescaledb-tools
 
 ## Entrypoints as they are from the Timescale image and its default upstream repositories.
@@ -313,8 +317,6 @@ RUN set -ex; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install; \
         done; \
     fi
-
-COPY --chown=postgres:postgres build_scripts /build/scripts/
 
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
 ARG INSTALL_METHOD=docker-ha
