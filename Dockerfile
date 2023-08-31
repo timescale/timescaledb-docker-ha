@@ -153,7 +153,8 @@ RUN set -eux; \
             postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger postgresql-${pg}-pgpcre \
             postgresql-${pg}-pglogical postgresql-${pg}-wal2json postgresql-${pg}-pgq3 postgresql-${pg}-pg-qualstats \
-            postgresql-${pg}-pgaudit postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-orafce"; \
+            postgresql-${pg}-pgaudit postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-orafce \
+            postgresql-${pg}-pgvector" ; \
     done; \
     apt-get install -y $packages
 
