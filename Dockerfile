@@ -153,8 +153,7 @@ RUN set -eux; \
             postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger postgresql-${pg}-pgpcre \
             postgresql-${pg}-pglogical postgresql-${pg}-wal2json postgresql-${pg}-pgq3 postgresql-${pg}-pg-qualstats \
-            postgresql-${pg}-pgaudit postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-orafce \
-            postgresql-${pg}-pgvector" ; \
+            postgresql-${pg}-pgaudit postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-orafce" ; \
     done; \
     apt-get install -y $packages
 
@@ -277,6 +276,7 @@ RUN set -ex; \
 # different types of CPU, disable CPU-specific optimizations by
 # supplying OPTFLAGS="".
 # See https://github.com/pgvector/pgvector/issues/143
+# TODO: switch to debian packages once v0.50.0 is available there.
 ARG PGVECTOR
 RUN set -ex; \
     if [ -n "${PGVECTOR}" ]; then \
