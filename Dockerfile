@@ -153,7 +153,7 @@ RUN set -eux; \
             postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger postgresql-${pg}-pgpcre \
             postgresql-${pg}-pglogical postgresql-${pg}-wal2json postgresql-${pg}-pgq3 postgresql-${pg}-pg-qualstats \
-            postgresql-${pg}-pgaudit postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-orafce"; \
+            postgresql-${pg}-pgaudit postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-orafce" ; \
     done; \
     apt-get install -y $packages
 
@@ -235,7 +235,11 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh; \
 # - new files can be added to the directories mentioned here
 RUN set -ex; \
     for pg in ${PG_VERSIONS}; do \
-        for dir in /usr/share/doc "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
+        for dir in /usr/share/doc \
+                  "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" \
+                  "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" \
+                  "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)" \
+                  "$(/usr/lib/postgresql/${pg}/bin/pg_config --includedir-server)/extension"; do \
             install --directory "${dir}" --group postgres --mode 1775; \
             find "${dir}" -type d -exec install --directory {} --group postgres --mode 1775 \;; \
         done; \
@@ -276,6 +280,7 @@ RUN set -ex; \
 # different types of CPU, disable CPU-specific optimizations by
 # supplying OPTFLAGS="".
 # See https://github.com/pgvector/pgvector/issues/143
+# TODO: switch to debian packages once v0.50.0 is available there.
 ARG PGVECTOR
 RUN set -ex; \
     if [ -n "${PGVECTOR}" ]; then \
