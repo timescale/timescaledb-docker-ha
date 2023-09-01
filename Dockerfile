@@ -235,7 +235,11 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh; \
 # - new files can be added to the directories mentioned here
 RUN set -ex; \
     for pg in ${PG_VERSIONS}; do \
-        for dir in /usr/share/doc "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)"; do \
+        for dir in /usr/share/doc \
+                  "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" \
+                  "$(/usr/lib/postgresql/${pg}/bin/pg_config --pkglibdir)" \
+                  "$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir)" \
+                  "$(/usr/lib/postgresql/${pg}/bin/pg_config --includedir-server)/extension"; do \
             install --directory "${dir}" --group postgres --mode 1775; \
             find "${dir}" -type d -exec install --directory {} --group postgres --mode 1775 \;; \
         done; \
