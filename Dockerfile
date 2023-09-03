@@ -289,7 +289,7 @@ RUN set -ex; \
         git checkout "${PGVECTOR}"; \
         for pg in ${PG_VERSIONS}; do \
             git reset HEAD --hard; \
-            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make OPTFLAGS="" all; \
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make OPTFLAGS="" clean; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make OPTFLAGS="" install; \
         done; \
     fi
