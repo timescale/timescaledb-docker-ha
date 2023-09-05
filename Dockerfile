@@ -266,9 +266,10 @@ RUN set -ex; \
         git clone https://github.com/percona/pg_stat_monitor /build/pg_stat_monitor; \
         cd /build/pg_stat_monitor; \
         git checkout "${PG_STAT_MONITOR}"; \
+        git reset HEAD --hard; \
         for pg in ${PG_VERSIONS}; do \
-            git reset HEAD --hard; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make USE_PGXS=1 clean; \
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make USE_PGXS=1 all; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make USE_PGXS=1 install; \
         done; \
     fi
@@ -287,9 +288,10 @@ RUN set -ex; \
         git clone https://github.com/pgvector/pgvector /build/pgvector; \
         cd /build/pgvector; \
         git checkout "${PGVECTOR}"; \
+        git reset HEAD --hard; \
         for pg in ${PG_VERSIONS}; do \
-            git reset HEAD --hard; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make OPTFLAGS="" clean; \
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make OPTFLAGS="" all; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make OPTFLAGS="" install; \
         done; \
     fi
