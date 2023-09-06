@@ -120,7 +120,7 @@ jobs:
 
   dispatch-ha-image-published-event:
     name: Dispatch HA image published event
-    needs: [ "publish-combined-manifests" ]
+    needs: [ "check" ]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
