@@ -131,5 +131,5 @@ jobs:
             curl -H "Accept: application/vnd.github.everest-preview+json" \
             -H "Authorization: token ${{ secrets.ORG_AUTOMATION_TOKEN }}" \
             --request POST \
-            --data '{"event_type": "ha_image_published", "client_payload": { "foo": "bar" }}' \
+            --data '{"event_type": "ha_image_published"}' \
             https://api.github.com/repos/timescale/timescaledb-docker-cloud/dispatches
