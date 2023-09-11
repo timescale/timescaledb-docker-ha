@@ -121,6 +121,7 @@ jobs:
   dispatch-ha-image-published-event:
     name: Dispatch HA image published event
     needs: [ "check" ]
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
