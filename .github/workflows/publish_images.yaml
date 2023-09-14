@@ -117,3 +117,20 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
         run: make get-image-config check
+
+  dispatch-ha-image-published-event:
+    name: Dispatch HA image published event
+    needs: [ "check" ]
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Dispatch event to Publish cloud images workflow
+        run: |
+            curl -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Authorization: token ${{ secrets.ORG_AUTOMATION_TOKEN }}" \
+            --request POST \
+            --data '{"event_type": "ha_image_published"}' \
+            https://api.github.com/repos/timescale/timescaledb-docker-cloud/dispatches
