@@ -200,7 +200,6 @@ COPY --chown=postgres:postgres build_scripts /build/scripts/
 # This need to be done after the PostgreSQL packages have been installed,
 # to ensure we have the preferred libpq installations etc.
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj patroni
-RUN cd /usr/lib/python3/dist-packages/patroni && git apply /build/scripts/patroni_issue_2837.patch
 
 RUN apt-get install -y timescaledb-tools
 
