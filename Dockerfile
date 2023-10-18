@@ -2,6 +2,7 @@
 ## - timescale from (internal) sources
 ## - many PostgreSQL extensions
 ## - patroni for High Availability
+## - Barman Cloud for CloudNativePG compatibility
 ## - spilo to allow the github.com/zalando/postgres-operator to be compatible
 ## - pgBackRest to allow good backups
 
@@ -200,6 +201,10 @@ COPY --chown=postgres:postgres build_scripts /build/scripts/
 # This need to be done after the PostgreSQL packages have been installed,
 # to ensure we have the preferred libpq installations etc.
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj patroni
+
+# Barman cloud
+# Required for CloudNativePG compatibility
+RUN apt-get install -y python3-barman
 
 RUN apt-get install -y timescaledb-tools
 
