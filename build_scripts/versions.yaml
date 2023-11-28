@@ -139,3 +139,5 @@ toolkit:
     cargo-pgrx: 0.7.1
   1.17.0:
     cargo-pgrx: 0.9.7
+  1.18.0:
+    cargo-pgrx: 0.10.2
