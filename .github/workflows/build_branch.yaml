@@ -16,7 +16,7 @@ env:
   DOCKER_REPOSITORY: timescale/timescaledb-ha
   DOCKER_REGISTRY: docker.io
   PLATFORM: amd64
-  PG_MAJOR: 15
+  PG_MAJOR: 16
   ALL_VERSIONS: "true"
   OSS_ONLY: "false"
 
