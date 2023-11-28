@@ -31,8 +31,8 @@ FROM ${DOCKER_FROM} AS builder
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
 # pg_upgrade from one major version to another,
 # so we need all the postgres & timescale libraries for all versions
-ARG PG_VERSIONS="15 14 13"
-ARG PG_MAJOR=15
+ARG PG_VERSIONS="16 15 14 13"
+ARG PG_MAJOR=16
 
 ENV DEBIAN_FRONTEND=noninteractive
 

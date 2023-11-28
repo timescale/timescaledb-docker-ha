@@ -168,7 +168,7 @@ require_cargo_pgrx_version() {
 available_pg_versions() {
     # this allows running out-of-container with dry-run to test script logic
     if [[ "$DRYRUN" = true && ! -d /usr/lib/postgresql ]]; then
-        echo 12 13 14 15
+        echo 12 13 14 15 16
     else
         (cd /usr/lib/postgresql && ls)
     fi
@@ -195,7 +195,7 @@ cargo_pgrx_init() {
         fi
     fi
 
-    if [[ -z "$pg_ver" || "$pg" -eq 15 && "$pgrx_version" =~ ^0\.[0-5]\.* ]]; then
+    if [[ -z "$pg_ver" || "$pg" -ge 15 && "$pgrx_version" =~ ^0\.[0-5]\.* ]]; then
         pg_versions="$(available_pg_versions)"
     else
         pg_versions="$pg_ver"
@@ -203,7 +203,7 @@ cargo_pgrx_init() {
     args=()
     for pg in $pg_versions; do
         # pgrx only got the pg15 feature in 0.6.0
-        [[ "$pgrx_version" =~ ^0\.[0-5]\.* && $pg -eq 15 ]] && continue
+        [[ "$pgrx_version" =~ ^0\.[0-5]\.* && $pg -ge 15 ]] && continue
 
         args+=("--pg${pg}" "/usr/lib/postgresql/${pg}/bin/pg_config")
     done
