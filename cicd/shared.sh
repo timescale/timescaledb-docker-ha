@@ -154,7 +154,7 @@ check_promscale() {
         fi
     done
 
-    if [ "$found" = false ]; then error "no promscale versions found for pg$pg"; fi
+    if [[ "$found" = false && "$pg" -lt 16 ]]; then error "no promscale versions found for pg$pg"; fi
 }
 
 check_toolkit() {
