@@ -7,16 +7,16 @@ env:
   DOCKER_HUB_URL: docker.io/timescale/timescaledb-ha
   INSTALL_METHOD: docker-ha
   TIMESCALE_CLOUDUTILS: "v1.1.11"
-  TIMESCALE_HOT_FORGE: "v0.1.39"
+  TIMESCALE_HOT_FORGE: "v0.1.40"
   TIMESCALE_PATRONI_K8S_SYNC: "v0.1.2"
   TIMESCALE_OOM_GUARD:  "v1.4.2"
-  TIMESCALE_TSDB_ADMIN: "1.0.1"
-  TIMESCALE_TS_STAT_STATEMENTS: "0.0.3"
+  TIMESCALE_TSDB_ADMIN: "1.1.0"
+  TIMESCALE_TS_STAT_STATEMENTS: "0.4.1"
 
   # This compiler image is used to create patches in other environments.
   # Some of these patches still require PostgreSQL 12 support, therefore,
   # we include 4 versions for the compiler image
-  PG_VERSIONS: "15 14 13 12"
+  PG_VERSIONS: "16 15 14 13 12"
 jobs:
   build-image:
     name: Build the compiler Docker Image
@@ -36,6 +36,7 @@ jobs:
           PRIVATE_REPO_TOKEN: ${{ secrets.API_TOKEN_GITHUB_PACKAGE }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          PG_MAJOR: "16"
         run: |
           DOCKER_PUBLISH_URLS="${DOCKER_HUB_URL}" make publish-compiler
 
