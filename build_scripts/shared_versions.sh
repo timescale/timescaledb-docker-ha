@@ -6,6 +6,9 @@ PG_WANTED_EXTENSIONS="pglogical wal2json pgextwlist pgrouting pg-stat-kcache cro
 
 WANTED_PACKAGES="patroni pgbackrest timescaledb-tools"
 
+WANTED_FILES="/usr/bin/timescaledb-tune /usr/local/bin/yq /usr/local/bin/pgbouncer_exporter \
+    /usr/bin/pgbackrest_exporter"
+
 # These functions return "" if the combination of architecture, pg version, and package version are supported,
 # otherwise it returns a reason string. Both the cicd/install_checks, and the install_extensions scripts use
 # this to decide what should be built/included.
