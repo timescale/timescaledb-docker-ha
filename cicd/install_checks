@@ -18,6 +18,9 @@ check_base_age 28800
 # Check for packages that aren't pg-version-specific
 check_packages
 
+# Check for specific files, generally things that were installed without package management
+check_files
+
 for pg in $(available_pg_versions); do
     check_base_components "$pg" "/usr/lib/postgresql/$pg/lib"
 done

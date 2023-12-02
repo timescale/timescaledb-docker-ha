@@ -272,6 +272,17 @@ check_packages() {
     done
 }
 
+check_files() {
+    local file
+    for file in $WANTED_FILES; do
+        if [ -f "$file" ]; then
+            log "found file $file"
+        else
+            error "file $file is missing"
+        fi
+    done
+}
+
 EXTVERSIONS="$(mktemp -t extversions.$ARCH.XXXX)"
 cleanup() {
     rm -f "$EXTVERSIONS".* >&/dev/null
