@@ -84,6 +84,18 @@ RUN set -eux; \
     curl -Lso /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_"$(dpkg --print-architecture)"; \
     chmod 755 /usr/local/bin/yq
 
+# pgbackrest-exporter
+ARG PGBACKREST_EXPORTER_VERSION="0.16.1"
+RUN set -eux; \
+    pkg="pgbackrest_exporter_${PGBACKREST_EXPORTER_VERSION}_linux_$(arch)"; \
+    curl --silent \
+        --location \
+        --output /tmp/pkg.deb \
+        "https://github.com/woblerr/pgbackrest_exporter/releases/download/v${PGBACKREST_EXPORTER_VERSION}/${pkg}.deb"; \
+    cd /tmp; \
+    dpkg -i ./pkg.deb; \
+    rm -rfv /tmp/pkg.deb
+
 # pgbouncer-exporter
 ARG PGBOUNCER_EXPORTER_VERSION="0.7.0"
 RUN set -eux; \
