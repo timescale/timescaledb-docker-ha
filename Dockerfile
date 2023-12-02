@@ -451,6 +451,8 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "PGVECTOR=\"${PGVECTOR}\"" >> /.image_config; \
     echo "POSTGIS_VERSIONS=\"${POSTGIS_VERSIONS}\"" >> /.image_config; \
     echo "PG_AUTH_MON=\"${PG_AUTH_MON}\"" >> /.image_config; \
+    echo "PGBOUNCER_EXPORTER_VERSION=\"${PGBOUNCER_EXPORTER_VERSION}\"" >> /.image_config; \
+    echo "PGBACKREST_EXPORTER_VERSION=\"${PGBACKREST_EXPORTER_VERSION}\"" >> /.image_config; \
     echo "PG_MAJOR=\"${PG_MAJOR}\"" >> /.image_config; \
     echo "PG_VERSIONS=\"${PG_VERSIONS}\"" >> /.image_config; \
     echo "FROM=\"${DOCKER_FROM}\"" >> /.image_config; \
