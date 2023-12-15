@@ -206,6 +206,22 @@ RUN set -ex; \
         done; \
     fi
 
+ARG PGVECTO_RS
+RUN set -ex; \
+    if [ -n "${PGVECTO_RS}" ]; then \
+        for pg in ${PG_VERSIONS}; do \
+            # Vecto.rs only support PostgreSQL 14 and upwards
+            if [ $pg -gt 13 ]; then \
+                curl --silent \
+                    --location \
+                    --output /tmp/vectors.deb \
+                    "https://github.com/tensorchord/pgvecto.rs/releases/download/v${PGVECTO_RS}/vectors-pg${pg}-v${PGVECTO_RS}-$(uname -m)-unknown-linux-gnu.deb" && \
+                dpkg -i /tmp/vectors.deb && \
+                rm -rfv /tmp/vectors.deb; \
+            fi \
+        done; \
+    fi
+
 COPY --chown=postgres:postgres build_scripts /build/scripts/
 
 # Some Patroni prerequisites
@@ -449,6 +465,7 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "PG_LOGERRORS=\"${PG_LOGERRORS}\"" >> /.image_config; \
     echo "PG_STAT_MONITOR=\"${PG_STAT_MONITOR}\"" >> /.image_config; \
     echo "PGVECTOR=\"${PGVECTOR}\"" >> /.image_config; \
+    echo "PGVECTO_RS=\"${PGVECTO_RS}\"" >> /.image_config; \
     echo "POSTGIS_VERSIONS=\"${POSTGIS_VERSIONS}\"" >> /.image_config; \
     echo "PG_AUTH_MON=\"${PG_AUTH_MON}\"" >> /.image_config; \
     echo "PGBOUNCER_EXPORTER_VERSION=\"${PGBOUNCER_EXPORTER_VERSION}\"" >> /.image_config; \
