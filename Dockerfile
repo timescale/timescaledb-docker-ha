@@ -171,7 +171,8 @@ RUN set -eux; \
             postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger postgresql-${pg}-pgpcre \
             postgresql-${pg}-pglogical postgresql-${pg}-wal2json postgresql-${pg}-pgq3 postgresql-${pg}-pg-qualstats \
-            postgresql-${pg}-pgaudit postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-orafce"; \
+            postgresql-${pg}-pgaudit postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-orafce \
+            postgresql-${pg}-pgvector"; \
     done; \
     apt-get install -y $packages
 
@@ -304,28 +305,6 @@ RUN set -ex; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make USE_PGXS=1 clean; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make USE_PGXS=1 all; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make USE_PGXS=1 install; \
-        done; \
-    fi
-
-# pgvector is an open-source vector similarity search for Postgres
-# https://github.com/pgvector/pgvector
-# As pgvector assumes running on the same system it was build at,
-# and this is not always our case (since AWS has instances with
-# different types of CPU, disable CPU-specific optimizations by
-# supplying OPTFLAGS="".
-# See https://github.com/pgvector/pgvector/issues/143
-# TODO: switch to debian packages once v0.50.0 is available there.
-ARG PGVECTOR
-RUN set -ex; \
-    if [ -n "${PGVECTOR}" ]; then \
-        git clone https://github.com/pgvector/pgvector /build/pgvector; \
-        cd /build/pgvector; \
-        git checkout "${PGVECTOR}"; \
-        git reset HEAD --hard; \
-        for pg in ${PG_VERSIONS}; do \
-            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make OPTFLAGS="" clean; \
-            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make OPTFLAGS="" all; \
-            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make OPTFLAGS="" install; \
         done; \
     fi
 
@@ -470,7 +449,6 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "OSS_ONLY=\"$OSS_ONLY\"" >> /.image_config; \
     echo "PG_LOGERRORS=\"${PG_LOGERRORS}\"" >> /.image_config; \
     echo "PG_STAT_MONITOR=\"${PG_STAT_MONITOR}\"" >> /.image_config; \
-    echo "PGVECTOR=\"${PGVECTOR}\"" >> /.image_config; \
     echo "PGVECTO_RS=\"${PGVECTO_RS}\"" >> /.image_config; \
     echo "POSTGIS_VERSIONS=\"${POSTGIS_VERSIONS}\"" >> /.image_config; \
     echo "PG_AUTH_MON=\"${PG_AUTH_MON}\"" >> /.image_config; \
