@@ -215,7 +215,7 @@ RUN set -ex; \
                 curl --silent \
                     --location \
                     --output /tmp/vectors.deb \
-                    "https://github.com/tensorchord/pgvecto.rs/releases/download/v${PGVECTO_RS}/vectors-pg${pg}_v${PGVECTO_RS}_$(dpkg --print-architecture).deb" && \
+                    "https://github.com/tensorchord/pgvecto.rs/releases/download/v${PGVECTO_RS}/vectors-pg${pg}_${PGVECTO_RS}_$(dpkg --print-architecture).deb" && \
                 dpkg -i /tmp/vectors.deb && \
                 rm -rfv /tmp/vectors.deb; \
             fi \
