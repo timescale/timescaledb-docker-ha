@@ -222,6 +222,15 @@ check_others() {
         fi
     fi
 
+    record_ext_version pgvecto.rs "$pg" ""
+    if [[ -n "$PGVECTO_RS" && "$pg" -gt 13 ]]; then
+        if [ -s "$lib/vectors.so" ]; then
+            record_ext_version pgvecto.rs "$pg" "$PGVECTO_RS"
+        else
+            error "pgvecto.rs not found for pg$pg"
+        fi
+    fi
+
     record_ext_version pg_auth_mon "$pg" ""
     if [ -n "$PG_AUTH_MON" ]; then
         if [ -s "$lib/pg_auth_mon.so" ]; then
