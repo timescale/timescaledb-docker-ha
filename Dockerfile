@@ -87,7 +87,7 @@ RUN set -eux; \
 # pgbackrest-exporter
 ARG PGBACKREST_EXPORTER_VERSION="0.16.1"
 RUN set -eux; \
-    pkg="pgbackrest_exporter_${PGBACKREST_EXPORTER_VERSION}_linux_$(arch)"; \
+    arch="$(arch)"; [ "$arch" = aarch64 ] && arch=arm64; pkg="pgbackrest_exporter_${PGBACKREST_EXPORTER_VERSION}_linux_${arch}"; \
     curl --silent \
         --location \
         --output /tmp/pkg.deb \
