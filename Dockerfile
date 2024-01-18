@@ -151,11 +151,17 @@ ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
+# TODO: There's currently a build-dependency problem related to tzdata, remove this when it's resolved
+RUN apt-get install -y --allow-downgrades tzdata="2023c-*"
+
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
 RUN set -eux; \
     for pg in ${PG_VERSIONS}; do \
         mk-build-deps postgresql-${pg} && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
     done
+
+# TODO: There's currently a build-dependency problem related to tzdata, remove this when it's resolved
+RUN apt-get install -y tzdata
 
 RUN set -eux; \
     packages=""; \
