@@ -172,7 +172,7 @@ RUN set -eux; \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger postgresql-${pg}-pgpcre \
             postgresql-${pg}-pglogical postgresql-${pg}-wal2json postgresql-${pg}-pgq3 postgresql-${pg}-pg-qualstats \
             postgresql-${pg}-pgaudit postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-orafce \
-            postgresql-${pg}-pgvector"; \
+            postgresql-${pg}-pgvector postgresql-${pg}-h3"; \
     done; \
     apt-get install -y $packages
 
@@ -196,22 +196,6 @@ RUN set -eux; \
             PATH="/usr/lib/postgresql/${pg}/bin:$PATH" pgxnclient install --pg_config "/usr/lib/postgresql/${pg}/bin/pg_config" "$pkg"; \
         done; \
     done
-
-# h3 has to use cmake in order to allow installing on anything but the latest version of pg that it finds
-ARG H3
-RUN set -ex; \
-    if [ -n "${H3}" ]; then \
-        cd /build; \
-        git clone https://github.com/zachasme/h3-pg.git; \
-        cd h3-pg; \
-        git checkout "${H3}"; \
-        for pg in ${PG_VERSIONS}; do \
-            rm -fr build* >/dev/null 2>&1; \
-            cmake -B build -DCMAKE_BUILD_TYPE=Release -DPostgreSQL_ADDITIONAL_VERSIONS="${pg}"; \
-            cmake --build build; \
-            cmake --install build --component h3-pg; \
-        done; \
-    fi
 
 ARG PGVECTO_RS
 RUN set -ex; \
