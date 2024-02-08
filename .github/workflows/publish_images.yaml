@@ -6,6 +6,8 @@ on:
   push:
     branches:
       - master
+      - main
+      - brent/base_arm64
     paths-ignore:
       - "*.md"
 
