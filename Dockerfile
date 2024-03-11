@@ -152,8 +152,11 @@ ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
-# TODO: There's currently a build-dependency problem related to tzdata, remove this when it's resolved
-RUN apt-get install -y --allow-downgrades tzdata="2023c-*"
+# https://salsa.debian.org/postgresql/postgresql/-/commit/b995beb3cd1c2b8834605007227b3cedab6462e4
+# This looks like a build-/test-only dependency, and they expect us to use the real tzdata when actually running.
+# TODO: keep watching this to see if they remove the limitation. If the old tzdata becomes unavailable, we'll have to
+# do something more drastic.
+RUN apt-get install -y --allow-downgrades tzdata="2022a-*"
 
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
 RUN set -eux; \
