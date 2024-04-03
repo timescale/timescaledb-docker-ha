@@ -148,7 +148,7 @@ RUN set -eux; \
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
@@ -192,11 +192,15 @@ RUN set -ex; \
 
 # Add a couple 3rd party extension managers to make extension additions easier
 RUN set -eux; \
-    apt-get install -y pgxnclient
+    apt-get install -y pgxnclient 
+
+## Add pgsodium extension depedencies
+RUN set -eux; \
+    apt-get install -y libsodium23
 
 RUN set -eux; \
     for pg in ${PG_VERSIONS}; do \
-        for pkg in pg_uuidv7; do \
+        for pkg in pg_uuidv7 pgsodium; do \
             PATH="/usr/lib/postgresql/${pg}/bin:$PATH" pgxnclient install --pg_config "/usr/lib/postgresql/${pg}/bin/pg_config" "$pkg"; \
         done; \
     done
@@ -467,7 +471,7 @@ FROM builder as trimmed
 
 USER root
 
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
 
 RUN set -ex; \
     apt-get purge -y ${BUILD_PACKAGES}; \
