@@ -192,7 +192,11 @@ RUN set -ex; \
 
 # Add a couple 3rd party extension managers to make extension additions easier
 RUN set -eux; \
-    apt-get install -y pgxnclient
+    apt-get install -y pgxnclient 
+
+## Add pgsodium extension depedencies
+RUN set -eux; \
+    apt-get install -y libsodium23
 
 RUN set -eux; \
     for pg in ${PG_VERSIONS}; do \
