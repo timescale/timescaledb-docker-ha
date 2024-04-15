@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ "amd64" ]
+        platform: [ "amd64", "arm64" ]
         pg_major: [ "16", "15", "14", "13", "12" ]
         all_versions: [ "false", "true" ]
         oss_only: [ "false", "true" ]
@@ -37,9 +37,11 @@ jobs:
             oss: "-oss"
           - all_versions: "true"
             all: "-all"
-
-    runs-on: ubuntu-latest
-
+          - platform: amd64
+            runner_type: ubuntu-latest
+          - platform: arm64
+            runner_type: macos-14
+    runs-on: ${{ matrix.runner_type }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -64,6 +66,7 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           ALL_VERSIONS: ${{ matrix.all_versions }}
           OSS_ONLY: ${{ matrix.oss_only }}
+          PLATFORM: ${{ matrix.platform }}
         run: |
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder publish-release
 
@@ -90,6 +93,7 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           VERSION_TAG: pg${{ matrix.pg_major}}${{ matrix.docker_tag_postfix }}-builder
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
+          PLATFORM: ${{ matrix.platform }}
         run: make publish-manifests
 
   check:
@@ -116,6 +120,8 @@ jobs:
         env:
           PG_MAJOR: ${{ matrix.pg_major }}
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
+        env:
+          PLATFORM: ${{ matrix.platform }}
         run: make get-image-config check
 
   dispatch-ha-image-published-event:

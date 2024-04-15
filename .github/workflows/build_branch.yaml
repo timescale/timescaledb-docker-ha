@@ -15,7 +15,6 @@ concurrency:
 env:
   DOCKER_REPOSITORY: timescale/timescaledb-ha
   DOCKER_REGISTRY: docker.io
-  PLATFORM: amd64
   PG_MAJOR: 16
   ALL_VERSIONS: "true"
   OSS_ONLY: "false"
@@ -23,8 +22,15 @@ env:
 jobs:
   build-branch:
     name: Build and push branch
-    runs-on: ubuntu-latest
-
+    runs-on: ${{ matrix.runner_type }}
+    strategy:
+      fail-fast: true
+      matrix:
+        platform: [ "amd64", "arm64" ]
+          - platform: amd64
+            runner_type: ubuntu-latest
+          - platform: arm64
+            runner_type: macos-14
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -39,10 +45,16 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build
+        env:
+          PLATFORM: ${{ matrix.platform }}
         run: make build-sha
 
       - name: Check
+        env:
+          PLATFORM: ${{ matrix.platform }}
         run: make check-sha
 
       - name: Publish
+        env:
+          PLATFORM: ${{ matrix.platform }}
         run: make publish-sha
