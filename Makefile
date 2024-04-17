@@ -69,7 +69,8 @@ DOCKER_BUILDER_URL=$(DOCKER_PUBLISH_URL):pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-buil
 DOCKER_BUILDER_ARCH_URL=$(DOCKER_PUBLISH_URL):pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-builder-$(PLATFORM)
 DOCKER_RELEASE_URL=$(DOCKER_PUBLISH_URL):pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
 DOCKER_RELEASE_ARCH_URL=$(DOCKER_PUBLISH_URL):pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-$(PLATFORM)
-CICD_URL=$(DOCKER_PUBLISH_URL):cicd-$(shell printf "%.7s" "$(GITHUB_SHA)")-$(PLATFORM)
+CICD_URL=$(DOCKER_PUBLISH_URL):cicd-$(shell printf "%.7s" "$(GITHUB_SHA)")
+CICD_ARCH_URL=$(CICD_URL)-$(PLATFORM)
 
 GITHUB_STEP_SUMMARY?=/dev/null
 GITHUB_OUTPUT?=/dev/null
@@ -199,12 +200,12 @@ build-sha: is_ci
 ifeq ($(strip $(GITHUB_SHA)),)
 	$(error GITHUB_SHA is empty, is this running in github actions?)
 endif
-	$(DOCKER_BUILD_COMMAND) --tag "$(CICD_URL)"
+	$(DOCKER_BUILD_COMMAND) --tag "$(CICD_ARCH_URL)"
 
 .PHONY: publish-sha
 publish-sha: # push the specific git commit image
 publish-sha: is_ci
-	docker push "$(CICD_URL)"
+	docker push "$(CICD_ARCH_URL)"
 
 .PHONY: build-tag
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
@@ -254,40 +255,53 @@ build:
 
 .PHONY: publish-combined-builder-manifest
 publish-combined-builder-manifest: # publish a combined builder image manifest
-	@echo "Creating manifest $(DOCKER_BUILDER_URL) that includes $(DOCKER_BUILDER_URL)-amd64"
+	@echo "Creating manifest $(DOCKER_BUILDER_URL) that includes $(DOCKER_BUILDER_URL)-amd64 and $(DOCKER_BUILDER_URL)-arm64"
 	amddigest_image="$$(./fetch_tag_digest $(DOCKER_BUILDER_URL)-amd64)"
-	echo "AMD: $$amddigest_image"
+	armdigest_image="$$(./fetch_tag_digest $(DOCKER_BUILDER_URL)-arm64)"
+	echo "AMD: $$amddigest_image ARM: $$armdigest_image"
 	docker manifest rm "$(DOCKER_BUILDER_URL)" >& /dev/null || true
-	docker manifest create "$(DOCKER_BUILDER_URL)" --amend "$$amddigest_image"
+	docker manifest create "$(DOCKER_BUILDER_URL)" --amend "$$amddigest_image" --amend "$$armdigest_image"
 	docker manifest push "$(DOCKER_BUILDER_URL)"
 	echo "pushed $(DOCKER_BUILDER_URL)"
-	echo "Pushed $(DOCKER_BUILDER_URL) (amd:$$amddigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
+	echo "Pushed $(DOCKER_BUILDER_URL) (amd:$$amddigest_image, arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
 
-# since we're using immutable tags, we don't need to pull/find the child image SHAs, we can just use the tags
 .PHONY: publish-combined-manifest
 publish-combined-manifest: # publish the main combined manifest that includes amd64 and arm64 images
 publish-combined-manifest: $(VAR_VERSION_INFO)
-	@echo "Creating manifest $(DOCKER_RELEASE_URL) that includes $(DOCKER_RELEASE_URL)-amd64"
+	@echo "Creating manifest $(DOCKER_RELEASE_URL) that includes $(DOCKER_RELEASE_URL)-amd64 and $(DOCKER_RELEASE_URL)-arm64"
 	amddigest_image="$$(./fetch_tag_digest $(DOCKER_RELEASE_URL)-amd64)"
-	echo "AMD: $$amddigest_image"
+	armdigest_image="$$(./fetch_tag_digest $(DOCKER_RELEASE_URL)-arm64)"
+	echo "AMD: $$amddigest_image ARM: $$armdigest_image"
 	for tag in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMAJOR)-ts$(VAR_TSVERSION); do
 		url="$(DOCKER_PUBLISH_URL):$$tag$(DOCKER_TAG_POSTFIX)"
 		docker manifest rm "$$url" >&/dev/null || true
-		docker manifest create "$$url" --amend "$$amddigest_image"
+		docker manifest create "$$url" --amend "$$amddigest_image" --amend "$$armdigest_image"
 		docker manifest push "$$url"
 		echo "pushed $$url"
-		echo "Pushed $$url (amd:$$amddigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
+		echo "Pushed $$url (amd:$$amddigest_image, arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
 	done
 
 .PHONY: publish-manifests
 publish-manifests: # publish the combined manifests for the builder and the release images
 publish-manifests: publish-combined-builder-manifest publish-combined-manifest
 
+.PHONY: publish-combined-sha
+publish-combined-sha: is_ci # publish a combined image manifest for a CICD branch build
+	@echo "Creating manifest $(CICD_URL) that includes $(CICD_URL)-amd64 and $(CICD_URL)-arm64"
+	amddigest_image="$$(./fetch_tag_digest $(CICD_URL)-amd64)"
+	armdigest_image="$$(./fetch_tag_digest $(CICD_URL)-arm64)"
+	echo "AMD: $$amddigest_image ARM: $$armdigest_image"
+	docker manifest rm "$(CICD_URL)" >& /dev/null || true
+	docker manifest create "$(CICD_URL)" --amend "$$amddigest_image" --amend "$$armdigest_image"
+	docker manifest push "$(CICD_URL)"
+	echo "pushed $(CICD_URL)"
+	echo "Pushed $(CICD_URL) (amd:$$amddigest_image, arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
+
 CHECK_NAME=ha-check
 .PHONY: check
 check: # check images to see if they have all the requested content
 	@set -x
-	for arch in amd64; do \
+	for arch in amd64 arm64; do \
 		key="$$(mktemp -u XXXXXX)"
 		check_name="$(CHECK_NAME)-$$key"
 		echo "### Checking $$arch $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY); \
@@ -311,11 +325,11 @@ check: # check images to see if they have all the requested content
 
 .PHONY: check-sha
 check-sha: # check a specific git commit-based image
-	@echo "### Checking $(CICD_URL)" >> $(GITHUB_STEP_SUMMARY)
-	case "$(CICD_URL)" in
+	@echo "### Checking $(CICD_ARCH_URL)" >> $(GITHUB_STEP_SUMMARY)
+	case "$(CICD_ARCH_URL)" in
 	*-amd64) arch=amd64;;
 	*-arm64) arch=arm64;;
-	*) echo "unknown architecture for $(CICD_URL)" >&2; exit 1;;
+	*) echo "unknown architecture for $(CICD_ARCH_URL)" >&2; exit 1;;
 	esac
 	key="$$(mktemp -u XXXXXX)"
 	check_name="$(CHECK_NAME)-$$key"
@@ -326,7 +340,7 @@ check-sha: # check a specific git commit-based image
 		--name "$$check_name" \
 		-e PGDATA=/tmp/pgdata \
 		--user=postgres \
-		"$(CICD_URL)" sleep 300
+		"$(CICD_ARCH_URL)" sleep 300
 	docker exec -u root "$$check_name" mkdir -p /cicd/scripts
 	docker exec -u root "$$check_name" chown -R postgres: /cicd
 	tar -cf - -C ./cicd . | docker exec -i "$$check_name" tar -C /cicd -x

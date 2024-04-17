@@ -33,9 +33,9 @@ else
 fi
 
 DEFAULT_PG_MIN="$(yq .default-pg-min <<< "$VERSION_DATA")"
-[ -z "$DEFAULT_PG_MIN" ] && { error "default-pg-min required in versions.yaml"; exit 1; }
+[ -z "$DEFAULT_PG_MIN" ] && { error "default-pg-min is required in versions.yaml"; exit 1; }
 DEFAULT_PG_MAX="$(yq .default-pg-max <<< "$VERSION_DATA")"
-[ -z "$DEFAULT_PG_MAX" ] && { error "default-pg-max required in versions.yaml"; exit 1; }
+[ -z "$DEFAULT_PG_MAX" ] && { error "default-pg-max is required in versions.yaml"; exit 1; }
 
 pkg_versions() {
     local pkg="$1"
@@ -112,7 +112,7 @@ install_rust_extensions() {
 }
 
 version_is_supported() {
-    local pkg="$1" pg="$2" ver="$3" pdata pgmin pgmax
+    local pkg="$1" pg="$2" ver="$3" pdata pgmin pgmax arch
     local -a pgversions
 
     pdata="$(yq ".$pkg | pick([\"$ver\"]) | .[]" <<<"$VERSION_DATA")"
@@ -120,6 +120,10 @@ version_is_supported() {
         echo "not found in versions.yaml"
         return
     fi
+
+    arch="$(yq .arch <<<"$pdata")"
+    if [ "$arch" = null ]; then arch="both"; fi
+    if [[ "$arch" != "both" && "$arch" != "$ARCH" ]]; then echo "unsupported arch $ARCH"; return; fi
 
     pgmin="$(yq .pg-min <<<"$pdata")"
     if [ "$pgmin" = null ]; then pgmin="$DEFAULT_PG_MIN"; fi
@@ -164,6 +168,8 @@ supported_toolkit() {
 
 supported_promscale() {
     local pg="$1" ver="$2"
+
+    if [ "$ARCH" != amd64 ]; then echo "unsupported arch $ARCH"; return; fi
 
     # just attempt the build for main/master/or other branch build
     if [[ "$ver" = main || "$ver" = master || "$ver" =~ [a-z_-]*/[A-Za-z0-9_-]* ]]; then

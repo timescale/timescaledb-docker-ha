@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - master
+      - main
     paths-ignore:
       - "*.md"
 
@@ -22,12 +23,12 @@ env:
 
 jobs:
   publish:
-    name: Publish pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }}
+    name: Publish pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }}
 
     strategy:
       fail-fast: false
       matrix:
-        platform: [ "amd64" ]
+        platform: [ "amd64", "arm64" ]
         pg_major: [ "16", "15", "14", "13", "12" ]
         all_versions: [ "false", "true" ]
         oss_only: [ "false", "true" ]
@@ -37,12 +38,35 @@ jobs:
             oss: "-oss"
           - all_versions: "true"
             all: "-all"
+          - platform: amd64
+            runs_on: ubuntu-22.04
+          - platform: arm64
+            runs_on: cloud-image-runner-arm64
 
-    runs-on: ubuntu-latest
+    runs-on: "${{ matrix.runs_on }}"
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Install docker (arm64 beta)
+        if: matrix.platform == 'arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates curl acl build-essential
+          sudo install -m 0755 -d /etc/apt/keyrings
+          sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+          sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+          echo \
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+            $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update
+
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+          sudo usermod -aG docker $USER
+          sudo setfacl --modify user:$USER:rw /var/run/docker.sock
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -58,7 +82,7 @@ jobs:
         with:
           endpoint: ha-builder
 
-      - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }})
+      - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
         env:
           PLATFORM: ${{ matrix.platform }}
           PG_MAJOR: ${{ matrix.pg_major }}
@@ -80,11 +104,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
           password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+
+      # QEMU for multiplatform, which should be quick enough for pulling version information out of the images
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Publish combined manifest for pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
           PG_MAJOR: ${{ matrix.pg_major }}
@@ -111,6 +141,10 @@ jobs:
         with:
           username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
           password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+
+      # QEMU for multiplatform, which should be quick enough for just the checks
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Check pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
