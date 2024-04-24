@@ -167,17 +167,20 @@ RUN set -eux; \
 # TODO: There's currently a build-dependency problem related to tzdata, remove this when it's resolved
 RUN apt-get install -y tzdata
 
+# install postgresql and extensions avaialable as deb ian packages. Install pgextwlist, unless we override
+# it with a timescale fork.
 RUN set -eux; \
     packages=""; \
     for pg in ${PG_VERSIONS}; do \
         packages="$packages postgresql-${pg} postgresql-server-dev-${pg} postgresql-${pg}-dbgsym \
-            postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-${pg}-pgextwlist postgresql-${pg}-hll \
+            postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-${pg}-hll \
             postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger postgresql-${pg}-pgpcre \
             postgresql-${pg}-pglogical postgresql-${pg}-wal2json postgresql-${pg}-pgq3 postgresql-${pg}-pg-qualstats \
             postgresql-${pg}-pgaudit postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-orafce \
             postgresql-${pg}-pgvector postgresql-${pg}-h3"; \
     done; \
+    [ -z "${TIMESCALE_PGEXTWLIST}"] && packages="$packages postgresql-${pg}-pgextwlist" \
     apt-get install -y $packages
 
 ARG POSTGIS_VERSIONS="3"
@@ -334,6 +337,21 @@ RUN set -ex; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install; \
         done; \
     fi
+
+# install our own fork og pgextwlist to allow multiple pre- and post- scripts from a single configmap
+ARG TIMESCALE_PGEXTWLIST
+RUN set -ex; \
+    if [ -n "${TIMESCALE_PGEXTWLIST}" ]; then \
+        git clone https://github.com/timescale/pgextwlist /build/pgextwlist; \
+        cd /buid/pgextwlist; \
+        git checkout "${TIMESCALE_PGEXTWLIST}"  \
+        for pg in ${PG_VERSIONS}; do \
+            git reset HEAD --hard; \
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make clean; \
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install; \
+        done; \
+    fi
+
 
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
 ARG INSTALL_METHOD=docker-ha
