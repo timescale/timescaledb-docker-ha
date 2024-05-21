@@ -227,6 +227,17 @@ check_others() {
         fi
     fi
 
+    record_ext_version ai "$pg" ""
+    if [ -n "$PGAI_VERSION" ]; then
+        # pgai has no .so file
+        pgai_control="$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension/ai.control"
+        if [ -f "$pgai_control" ]; then
+            record_ext_version ai "$pg" "$PGAI_VERSION"
+        else
+            error "ai not found for pg$pg"
+        fi
+    fi
+
     record_ext_version pgvecto.rs "$pg" ""
     if [[ -n "$PGVECTO_RS" && "$pg" -gt 13 ]]; then
         if [ -s "$lib/vectors.so" ]; then

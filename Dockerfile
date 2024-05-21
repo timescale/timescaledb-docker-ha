@@ -193,6 +193,21 @@ RUN set -ex; \
         done; \
     fi
 
+# pgai is an extension for artificial intelligence workloads
+ARG PGAI_VERSION
+RUN set -ex; \
+    if [ -n "${PGAI_VERSION}" ]; then \
+        git clone https://github.com/timescale/pgai.git /build/pgai; \
+        cd /build/pgai; \
+        git checkout "${PGAI_VERSION}"; \
+        git reset HEAD --hard; \
+        for pg in ${PG_VERSIONS}; do \
+            cp /build/pgai/ai--*.sql "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension/"; \
+            cp /build/pgai/ai.control "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension/"; \
+        done; \
+        pip install -r /build/pgai/requirements.txt; \
+    fi
+
 # Add a couple 3rd party extension managers to make extension additions easier
 RUN set -eux; \
     apt-get install -y pgxnclient
@@ -453,12 +468,15 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "PG_AUTH_MON=\"${PG_AUTH_MON}\"" >> /.image_config; \
     echo "PGBOUNCER_EXPORTER_VERSION=\"${PGBOUNCER_EXPORTER_VERSION}\"" >> /.image_config; \
     echo "PGBACKREST_EXPORTER_VERSION=\"${PGBACKREST_EXPORTER_VERSION}\"" >> /.image_config; \
+    echo "PGAI_VERSION=\"${PGAI_VERSION}\"" >> /.image_config; \
     echo "PG_MAJOR=\"${PG_MAJOR}\"" >> /.image_config; \
     echo "PG_VERSIONS=\"${PG_VERSIONS}\"" >> /.image_config; \
     echo "FROM=\"${DOCKER_FROM}\"" >> /.image_config; \
     echo "RELEASE_URL=\"${RELEASE_URL}\"" >> /.image_config; \
     echo "BUILDER_URL=\"${BUILDER_URL}\"" >> /.image_config; \
     echo "BUILD_DATE=\"$(date -Iseconds)\"" >> /.image_config
+
+
 
 WORKDIR /home/postgres
 EXPOSE 5432 8008 8081
