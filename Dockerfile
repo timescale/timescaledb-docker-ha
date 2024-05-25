@@ -146,6 +146,9 @@ RUN set -eux; \
     echo 'en_US.UTF-8 UTF-8' > /usr/share/i18n/SUPPORTED; \
     localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 
+# We install pip3, as we need it for some of the extensions. This will install a lot of dependencies, all marked as auto to help with cleanup later
+RUN apt-get install -y python3 python3-pip
+
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
 ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
@@ -192,7 +195,7 @@ RUN set -ex; \
 
 # Add a couple 3rd party extension managers to make extension additions easier
 RUN set -eux; \
-    apt-get install -y pgxnclient 
+    apt-get install -y pgxnclient
 
 ## Add pgsodium extension depedencies
 RUN set -eux; \
@@ -230,8 +233,7 @@ RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-ku
 
 # Barman cloud
 # Required for CloudNativePG compatibility
-RUN apt-get install -y python3-pip && \
-    pip3 install --no-cache-dir 'barman[cloud,azure,snappy,google]'
+RUN pip3 install --no-cache-dir 'barman[cloud,azure,snappy,google]'
 
 RUN apt-get install -y timescaledb-tools
 
