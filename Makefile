@@ -11,6 +11,7 @@ PG_MAJOR?=16
 PG_VERSIONS?=
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
+PGAI_VERSION?=v0.1.0
 POSTGIS_VERSIONS?=3
 PG_AUTH_MON?=v2.0
 PG_STAT_MONITOR?=2.0.3
@@ -114,6 +115,7 @@ DOCKER_BUILD_COMMAND=docker build \
 					 --build-arg GITHUB_REPO="$(GITHUB_REPO)" \
 					 --build-arg GITHUB_TIMESCALEDB_DOCKER_REF="$(GITHUB_TIMESCALEDB_DOCKER_REF)" \
 					 --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" \
+					 --build-arg PGAI_VERSION="$(PGAI_VERSION)" \
 					 --build-arg PG_AUTH_MON="$(PG_AUTH_MON)" \
 					 --build-arg PG_LOGERRORS="$(PG_LOGERRORS)" \
 					 --build-arg PG_MAJOR=$(PG_MAJOR) \
@@ -145,6 +147,7 @@ fast: DOCKER_EXTRA_BUILDARGS= --build-arg GITHUB_TAG=master
 fast: ALL_VERSIONS=false
 fast: PG_AUTH_MON=
 fast: PG_LOGERRORS=
+fast: PGAI_VERSION=
 fast: PG_VERSIONS=16
 fast: POSTGIS_VERSIONS=
 fast: TOOLKIT_VERSIONS=
