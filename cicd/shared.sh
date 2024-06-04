@@ -228,7 +228,7 @@ check_others() {
     fi
 
     record_ext_version ai "$pg" ""
-    if [ -n "$PGAI_VERSION" ]; then
+    if [[ -n "$PGAI_VERSION" && "$pg" -gt 15 ]]; then
         # pgai has no .so file
         pgai_control="$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension/ai.control"
         if [ -f "$pgai_control" ]; then
