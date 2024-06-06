@@ -9,6 +9,9 @@ These are changes that will probably be included in the next release.
 
 ## [future release]
 
+* Include pgvectorscale
+* Include pgai
+
 ## [v1.7.1] - 2023-04-27
 
 * [Refactor base HA image](https://github.com/timescale/timescaledb-docker-ha/pull/355)

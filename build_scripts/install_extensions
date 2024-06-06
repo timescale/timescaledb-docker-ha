@@ -19,8 +19,8 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 
 what="$1"
 [ -z "$what" ] && what=all
-if [[ ! "$what" =~ ^versions|timescaledb|rust|all|promscale|toolkit$ ]]; then
-    echo "usage: $0 [-n] [versions|timescaledb|rust|all|promscale|toolkit]" >&2
+if [[ ! "$what" =~ ^versions|timescaledb|rust|all|promscale|pgvectorscale|toolkit$ ]]; then
+    echo "usage: $0 [-n] [versions|timescaledb|rust|all|promscale|pgvectorscale|toolkit]" >&2
     exit 1
 fi
 
@@ -30,6 +30,7 @@ versions)
     echo "TIMESCALEDB_VERSIONS=\"$TIMESCALEDB_VERSIONS\""
     echo "TOOLKIT_VERSIONS=\"$TOOLKIT_VERSIONS\""
     echo "PROMSCALE_VERSIONS=\"$PROMSCALE_VERSIONS\""
+    echo "PGVECTORSCALE_VERSIONS=\"$PGVECTORSCALE_VERSIONS\""
     ;;
 
 timescaledb | all)
@@ -37,6 +38,12 @@ timescaledb | all)
         install_timescaledb "$ver"
     done
     if [ "$DRYRUN" != true ]; then timescaledb_post_install; fi
+    ;;& # fallthrough to get rust as well if we're called with 'all'
+
+pgvectorscale | all)
+    for ver in $PGVECTORSCALE_VERSIONS; do
+        install_pgvectorscale "$ver"
+    done
     ;;& # fallthrough to get rust as well if we're called with 'all'
 
 rust | all) install_rust_extensions;;
