@@ -61,6 +61,7 @@ check_base_components() {
 
     check_timescaledb "$pg" "$lib"
     check_promscale "$pg" "$lib"
+    check_pgvectorscale "$pg" "$lib"
     check_toolkit "$pg" "$lib"
     check_oss_extensions "$pg" "$lib"
     check_others "$pg" "$lib"
@@ -194,6 +195,41 @@ check_toolkit() {
     done
 
     if [ "$found" = false ]; then error "no toolkit versions found for pg$pg"; fi
+}
+
+check_pgvectorscale() {
+    if [ -z "$PGVECTORSCALE_VERSIONS" ]; then return; fi
+    local pg="$1" lib="$2" found=false
+
+    if [ "$ARCH" != amd64 ]; then
+        # no arm64 pgvectorscale packages
+        return
+    fi
+
+    # record an empty version so we'll get an empty table row if we don't have any versions
+    record_ext_version pgvectorscale "$pg" ""
+
+    for ver in $PGVECTORSCALE_VERSIONS; do
+        if [[ "$ver" = master || "$ver" = main ]]; then
+            log "skipping looking for vectorscale-$ver"
+            continue
+        fi
+
+        if [ -s "$lib/vectorscale-$ver.so" ]; then
+            found=true
+            record_ext_version pgvectorscale "$pg" "$ver"
+        else
+            unsupported_reason="$(supported_pgvectorscale "$pg" "$ver")"
+            if [ -n "$unsupported_reason" ]; then
+                log "skipped: pgvectorscale-$ver: $unsupported_reason"
+            else
+                error "pgvectorscale-$ver not found for pg$pg"
+            fi
+        fi
+    done
+
+
+    if [[ "$found" = false && "$pg" -gt 14 ]]; then error "no pgvectorscale versions found for pg$pg"; fi
 }
 
 # this checks for other extensions that should always exist
