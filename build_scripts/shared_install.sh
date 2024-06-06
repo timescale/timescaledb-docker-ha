@@ -243,3 +243,35 @@ __SQL__
         done # for file
     done     # for pg
 }
+
+install_pgvectorscale() {
+    local version="$1" pg pkg=pgvectorscale unsupported_reason
+
+    for pg in $(available_pg_versions); do
+        unsupported_reason="$(supported_pgvectorscale "$pg" "$version")"
+        if [ -n "$unsupported_reason" ]; then
+            log "$pkg-$version: $unsupported_reason"
+            continue
+        fi
+
+        log "building $pkg-$version for pg$pg"
+
+        [[ "$DRYRUN" = true ]] && continue
+
+        (
+            set -ex
+
+            rm -rf /build/pgvectorscale
+            mkdir /build/pgvectorscale
+            cd /build/pgvectorscale
+
+            curl --silent \
+                 --location \
+                 --output artifact.zip \
+                 "https://github.com/timescale/pgvectorscale/releases/download/$version/pgvectorscale-$version-pg${pg}.zip"
+
+            unzip artifact.zip
+            dpkg -i pgvectorscale*amd64.deb
+        )
+    done
+}

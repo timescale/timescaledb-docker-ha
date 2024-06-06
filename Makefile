@@ -12,6 +12,7 @@ PG_VERSIONS?=
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 PGAI_VERSION?=v0.1.0
+PGVECTORSCALE_VERSIONS?=all
 POSTGIS_VERSIONS?=3
 PG_AUTH_MON?=v2.0
 PG_STAT_MONITOR?=2.0.3
@@ -116,6 +117,7 @@ DOCKER_BUILD_COMMAND=docker build \
 					 --build-arg GITHUB_TIMESCALEDB_DOCKER_REF="$(GITHUB_TIMESCALEDB_DOCKER_REF)" \
 					 --build-arg INSTALL_METHOD="$(INSTALL_METHOD)" \
 					 --build-arg PGAI_VERSION="$(PGAI_VERSION)" \
+					 --build-arg PGVECTORSCALE_VERSIONS="$(PGVECTORSCALE_VERSIONS)" \
 					 --build-arg PG_AUTH_MON="$(PG_AUTH_MON)" \
 					 --build-arg PG_LOGERRORS="$(PG_LOGERRORS)" \
 					 --build-arg PG_MAJOR=$(PG_MAJOR) \
@@ -152,6 +154,7 @@ fast: PG_VERSIONS=16
 fast: POSTGIS_VERSIONS=
 fast: TOOLKIT_VERSIONS=
 fast: PROMSCALE_VERSIONS=
+fast: PGVECTORSCALE_VERSIONS=
 fast: build
 
 .PHONY: latest
@@ -159,6 +162,7 @@ latest: ALL_VERSIONS=false
 latest: TIMESCALEDB_VERSIONS=latest
 latest: TOOLKIT_VERSIONS=latest
 latest: PROMSCALE_VERSIONS=latest
+latest: PGVECTORSCALE_VERSIONS=
 latest: build
 
 prune: # docker system prune -af

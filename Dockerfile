@@ -382,6 +382,13 @@ RUN set -ex; \
         TOOLKIT_VERSIONS="${TOOLKIT_VERSIONS}" \
         /build/scripts/install_extensions rust
 
+ARG PGVECTORSCALE_VERSIONS
+RUN set -ex; \
+    OSS_ONLY="${OSS_ONLY}" \
+    RUST_RELEASE="${RUST_RELEASE}" \
+    PGVECTORSCALE_VERSIONS="${PROMSCALE_VERSIONS}" \
+    /build/scripts/install_extensions pgvectorscale
+
 USER root
 
 # All the tools that were built in the previous steps have their ownership set to postgres
@@ -471,6 +478,7 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "PGBOUNCER_EXPORTER_VERSION=\"${PGBOUNCER_EXPORTER_VERSION}\"" >> /.image_config; \
     echo "PGBACKREST_EXPORTER_VERSION=\"${PGBACKREST_EXPORTER_VERSION}\"" >> /.image_config; \
     echo "PGAI_VERSION=\"${PGAI_VERSION}\"" >> /.image_config; \
+    echo "PGVECTORSCALE_VERSIONS=\"${PGVECTORSCALE_VERSIONS}\"" >> /.image_config; \
     echo "PG_MAJOR=\"${PG_MAJOR}\"" >> /.image_config; \
     echo "PG_VERSIONS=\"${PG_VERSIONS}\"" >> /.image_config; \
     echo "FROM=\"${DOCKER_FROM}\"" >> /.image_config; \
