@@ -106,6 +106,9 @@ timescaledb:
   2.15.1:
     pg-min: 13
     pg-max: 16
+  2.15.2:
+    pg-min: 13
+    pg-max: 16
 
 promscale:
   0.5.0:
