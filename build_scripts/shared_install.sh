@@ -245,7 +245,10 @@ __SQL__
 }
 
 install_pgvectorscale() {
-    local version="$1" pg pkg=pgvectorscale unsupported_reason
+    local version="$1" pg pkg=pgvectorscale unsupported_reason arch_deb="$ARCH"
+    if [ "$arch_deb" = aarch64 ]; then
+        arch_deb=arm64
+    fi
 
     for pg in $(available_pg_versions); do
         unsupported_reason="$(supported_pgvectorscale "$pg" "$version")"
@@ -269,10 +272,10 @@ install_pgvectorscale() {
                  --fail \
                  --location \
                  --output artifact.zip \
-                 "https://github.com/timescale/pgvectorscale/releases/download/$version/pgvectorscale-$version-pg${pg}.zip"
+                 "https://github.com/timescale/pgvectorscale/releases/download/$version/pgvectorscale-$version-pg${pg}-${arch_deb}.zip"
 
             unzip artifact.zip
-            dpkg --install --log=/build/pgvectorscale/dpkg.log --admindir=/build/pgvectorscale/ --force-depends --force-not-root --force-overwrite pgvectorscale*amd64.deb
+            dpkg --install --log=/build/pgvectorscale/dpkg.log --admindir=/build/pgvectorscale/ --force-depends --force-not-root --force-overwrite pgvectorscale*${arch_deb}.deb
         )
     done
 }

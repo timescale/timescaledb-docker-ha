@@ -201,11 +201,6 @@ check_pgvectorscale() {
     if [ -z "$PGVECTORSCALE_VERSIONS" ]; then return; fi
     local pg="$1" lib="$2" found=false
 
-    if [ "$ARCH" != amd64 ]; then
-        # no arm64 pgvectorscale packages
-        return
-    fi
-
     # record an empty version so we'll get an empty table row if we don't have any versions
     record_ext_version pgvectorscale "$pg" ""
 
