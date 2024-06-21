@@ -182,8 +182,6 @@ supported_promscale() {
 supported_pgvectorscale() {
     local pg="$1" ver="$2"
 
-    if [ "$ARCH" != amd64 ]; then echo "unsupported arch $ARCH"; return; fi
-
     # just attempt the build for main/master/or other branch build
     if [[ "$ver" = main || "$ver" = master || "$ver" =~ [a-z_-]*/[A-Za-z0-9_-]* ]]; then
         return

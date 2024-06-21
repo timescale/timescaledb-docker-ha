@@ -188,6 +188,5 @@ toolkit:
 
 pgvectorscale:
   0.2.0:
-    arch: amd64
     pg-min: 15
     pg-max: 16
