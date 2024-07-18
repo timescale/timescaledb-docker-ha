@@ -528,9 +528,9 @@ RUN set -ex; \
 
 USER postgres
 
-
 ## Create a smaller Docker image from the builder image
-FROM scratch as release
+FROM alpine:3.16.9 as release
+
 COPY --from=trimmed / /
 
 ARG PG_MAJOR
