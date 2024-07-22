@@ -110,6 +110,19 @@ RUN set -eux; \
     mv -v /tmp/"$pkg"/pgbouncer_exporter /usr/local/bin/pgbouncer_exporter; \
     rm -rfv /tmp/pkg.tgz /tmp/"$pkg"
 
+# postgres-exporter
+ARG POSTGRES_EXPORTER_VERSION="0.15.0"
+RUN set -eux; \
+    pkg="postgres_exporter-${POSTGRES_EXPORTER_VERSION}.linux-$(dpkg --print-architecture)"; \
+    curl --silent \
+        --location \
+        --output /tmp/pkg.tgz \
+        "https://github.com/prometheus-community/postgres_exporter/releases/download/v${POSTGRES_EXPORTER_VERSION}/${pkg}.tar.gz"; \
+    cd /tmp; \
+    tar xvzf /tmp/pkg.tgz "$pkg"/postgres_exporter; \
+    mv -v /tmp/"$pkg"/postgres_exporter /usr/local/bin/postgres_exporter; \
+    rm -rfv /tmp/pkg.tgz /tmp/"$pkg"
+
 # forbid creation of a main cluster when package is installed
 RUN sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
 
