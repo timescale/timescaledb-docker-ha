@@ -81,7 +81,7 @@ RUN set -eux; \
     apt-get install -y \
         less jq strace procps awscli vim-tiny gdb gdbserver dumb-init daemontools \
         postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop libnss-wrapper gosu \
-        pg-activity lsof htop; \
+        pg-activity lsof htop xfsprogs; \
     curl -Lso /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_"$(dpkg --print-architecture)"; \
     chmod 755 /usr/local/bin/yq
 
