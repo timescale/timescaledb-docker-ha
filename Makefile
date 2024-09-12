@@ -262,6 +262,7 @@ build:
 
 .PHONY: publish-combined-builder-manifest
 publish-combined-builder-manifest: # publish a combined builder image manifest
+publish-combined-builder-manifest: $(VAR_VERSION_INFO)
 	@echo "Creating manifest $(DOCKER_BUILDER_URL) that includes $(DOCKER_BUILDER_URL)-amd64 and $(DOCKER_BUILDER_URL)-arm64"
 	amddigest_image="$$(./fetch_tag_digest $(DOCKER_BUILDER_URL)-amd64)"
 	armdigest_image="$$(./fetch_tag_digest $(DOCKER_BUILDER_URL)-arm64)"
@@ -311,10 +312,10 @@ CHECK_NAME=ha-check
 .PHONY: check
 check: # check images to see if they have all the requested content
 	@set -x
-	for arch in amd64 arm64; do \
+	for arch in amd64 arm64; do
 		key="$$(mktemp -u XXXXXX)"
 		check_name="$(CHECK_NAME)-$$key"
-		echo "### Checking $$arch $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY); \
+		echo "### Checking $$arch $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY)
 		docker rm --force "$$check_name" >&/dev/null || true
 		docker run \
 			--platform linux/"$$arch" \
