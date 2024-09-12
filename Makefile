@@ -94,7 +94,7 @@ INSTALL_METHOD?=docker-ha
 GITHUB_REPO?=timescale/timescaledb
 
 # We need dynamic variables here, that is why we do not use $(shell awk ...)
-VAR_PGMAJOR="$$(awk -F '=' '/postgresql.version=/ {print $$2}' $(VAR_VERSION_INFO) 2>/dev/null)"
+VAR_PGMAJORMINOR="$$(awk -F '=' '/postgresql.version=/ {print $$2}' $(VAR_VERSION_INFO) 2>/dev/null)"
 VAR_TSVERSION="$$(awk -F '=' '/timescaledb.version=/ {print $$2}' $(VAR_VERSION_INFO) 2>/dev/null)"
 VAR_TSMAJOR="$$(awk -F '[.=]' '/timescaledb.version=/ {print $$3 "." $$4}' $(VAR_VERSION_INFO))"
 VAR_VERSION_INFO=version_info-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX).log
@@ -242,10 +242,10 @@ version_info-%.log:
 # The purpose of publishing the images under many tags, is to provide
 # some choice to the user as to their appetite for volatility.
 #
-#  1. timescale/timescaledb-ha:pg12-latest
-#  2. timescale/timescaledb-ha:pg12-ts1.7-latest
-#  3. timescale/timescaledb-ha:pg12.3-ts1.7-latest
-#  4. timescale/timescaledb-ha:pg12.3-ts1.7.1-latest
+#  1. timescale/timescaledb-ha:pg12
+#  2. timescale/timescaledb-ha:pg12-ts1.7
+#  3. timescale/timescaledb-ha:pg12.3-ts1.7
+#  4. timescale/timescaledb-ha:pg12.3-ts1.7.1
 
 .PHONY: build-oss
 build-oss: # build an OSS-only image
@@ -266,11 +266,14 @@ publish-combined-builder-manifest: # publish a combined builder image manifest
 	amddigest_image="$$(./fetch_tag_digest $(DOCKER_BUILDER_URL)-amd64)"
 	armdigest_image="$$(./fetch_tag_digest $(DOCKER_BUILDER_URL)-arm64)"
 	echo "AMD: $$amddigest_image ARM: $$armdigest_image"
-	docker manifest rm "$(DOCKER_BUILDER_URL)" >& /dev/null || true
-	docker manifest create "$(DOCKER_BUILDER_URL)" --amend "$$amddigest_image" --amend "$$armdigest_image"
-	docker manifest push "$(DOCKER_BUILDER_URL)"
-	echo "pushed $(DOCKER_BUILDER_URL)"
-	echo "Pushed $(DOCKER_BUILDER_URL) (amd:$$amddigest_image, arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
+	for tag in pg$(PG_MAJOR) pg$(VAR_PGMAJORMINOR); do
+		url="$(DOCKER_PUBLISH_URL):$$tag$(DOCKER_TAG_POSTFIX)-builder"
+		docker manifest rm "$$url" >& /dev/null || true
+		docker manifest create "$$url" --amend "$$amddigest_image" --amend "$$armdigest_image"
+		docker manifest push "$$url"
+		echo "pushed $$url"
+		echo "Pushed $$url (amd:$$amddigest_image, arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
+	done
 
 .PHONY: publish-combined-manifest
 publish-combined-manifest: # publish the main combined manifest that includes amd64 and arm64 images
@@ -279,7 +282,7 @@ publish-combined-manifest: $(VAR_VERSION_INFO)
 	amddigest_image="$$(./fetch_tag_digest $(DOCKER_RELEASE_URL)-amd64)"
 	armdigest_image="$$(./fetch_tag_digest $(DOCKER_RELEASE_URL)-arm64)"
 	echo "AMD: $$amddigest_image ARM: $$armdigest_image"
-	for tag in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMAJOR)-ts$(VAR_TSVERSION); do
+	for tag in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMAJORMINOR)-ts$(VAR_TSVERSION); do
 		url="$(DOCKER_PUBLISH_URL):$$tag$(DOCKER_TAG_POSTFIX)"
 		docker manifest rm "$$url" >&/dev/null || true
 		docker manifest create "$$url" --amend "$$amddigest_image" --amend "$$armdigest_image"
