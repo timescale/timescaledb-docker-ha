@@ -86,7 +86,7 @@ RUN set -eux; \
     chmod 755 /usr/local/bin/yq
 
 # pgbackrest-exporter
-ARG PGBACKREST_EXPORTER_VERSION="0.16.1"
+ARG PGBACKREST_EXPORTER_VERSION="0.18.0"
 RUN set -eux; \
     arch="$(arch)"; [ "$arch" = aarch64 ] && arch=arm64; pkg="pgbackrest_exporter_${PGBACKREST_EXPORTER_VERSION}_linux_${arch}"; \
     curl --silent \
@@ -98,7 +98,7 @@ RUN set -eux; \
     rm -rfv /tmp/pkg.deb
 
 # pgbouncer-exporter
-ARG PGBOUNCER_EXPORTER_VERSION="0.7.0"
+ARG PGBOUNCER_EXPORTER_VERSION="0.9.0"
 RUN set -eux; \
     pkg="pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-$(dpkg --print-architecture)"; \
     curl --silent \
