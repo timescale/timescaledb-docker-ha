@@ -168,7 +168,7 @@ require_cargo_pgrx_version() {
 available_pg_versions() {
     # this allows running out-of-container with dry-run to test script logic
     if [[ "$DRYRUN" = true && ! -d /usr/lib/postgresql ]]; then
-        echo 12 13 14 15 16
+        echo 12 13 14 15 16 17
     else
         (cd /usr/lib/postgresql && ls)
     fi
