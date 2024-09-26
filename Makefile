@@ -5,7 +5,7 @@ SHELL = bash
 
 all: help
 
-PG_MAJOR?=16
+PG_MAJOR?=17
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
 PG_VERSIONS?=
@@ -42,7 +42,9 @@ endif
 
 ifeq ($(ALL_VERSIONS),true)
   DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-all
-  ifeq ($(PG_MAJOR),16)
+  ifeq ($(PG_MAJOR),17)
+    PG_VERSIONS := 17 16 15 14 13 12
+  else ifeq ($(PG_MAJOR),16)
     PG_VERSIONS := 16 15 14 13 12
   else ifeq ($(PG_MAJOR),15)
     PG_VERSIONS := 15 14 13 12
@@ -180,7 +182,7 @@ fast: ALL_VERSIONS=false
 fast: PG_AUTH_MON=
 fast: PG_LOGERRORS=
 fast: PGAI_VERSION=
-fast: PG_VERSIONS=16
+fast: PG_VERSIONS=17
 fast: POSTGIS_VERSIONS=
 fast: TOOLKIT_VERSIONS=
 fast: PROMSCALE_VERSIONS=
