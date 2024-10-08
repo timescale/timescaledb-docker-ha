@@ -194,6 +194,12 @@ check_toolkit() {
         fi
     done
 
+    # TODO: no toolkit for pg17 yet
+    if [ "$pg" -ge 17 ]; then
+        log "toolkit isn't available for pg$pg"
+        return
+    fi
+
     if [ "$found" = false ]; then error "no toolkit versions found for pg$pg"; fi
 }
 
