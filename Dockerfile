@@ -225,8 +225,8 @@ ARG PGVECTO_RS
 RUN set -ex; \
     if [ -n "${PGVECTO_RS}" ]; then \
         for pg in ${PG_VERSIONS}; do \
-            # Vecto.rs only support PostgreSQL 14 and upwards
-            if [ $pg -gt 13 ]; then \
+            # Vecto.rs only support PostgreSQL 14..16
+            if [ $pg -gt 13 -a $pg -lt 17 ]; then \
                 curl --silent \
                     --location \
                     --output /tmp/vectors.deb \
