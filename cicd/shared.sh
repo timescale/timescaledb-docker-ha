@@ -269,7 +269,8 @@ check_others() {
     fi
 
     record_ext_version pgvecto.rs "$pg" ""
-    if [[ -n "$PGVECTO_RS" && "$pg" -gt 13 ]]; then
+    # TODO: pgvecto.rs hasn't released a pg17 compatible version yet, check https://github.com/tensorchord/pgvecto.rs/releases
+    if [[ -n "$PGVECTO_RS" && "$pg" -gt 13 && "$pg" -lt 17 ]]; then
         if [ -s "$lib/vectors.so" ]; then
             record_ext_version pgvecto.rs "$pg" "$PGVECTO_RS"
         else
