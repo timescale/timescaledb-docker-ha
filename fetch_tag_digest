@@ -12,6 +12,11 @@ if [ -z "$url" ]; then
     exit 1
 fi
 
+if [[ "$url" =~ localhost:5000 ]]; then
+    docker inspect localhost:5000/ha:pg16-builder-arm64|jq -r '.[].Id'
+    exit $?
+fi
+
 registry=docker.io # default
 tag="${url##*:}"
 path="${url%%:$tag}"
