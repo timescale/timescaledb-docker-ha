@@ -503,7 +503,7 @@ USER postgres
 COPY --chown=postgres:postgres cicd /cicd/
 RUN /cicd/install_checks -v
 
-FROM builder as trimmed
+FROM builder AS trimmed
 
 USER root
 
@@ -530,7 +530,7 @@ USER postgres
 
 
 ## Create a smaller Docker image from the builder image
-FROM scratch as release
+FROM scratch AS release
 COPY --from=trimmed / /
 
 ARG PG_MAJOR
