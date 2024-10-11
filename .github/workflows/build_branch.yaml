@@ -3,7 +3,7 @@ name: Build branch
 on:
   push:
     branches:
-      - "*/**"
+      - "nothing/**"
     paths-ignore:
       - ".github/workflows/publish*.yaml"
       - "*.md"

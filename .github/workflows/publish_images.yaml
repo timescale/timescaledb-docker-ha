@@ -7,6 +7,7 @@ on:
     branches:
       - master
       - main
+      - brent/tag_fix
     paths-ignore:
       - "*.md"
 
@@ -18,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOCKER_REPOSITORY: timescale/timescaledb-ha
+  DOCKER_REPOSITORY: timescaledev/timescaledb-ha
   DOCKER_REGISTRY: docker.io
 
 jobs:
@@ -29,15 +30,11 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ "amd64", "arm64" ]
-        pg_major: [ "16", "15", "14", "13", "12" ]
-        all_versions: [ "false", "true" ]
-        oss_only: [ "false", "true" ]
+        pg_major: [ "16" ]
+        all_versions: [ "false" ]
+        oss_only: [ "false" ]
 
         include:
-          - oss_only: "true"
-            oss: "-oss"
-          - all_versions: "true"
-            all: "-all"
           - platform: amd64
             runs_on: ubuntu-22.04
           - platform: arm64
@@ -64,11 +61,12 @@ jobs:
           endpoint: ha-builder
 
       - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
+        id: build
         env:
           PLATFORM: ${{ matrix.platform }}
           PG_MAJOR: ${{ matrix.pg_major }}
-          ALL_VERSIONS: ${{ matrix.all_versions }}
-          OSS_ONLY: ${{ matrix.oss_only }}
+          #ALL_VERSIONS: ${{ matrix.all_versions }}
+          #OSS_ONLY: ${{ matrix.oss_only }}
         run: |
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder publish-release
 
@@ -79,8 +77,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pg_major: [ "16", "15", "14", "13", "12" ]
-        docker_tag_postfix: ["", "-all", "-oss", "-all-oss" ]
+        pg_major: [ "16" ]
+        docker_tag_postfix: [""]
 
     steps:
       - name: Checkout code
@@ -110,8 +108,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pg_major: [ "16", "15", "14", "13", "12" ]
-        docker_tag_postfix: ["", "-all", "-oss", "-all-oss" ]
+        pg_major: [ "16" ]
+        docker_tag_postfix: [""]
 
     steps:
       - name: Checkout code
@@ -132,18 +130,3 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
         run: make get-image-config check
-
-  dispatch-ha-image-published-event:
-    name: Dispatch HA image published event
-    needs: [ "check" ]
-    if: ${{ github.event_name == 'push' }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Dispatch event to Publish cloud images workflow
-        run: |
-            curl -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Authorization: token ${{ secrets.ORG_AUTOMATION_TOKEN }}" \
-            --request POST \
-            --data '{"event_type": "ha_image_published"}' \
-            https://api.github.com/repos/timescale/timescaledb-docker-cloud/dispatches
