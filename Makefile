@@ -94,10 +94,41 @@ INSTALL_METHOD?=docker-ha
 GITHUB_REPO?=timescale/timescaledb
 
 # We need dynamic variables here, that is why we do not use $(shell awk ...)
-VAR_PGMAJORMINOR="$$(awk -F '=' '/postgresql.version=/ {print $$2}' $(VAR_VERSION_INFO) 2>/dev/null)"
-VAR_TSVERSION="$$(awk -F '=' '/timescaledb.version=/ {print $$2}' $(VAR_VERSION_INFO) 2>/dev/null)"
-VAR_TSMAJOR="$$(awk -F '[.=]' '/timescaledb.version=/ {print $$3 "." $$4}' $(VAR_VERSION_INFO))"
-VAR_VERSION_INFO=version_info-$(PG_MAJOR)$(DOCKER_TAG_POSTFIX).log
+VERSION_INFO = /tmp/outputs/version_info
+VAR_PGMAJORMINOR="$$(awk -F '=' '/postgresql.version=/ {print $$2}' $(VERSION_INFO) 2>/dev/null)"
+VAR_TSVERSION="$$(awk -F '=' '/timescaledb.version=/ {print $$2}' $(VERSION_INFO) 2>/dev/null)"
+VAR_TSMAJOR="$$(awk -F '[.=]' '/timescaledb.version=/ {print $$3 "." $$4}' $(VERSION_INFO))"
+
+# In these steps we do some introspection to find out some details of the versions
+# that are inside the Docker image. As we use the Ubuntu packages, we do not know until
+# after we have built the image, what patch version of PostgreSQL, or PostGIS is installed.
+#
+# We will then attach this information as OCI labels to the final Docker image
+# docker buildx build does a push to export it, so it doesn't exist in the regular local registry yet
+VERSION_TAG?=
+ifeq ($(VERSION_TAG),)
+VERSION_TAG := pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-builder-$(PLATFORM)
+$(VERSION_INFO): builder
+endif
+VERSION_IMAGE := $(DOCKER_PUBLISH_URL):$(VERSION_TAG)
+
+# The purpose of publishing the images under many tags, is to provide
+# some choice to the user as to their appetite for volatility.
+#
+#  1. timescale/timescaledb-ha:pg12
+#  2. timescale/timescaledb-ha:pg12-ts1.7
+#  3. timescale/timescaledb-ha:pg12.3-ts1.7
+#  4. timescale/timescaledb-ha:pg12.3-ts1.7.1
+
+$(VERSION_INFO):
+	@set -x
+	docker rm --force builder_inspector >@/dev/null || true
+	docker run --pull always --rm -d --name builder_inspector -e PGDATA=/tmp/pgdata --user=postgres "$(VERSION_IMAGE)" sleep 300
+	docker cp ./cicd "builder_inspector:/cicd/"
+	docker exec builder_inspector /cicd/smoketest.sh || (docker logs -n100 builder_inspector && exit 1)
+	mkdir -p /tmp/outputs
+	docker cp builder_inspector:/tmp/version_info.log "$(VERSION_INFO)"
+	docker rm --force builder_inspector || true
 
 # We require the use of buildkit, as we use the --secret arguments for docker build
 export DOCKER_BUILDKIT = 1
@@ -184,21 +215,24 @@ builder:
 
 .PHONY: publish-builder
 publish-builder: # build and publish the `builder` target image
-publish-builder: builder
+publish-builder: builder $(VERSION_INFO)
 	docker push "$(DOCKER_BUILDER_ARCH_URL)"
+	echo "version_info=$$(base64 < $(VERSION_INFO))" | tee -a "$(GITHUB_OUTPUT)}"
+	echo "builder_id=$$(docker inspect "$(DOCKER_BUILDER_ARCH_URL)" | jq -r '.[].Id')" | tee -a "$(GITHUB_OUTPUT)"
 
 # The prepare step does not build the final image, as we need to use introspection
 # to find out what versions of software are installed in this image
 .PHONY: release
 release: # build the `release` target image
 release: DOCKER_EXTRA_BUILDARGS=--target release
-release: $(VAR_VERSION_INFO)
+release: $(VERSION_INFO)
 	$(DOCKER_BUILD_COMMAND) --tag "$(DOCKER_RELEASE_ARCH_URL)" \
-		$$(awk -F '=' '{printf "--label com.timescaledb.image."$$1"="$$2" "}' $(VAR_VERSION_INFO))
+		$$(awk -F '=' '{printf "--label com.timescaledb.image."$$1"="$$2" "}' $(VERSION_INFO))
 
 publish-release: # build and publish the `release` target image
 publish-release: release
 	docker push "$(DOCKER_RELEASE_ARCH_URL)"
+	echo "release_id=$$(docker inspect "$(DOCKER_RELEASE_ARCH_URL)" | jq -r '.[].Id')" | tee -a "$(GITHUB_OUTPUT)"
 
 .PHONY: build-sha
 build-sha: # build a specific git commit
@@ -218,35 +252,6 @@ publish-sha: is_ci
 build-tag: DOCKER_TAG_POSTFIX?=$(GITHUB_TAG)
 build-tag: release
 
-VERSION_TAG?=
-ifeq ($(VERSION_TAG),)
-VERSION_TAG := pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-builder-$(PLATFORM)
-version_info-%.log: builder
-endif
-VERSION_IMAGE := $(DOCKER_PUBLISH_URL):$(VERSION_TAG)
-VERSION_NAME=versioninfo-pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)
-version_info-%.log:
-	# In these steps we do some introspection to find out some details of the versions
-	# that are inside the Docker image. As we use the Ubuntu packages, we do not know until
-	# after we have built the image, what patch version of PostgreSQL, or PostGIS is installed.
-	#
-	# We will then attach this information as OCI labels to the final Docker image
-	# docker buildx build does a push to export it, so it doesn't exist in the regular local registry yet
-	@docker rm --force "$(VERSION_NAME)" >&/dev/null || true
-	docker run --pull always --rm -d --name "$(VERSION_NAME)" -e PGDATA=/tmp/pgdata --user=postgres "$(VERSION_IMAGE)" sleep 300
-	docker cp ./cicd "$(VERSION_NAME):/cicd/"
-	docker exec "$(VERSION_NAME)" /cicd/smoketest.sh || (docker logs -n100 "$(VERSION_NAME)" && exit 1)
-	docker cp "$(VERSION_NAME):/tmp/version_info.log" "$(VAR_VERSION_INFO)"
-	docker rm --force "$(VERSION_NAME)" || true
-
-# The purpose of publishing the images under many tags, is to provide
-# some choice to the user as to their appetite for volatility.
-#
-#  1. timescale/timescaledb-ha:pg12
-#  2. timescale/timescaledb-ha:pg12-ts1.7
-#  3. timescale/timescaledb-ha:pg12.3-ts1.7
-#  4. timescale/timescaledb-ha:pg12.3-ts1.7.1
-
 .PHONY: build-oss
 build-oss: # build an OSS-only image
 build-oss: OSS_ONLY=true
@@ -262,34 +267,39 @@ build:
 
 .PHONY: publish-combined-builder-manifest
 publish-combined-builder-manifest: # publish a combined builder image manifest
-publish-combined-builder-manifest: $(VAR_VERSION_INFO)
-	@echo "Creating manifest $(DOCKER_BUILDER_URL) that includes $(DOCKER_BUILDER_URL)-amd64 and $(DOCKER_BUILDER_URL)-arm64"
-	amddigest_image="$$(./fetch_tag_digest $(DOCKER_BUILDER_URL)-amd64)"
-	armdigest_image="$$(./fetch_tag_digest $(DOCKER_BUILDER_URL)-arm64)"
-	echo "AMD: $$amddigest_image ARM: $$armdigest_image"
+	@set -x
+	ls -alR /tmp/outputs || true
+	cat $(VERSION_INFO) || true
+	images=()
+	for image in $$(cd /tmp/outputs && echo builder-* | sed 's/builder-/sha256:/g'); do
+		images+=("--amend" "$$image")
+	done
+	echo "Creating manifest $(DOCKER_BUILDER_URL) that includes $(DOCKER_BUILDER_URL)-amd64 and $(DOCKER_BUILDER_URL)-arm64 for pg $(VAR_PGMAJORMINOR)}"
 	for tag in pg$(PG_MAJOR) pg$(VAR_PGMAJORMINOR); do
 		url="$(DOCKER_PUBLISH_URL):$$tag$(DOCKER_TAG_POSTFIX)-builder"
 		docker manifest rm "$$url" >& /dev/null || true
-		docker manifest create "$$url" --amend "$$amddigest_image" --amend "$$armdigest_image"
+		docker manifest create "$$url" "$${images[@]}"
 		docker manifest push "$$url"
-		echo "pushed $$url"
-		echo "Pushed $$url (amd:$$amddigest_image, arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
+		echo "Pushed $$url ($${images[@]})" | tee -a "$(GITHUB_STEP_SUMMARY)"
 	done
 
 .PHONY: publish-combined-manifest
 publish-combined-manifest: # publish the main combined manifest that includes amd64 and arm64 images
-publish-combined-manifest: $(VAR_VERSION_INFO)
-	@echo "Creating manifest $(DOCKER_RELEASE_URL) that includes $(DOCKER_RELEASE_URL)-amd64 and $(DOCKER_RELEASE_URL)-arm64"
-	amddigest_image="$$(./fetch_tag_digest $(DOCKER_RELEASE_URL)-amd64)"
-	armdigest_image="$$(./fetch_tag_digest $(DOCKER_RELEASE_URL)-arm64)"
-	echo "AMD: $$amddigest_image ARM: $$armdigest_image"
+publish-combined-manifest: $(VERSION_INFO)
+	@set -x
+	ls -alR /tmp/outputs || true
+	cat $(VERSION_INFO) || true
+	images=()
+	for image in $$(cd /tmp/outputs && echo builder-* | sed 's/builder-/sha256:/g'); do
+		images+=("--amend" "$$image")
+	done
+	echo "Creating manifest $(DOCKER_RELEASE_URL) that includes $(DOCKER_RELEASE_URL)-amd64 and $(DOCKER_RELEASE_URL)-arm64"
 	for tag in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMAJORMINOR)-ts$(VAR_TSVERSION); do
 		url="$(DOCKER_PUBLISH_URL):$$tag$(DOCKER_TAG_POSTFIX)"
 		docker manifest rm "$$url" >&/dev/null || true
-		docker manifest create "$$url" --amend "$$amddigest_image" --amend "$$armdigest_image"
+		docker manifest create "$$url" "$${images[@]}"
 		docker manifest push "$$url"
-		echo "pushed $$url"
-		echo "Pushed $$url (amd:$$amddigest_image, arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
+		echo "Pushed $$url ($${images[@]})" | tee -a "$(GITHUB_STEP_SUMMARY)"
 	done
 
 .PHONY: publish-manifests
