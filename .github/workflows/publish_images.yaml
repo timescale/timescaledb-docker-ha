@@ -46,6 +46,15 @@ jobs:
     runs-on: "${{ matrix.runs_on }}"
 
     steps:
+      # The github runners have a lot of space in /mnt, but apparently not enough in /. This step removes about 13G.
+      - name: remove unneeded runner software
+        run: |
+          df -h
+          du -chs     /usr/share/dotnet /usr/local/lib/android /opt/microsoft || true
+          sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft || true
+          sudo docker image prune --all --force || true
+          df -h
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -64,6 +73,7 @@ jobs:
           endpoint: ha-builder
 
       - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
+        id: build
         env:
           PLATFORM: ${{ matrix.platform }}
           PG_MAJOR: ${{ matrix.pg_major }}
@@ -72,17 +82,63 @@ jobs:
         run: |
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder publish-release
 
+      - name: export outputs
+        run: |
+          mkdir -p /tmp/outputs
+          builder_id="${{ steps.build.outputs.builder_id }}"
+          release_id="${{ steps.build.outputs.release_id }}"
+          touch "/tmp/outputs/builder-$(echo "$builder_id" | cut -d: -f2)"
+          touch "/tmp/outputs/release-$(echo "$release_id" | cut -d: -f2)"
+
+      - name: upload outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: outputs-${{ matrix.pg_major }}-${{ matrix.all_versions }}-${{ matrix.oss_only }}-${{ matrix.platform }}
+          path: /tmp/outputs/*
+          if-no-files-found: error
+          retention-days: 1
+
   publish-combined-manifests:
     name: Publish manifest pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
     needs: [ "publish" ]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+
       matrix:
         pg_major: [ "16", "15", "14", "13", "12" ]
         docker_tag_postfix: ["", "-all", "-oss", "-all-oss" ]
+        include:
+          - docker_tag_postfix: ""
+            oss_only: "false"
+            all_versions: "false"
+          - docker_tag_postfix: "-all"
+            oss_only: "false"
+            all_versions: "true"
+          - docker_tag_postfix: "-oss"
+            oss_only: "true"
+            all_versions: "false"
+          - docker_tag_postfix: "-all-oss"
+            oss_only: "true"
+            all_versions: "true"
 
     steps:
+      - name: Download arm64 outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: outputs-${{ matrix.pg_major }}-${{ matrix.all_versions }}-${{ matrix.oss_only }}-arm64
+          path: /tmp/outputs
+          pattern: '*'
+          merge-multiple: true
+
+      - name: Download amd64 outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: outputs-${{ matrix.pg_major }}-${{ matrix.all_versions }}-${{ matrix.oss_only }}-amd64
+          path: /tmp/outputs
+          pattern: '*'
+          merge-multiple: true
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -105,7 +161,7 @@ jobs:
 
   check:
     name: Check image pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
-    needs: [ "publish-combined-manifests" ]
+    needs: [ "publish", "publish-combined-manifests" ]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
