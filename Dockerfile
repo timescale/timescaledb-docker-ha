@@ -32,8 +32,8 @@ FROM ${DOCKER_FROM} AS builder
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
 # pg_upgrade from one major version to another,
 # so we need all the postgres & timescale libraries for all versions
-ARG PG_VERSIONS="16 15 14 13"
-ARG PG_MAJOR=16
+ARG PG_VERSIONS="17 16 15 14 13"
+ARG PG_MAJOR=17
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -229,8 +229,8 @@ ARG PGVECTO_RS
 RUN set -ex; \
     if [ -n "${PGVECTO_RS}" ]; then \
         for pg in ${PG_VERSIONS}; do \
-            # Vecto.rs only support PostgreSQL 14 and upwards
-            if [ $pg -gt 13 ]; then \
+            # Vecto.rs only support PostgreSQL 14..16
+            if [ $pg -gt 13 -a $pg -lt 17 ]; then \
                 curl --silent \
                     --location \
                     --output /tmp/vectors.deb \
