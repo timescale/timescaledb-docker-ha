@@ -203,11 +203,9 @@ RUN set -ex; \
         git reset HEAD --hard; \
         for pg in ${PG_VERSIONS}; do \
             if [ "$pg" -gt 15 ]; then \
-                cp /build/pgai/ai--*.sql "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension/"; \
-                cp /build/pgai/ai.control "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension/"; \
+                PG_MAJOR=${pg} make install; \
             fi; \
         done; \
-        pip install -r /build/pgai/requirements.txt; \
     fi
 
 # Add a couple 3rd party extension managers to make extension additions easier
