@@ -223,8 +223,7 @@ check_pgvectorscale() {
         fi
     done
 
-
-    if [[ "$found" = false && "$pg" -gt 14 ]]; then error "no pgvectorscale versions found for pg$pg"; fi
+    if [[ "$found" = false && "$pg" -ge 13 && "$pg" -le 17 ]]; then error "no pgvectorscale versions found for pg$pg"; fi
 }
 
 # this checks for other extensions that should always exist
