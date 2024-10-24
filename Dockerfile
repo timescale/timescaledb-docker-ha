@@ -197,17 +197,13 @@ RUN set -ex; \
 ARG PGAI_VERSION
 RUN set -ex; \
     if [ "${PG_MAJOR}" -gt 15 ] && [ -n "${PGAI_VERSION}" ]; then \
-        git clone https://github.com/timescale/pgai.git /build/pgai; \
+        git clone --branch "${PGAI_VERSION}" https://github.com/timescale/pgai.git /build/pgai; \
         cd /build/pgai; \
-        git checkout "${PGAI_VERSION}"; \
-        git reset HEAD --hard; \
         for pg in ${PG_VERSIONS}; do \
             if [ "$pg" -gt 15 ]; then \
-                cp /build/pgai/ai--*.sql "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension/"; \
-                cp /build/pgai/ai.control "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension/"; \
+                PG_MAJOR=${pg} make install; \
             fi; \
         done; \
-        pip install -r /build/pgai/requirements.txt; \
     fi
 
 # Add a couple 3rd party extension managers to make extension additions easier
