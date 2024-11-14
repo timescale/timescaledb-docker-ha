@@ -10,8 +10,10 @@ on:
     paths-ignore:
       - "*.md"
 
-  schedule:
-    - cron: '0 7 * * 2'
+  # Don't build until pg point releases are fixed:
+  # https://www.postgresql.org/message-id/flat/CABOikdNmVBC1LL6pY26dyxAS2f%2BgLZvTsNt%3D2XbcyG7WxXVBBQ%40mail.gmail.com
+  #schedule:
+  #  - cron: '0 7 * * 2'
 
 concurrency:
   group: publish-ha-images-${{ github.ref }}
