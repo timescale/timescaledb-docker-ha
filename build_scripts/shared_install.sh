@@ -100,7 +100,7 @@ install_toolkit() {
         git_checkout $pkg "$version" || continue
         (
             cd /build/$pkg || exit 1
-            CARGO_TARGET_DIR_NAME=target ./tools/build "-pg$pg" -profile "$rust_release" install || { echo "failed toolkig build for pg$pg, $pkg-$version"; exit 1; }
+            CARGO_TARGET_DIR_NAME=target ./tools/build "-pg$pg" -profile "$rust_release" install || { echo "failed toolkit build for pg$pg, $pkg-$version"; exit 1; }
         )
         err=$?
         if [ $err -eq 0 ]; then
