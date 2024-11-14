@@ -176,7 +176,7 @@ available_pg_versions() {
 
 cargo_pgrx_cmd() {
     local pgrx_version="$1"
-    if [[ "$pgrx_version" =~ ^0\.[0-7]\.* ]]; then echo "pgx"; else echo "pgrx"; fi
+    if [[ "$pgrx_version" =~ ^0\.[0-7]\. ]]; then echo "pgx"; else echo "pgrx"; fi
 }
 
 cargo_pgrx_init() {
