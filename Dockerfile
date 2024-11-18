@@ -201,7 +201,7 @@ RUN set -ex; \
         cd /build/pgai; \
         for pg in ${PG_VERSIONS}; do \
             if [ "$pg" -gt 15 ]; then \
-                PG_MAJOR=${pg} make install; \
+                PG_MAJOR=${pg} ./projects/extension/build.py install; \
             fi; \
         done; \
     fi
