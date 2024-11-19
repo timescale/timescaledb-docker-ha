@@ -214,6 +214,8 @@ cargo_pgrx_init() {
         error "failed cargo $pgrx_cmd init ${args[*]} ($err)"
         return $err
     fi
+    # The build script in Toolkit versions <= 1.19.0 assumes that there aren't any spaces between pgXX and =
+    sed -i 's/ *= */=/g' /home/postgres/.$pgrx_cmd/config.toml
     return 0
 }
 
