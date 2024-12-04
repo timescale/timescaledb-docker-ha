@@ -31,7 +31,7 @@ timescaledb:
     # in the previous -ha versions, pg13 has 2.x+
     #pg-max: 13
     # using pg: for testing
-    pg: [ 12, 13 ]
+    pg: [12, 13]
   2.1.1:
     pg-max: 13
   2.2.0:
@@ -218,5 +218,8 @@ pgvectorscale:
     pg-min: 13
     pg-max: 17
   0.5.0:
+    pg-min: 13
+    pg-max: 17
+  0.5.1:
     pg-min: 13
     pg-max: 17
