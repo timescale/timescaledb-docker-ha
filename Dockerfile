@@ -221,6 +221,7 @@ RUN set -eux; \
         done; \
     done
 
+# the strip command is due to the vectors.so size: 450mb before stripping, 12mb after
 ARG PGVECTO_RS
 RUN set -ex; \
     if [ -n "${PGVECTO_RS}" ]; then \
@@ -232,7 +233,8 @@ RUN set -ex; \
                     --output /tmp/vectors.deb \
                     "https://github.com/tensorchord/pgvecto.rs/releases/download/v${PGVECTO_RS}/vectors-pg${pg}_${PGVECTO_RS}_$(dpkg --print-architecture).deb" && \
                 dpkg -i /tmp/vectors.deb && \
-                rm -rfv /tmp/vectors.deb; \
+                rm -rfv /tmp/vectors.deb && \
+                strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vectors.so"; \
             fi \
         done; \
     fi
