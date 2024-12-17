@@ -3,14 +3,13 @@
 SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 . "$SCRIPT_DIR"/shared.sh
 
-# This takes the requested toolkit and promscale extensions, figures out what versions of cargo-pgx/pgrx those
+# This takes the requested toolkit and other extensions, figures out what versions of cargo-pgx/pgrx those
 # versions want, and then build from the oldest pgx/pgrx to the newest so that `cargo install cargo-pgx/pgrx --version`
 # commands are only ran once. Once cargo-pgrx has been installed, run the installation for the extensions,
 # and then continue through the next cargo-pgrx version. At the end, we're left with the latest version of
 # cargo-pgrx so that the builder image can be used to test master/main branches.
 
 # we use the following variables to decide on if/what to install:
-# - PROMSCALE_VERSIONS
 # - TOOLKIT_VERSIONS
 
 [ "$1" = -n ] && { DRYRUN=true; shift; }
@@ -19,8 +18,8 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 
 what="$1"
 [ -z "$what" ] && what=all
-if [[ ! "$what" =~ ^versions|timescaledb|rust|all|promscale|pgvectorscale|toolkit$ ]]; then
-    echo "usage: $0 [-n] [versions|timescaledb|rust|all|promscale|pgvectorscale|toolkit]" >&2
+if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit$ ]]; then
+    echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit]" >&2
     exit 1
 fi
 
@@ -29,7 +28,6 @@ versions)
     # this outputs the expanded versions
     echo "TIMESCALEDB_VERSIONS=\"$TIMESCALEDB_VERSIONS\""
     echo "TOOLKIT_VERSIONS=\"$TOOLKIT_VERSIONS\""
-    echo "PROMSCALE_VERSIONS=\"$PROMSCALE_VERSIONS\""
     echo "PGVECTORSCALE_VERSIONS=\"$PGVECTORSCALE_VERSIONS\""
     ;;
 
@@ -48,8 +46,6 @@ pgvectorscale | all)
 
 rust | all) install_rust_extensions;;
 
-promscale) TOOLKIT_VERSIONS="" install_rust_extensions;;
-
-toolkit) PROMSCALE_VERSIONS="" install_rust_extensions;;
+toolkit) install_rust_extensions;;
 
 esac

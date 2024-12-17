@@ -112,55 +112,6 @@ install_toolkit() {
     PATH="$ORIGINAL_PATH"
 }
 
-install_promscale() {
-    local rust_release cargo_pgrx_version="$1" version="$2" pg pkg=promscale dpkg deb_version unsupported_reason pgrx_cmd
-    [ -n "$RUST_RELEASE" ] && rust_release=-r || rust_release=""
-    pgrx_cmd="$(cargo_pgrx_cmd "$cargo_pgrx_version")"
-
-    if [ "$OSS_ONLY" = true ]; then
-        log "skipped toolkit-$version due to OSS_ONLY"
-        return
-    fi
-
-    for pg in $(available_pg_versions); do
-        unsupported_reason="$(supported_promscale "$pg" "$version")"
-        if [ -n "$unsupported_reason" ]; then
-            log "$pkg-$version: $unsupported_reason"
-            continue
-        fi
-
-        read -rs dpkg deb_version <<< "$(find_deb "promscale-extension-postgresql-$pg" "$version")"
-        if [[ -n "$dpkg" && -n "$deb_version" ]]; then
-            [[ "$DRYRUN" = true ]] && { log "would install debian package $dpkg-$deb_version (cargo-$pgrx_cmd: $cargo_pgrx_version)"; continue; }
-            if install_deb "$dpkg" "$deb_version"; then continue; fi
-            log "failed installing $dpkg $deb_version"
-        else
-            log "couldn't find debian package for promscale-extension-postgresql-$pg $version"
-        fi
-
-        log "building $pkg version $version for pg$pg (cargo-$pgrx_cmd: $cargo_pgrx_version)"
-
-        [ "$DRYRUN" = true ] && continue
-
-        PATH="/usr/lib/postgresql/$pg/bin:${ORIGINAL_PATH}"
-        cargo_pgrx_init "$cargo_pgrx_version" "$pg" || continue
-        git_clone https://github.com/timescale/promscale_extension.git $pkg || continue
-        git_checkout $pkg "$version" || continue
-        (
-            cd /build/$pkg || exit 1
-            cp templates/promscale.control ./promscale.control
-            cargo "$pgrx_cmd" install ${rust_release} --features "pg$pg" || { echo "failed cargo $pgrx_cmd install for pg$pg, $pkg-$version"; exit 1; }
-        )
-        err=$?
-        if [ $err -eq 0 ]; then
-            log "installed $pkg-$version for pg$pg"
-        else
-            error "failed building $pkg-$version for pg$pg ($err)"
-        fi
-    done
-    PATH="$ORIGINAL_PATH"
-}
-
 timescaledb_post_install() {
     local pg
     # https://github.com/timescale/timescaledb/commit/6dddfaa54e8f29e3ea41dab2fe7d9f3e37cd3aae
