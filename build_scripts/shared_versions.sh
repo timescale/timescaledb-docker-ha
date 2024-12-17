@@ -88,15 +88,6 @@ install_rust_extensions() {
         pgrx_versions[$cargopgrx]+=" toolkit-$ver"
     done
 
-    for ver in $PROMSCALE_VERSIONS; do
-        cargopgrx="$(pkg_cargo_pgrx_version "promscale" "$ver")"
-        if [ -z "$cargopgrx" ]; then
-            error "no cargo-pgrx version found for promscale-$ver"
-            continue
-        fi
-        pgrx_versions[$cargopgrx]+=" promscale-$ver"
-    done
-
     sorted_pgrx_versions="$(for pgrx_ver in "${!pgrx_versions[@]}"; do echo "$pgrx_ver"; done | sort -Vu)"
     for pgrx_ver in $sorted_pgrx_versions; do
         ext_versions="$(for ext_ver in ${pgrx_versions[$pgrx_ver]}; do echo "$ext_ver"; done | sort -Vu)"
@@ -105,7 +96,6 @@ install_rust_extensions() {
             ver="$(echo "$ext_ver" | cut -d- -f2-)"
             case "$ext" in
             toolkit)   install_toolkit   "$pgrx_ver" "$ver";;
-            promscale) install_promscale "$pgrx_ver" "$ver";;
             esac
         done
     done
@@ -166,19 +156,6 @@ supported_toolkit() {
     version_is_supported toolkit "$pg" "$ver"
 }
 
-supported_promscale() {
-    local pg="$1" ver="$2"
-
-    if [ "$ARCH" != amd64 ]; then echo "unsupported arch $ARCH"; return; fi
-
-    # just attempt the build for main/master/or other branch build
-    if [[ "$ver" = main || "$ver" = master || "$ver" =~ [a-z_-]*/[A-Za-z0-9_-]* ]]; then
-        return
-    fi
-
-    version_is_supported promscale "$pg" "$ver"
-}
-
 supported_pgvectorscale() {
     local pg="$1" ver="$2"
 
@@ -199,5 +176,4 @@ require_supported_arch() {
 
 TIMESCALEDB_VERSIONS="$(requested_pkg_versions timescaledb "$TIMESCALEDB_VERSIONS")"
 TOOLKIT_VERSIONS="$(requested_pkg_versions toolkit "$TOOLKIT_VERSIONS")"
-PROMSCALE_VERSIONS="$(requested_pkg_versions promscale "$PROMSCALE_VERSIONS")"
 PGVECTORSCALE_VERSIONS="$(requested_pkg_versions pgvectorscale "$PGVECTORSCALE_VERSIONS")"

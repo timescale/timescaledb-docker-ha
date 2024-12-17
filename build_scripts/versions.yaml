@@ -128,35 +128,6 @@ timescaledb:
     pg-min: 14
     pg-max: 17
 
-promscale:
-  0.5.0:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.3.1
-  0.5.1:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.3.1
-  0.5.2:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.3.1
-  0.5.4:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.3.1
-  0.6.0:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.4.5
-  0.7.0:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.4.5
-  0.8.0:
-    arch: amd64
-    cargo-pgrx: 0.6.1
-
 toolkit:
   1.6.0:
     arch: amd64

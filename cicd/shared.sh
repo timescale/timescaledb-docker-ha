@@ -60,7 +60,6 @@ check_base_components() {
     local pg="$1" lib="$2"
 
     check_timescaledb "$pg" "$lib"
-    check_promscale "$pg" "$lib"
     check_pgvectorscale "$pg" "$lib"
     check_toolkit "$pg" "$lib"
     check_oss_extensions "$pg" "$lib"
@@ -119,48 +118,10 @@ check_oss_extensions() {
     if [ "$OSS_ONLY" != true ]; then return 0; fi
 
     local pg="$1" lib="$2"
-    for pattern in timescaledb_toolkit promscale; do
+    for pattern in timescaledb_toolkit; do
         files="$(find "$lib" -maxdepth 1 -name "${pattern}*")"
         if [ -n "$files" ]; then error "found $pattern files for pg$pg when OSS_ONLY is true"; fi
     done
-}
-
-check_promscale() {
-    if [ -z "$PROMSCALE_VERSIONS" ]; then return; fi
-    local pg="$1" lib="$2" ver found=false
-
-    if [ "$OSS_ONLY" = true ]; then
-        # we don't do anything here as we depend on `check_oss_extensions` to flag on inappropriate versions of promscale
-        return
-    fi
-
-    if [ "$ARCH" != amd64 ]; then
-        # no arm64 promscale packages
-        return
-    fi
-
-    # record an empty version so we'll get an empty table row if we don't have any versions
-    record_ext_version promscale_extension "$pg" ""
-
-    for ver in $PROMSCALE_VERSIONS; do
-        if [[ "$ver" = master || "$ver" = main ]]; then
-            log "skipping looking for promscale-$ver"
-            continue
-        fi
-        if [ -s "$lib/promscale-$ver.so" ]; then
-            found=true
-            record_ext_version promscale_extension "$pg" "$ver"
-        else
-            unsupported_reason="$(supported_promscale "$pg" "$ver")"
-            if [ -n "$unsupported_reason" ]; then
-                log "skipped: promscale-$ver: $unsupported_reason"
-            else
-                error "promscale-$ver not found for pg$pg"
-            fi
-        fi
-    done
-
-    if [[ "$found" = false && "$pg" -lt 16 ]]; then error "no promscale versions found for pg$pg"; fi
 }
 
 check_toolkit() {
@@ -168,7 +129,7 @@ check_toolkit() {
     local pg="$1" lib="$2" found=false
 
     if [ "$OSS_ONLY" = true ]; then
-        # we don't do anything here as we depend on `check_oss_extensions` to flag on inappropriate versions of promscale
+        # we don't do anything here as we depend on `check_oss_extensions` to flag on inappropriate versions
         return
     fi
 

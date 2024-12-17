@@ -362,8 +362,7 @@ RUN set -ex; \
 ARG INSTALL_METHOD=docker-ha
 ARG OSS_ONLY
 
-# RUST_RELEASE for some packages passes this to --profile, but for promscale, if anything is set that means use
-# release mode, and if it's empty, then debug mode.
+# RUST_RELEASE for some packages passes this to --profile
 ARG RUST_RELEASE=release
 
 # split the extension builds into two steps to allow caching of successful steps
@@ -376,12 +375,10 @@ RUN set -ex; \
         /build/scripts/install_extensions timescaledb
 
 # install all rust packages in the same step to allow it to optimize for cargo-pgx installs
-ARG PROMSCALE_VERSIONS
 ARG TOOLKIT_VERSIONS
 RUN set -ex; \
     OSS_ONLY="${OSS_ONLY}" \
         RUST_RELEASE="${RUST_RELEASE}" \
-        PROMSCALE_VERSIONS="${PROMSCALE_VERSIONS}" \
         TOOLKIT_VERSIONS="${TOOLKIT_VERSIONS}" \
         /build/scripts/install_extensions rust
 
