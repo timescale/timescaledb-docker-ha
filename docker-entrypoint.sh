@@ -114,6 +114,8 @@ docker_init_database_dir() {
 		set -- --waldir "$POSTGRES_INITDB_WALDIR" "$@"
 	fi
 
+    permission_wait_loop
+
 	# --pwfile refuses to handle a properly-empty file (hence the "\n"): https://github.com/docker-library/postgres/issues/1025
 	eval 'initdb --username="$POSTGRES_USER" --pwfile=<(printf "%s\n" "$POSTGRES_PASSWORD") '"$POSTGRES_INITDB_ARGS"' "$@"'
 }
