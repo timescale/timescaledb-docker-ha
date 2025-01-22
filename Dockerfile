@@ -149,6 +149,12 @@ RUN set -eux; \
 # We install pip3, as we need it for some of the extensions. This will install a lot of dependencies, all marked as auto to help with cleanup later
 RUN apt-get install -y python3 python3-pip
 
+# pgai requires pip 23.0.1 or greater due to the use of --break-system-packages flag
+RUN set -ex; \
+    if [ "$(pip --version | awk '{print $2; exit}')" \< "23.0.1" ]; then \
+        python3 -m pip install --upgrade pip==23.0.1; \
+    fi;
+
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
 ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
