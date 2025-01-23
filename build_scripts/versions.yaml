@@ -127,6 +127,9 @@ timescaledb:
   2.17.2:
     pg-min: 14
     pg-max: 17
+  2.18.0:
+    pg-min: 14
+    pg-max: 17
 
 toolkit:
   1.6.0:
