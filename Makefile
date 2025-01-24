@@ -8,10 +8,10 @@ all: help
 PG_MAJOR?=17
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
-PG_VERSIONS?=
+PG_VERSIONS?=17
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
-PGAI_VERSION?=extension-0.7.0
+PGAI_VERSION?=
 PGVECTORSCALE_VERSIONS?=all
 POSTGIS_VERSIONS?=3
 PG_AUTH_MON?=v3.0
