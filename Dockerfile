@@ -149,10 +149,10 @@ RUN set -eux; \
 # We install pip3, as we need it for some of the extensions. This will install a lot of dependencies, all marked as auto to help with cleanup later
 RUN apt-get install -y python3 python3-pip
 
-# pgai requires pip 23.0.1 or greater due to the use of --break-system-packages flag
+# using uv with pgai reduces size of dependencies
 RUN set -ex; \
     if [ "$(pip --version | awk '{print $2; exit}')" \< "23.0.1" ]; then \
-        python3 -m pip install --upgrade pip==23.0.1; \
+        python3 -m pip install uv; \
     fi;
 
 # We install some build dependencies and mark the installed packages as auto-installed,
