@@ -167,6 +167,19 @@ RUN apt-mark auto ${BUILD_PACKAGES}
 # do something more drastic.
 RUN apt-get install -y --allow-downgrades tzdata="2022a-*"
 
+# postgresql-12 doesn't install because of a missing dependency postgres-common-dev, so we pretend it exists
+# Note: this is temporary and should be fixed in the next pg minor release (mid-February 2025)
+# see: https://www.postgresql.org/message-id/flat/D6BD9F9D-8DBE-4E0B-B00A-2130E7C6385D%40guthrie.ch
+RUN mkdir -p /tmp/postgresql-common-dev/DEBIAN
+COPY <<EOF /tmp/postgresql-common-dev/DEBIAN/control
+Package: postgresql-common-dev
+Version: 1.0
+Architecture: all
+Maintainer: administrator@timescale.com
+Description: postgresql-common-dev package
+EOF
+RUN dpkg-deb --build /tmp/postgresql-common-dev; dpkg -i /tmp/postgresql-common-dev.deb
+
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
 RUN set -eux; \
     for pg in ${PG_VERSIONS}; do \
