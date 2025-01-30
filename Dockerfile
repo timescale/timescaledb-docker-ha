@@ -25,7 +25,7 @@
 ## the changes required are not that big for this Docker Image. Most of the
 ## tools we use will be the same across the board, as most of our tools our
 ## installed using external repositories.
-ARG DOCKER_FROM=ubuntu:22.04
+ARG DOCKER_FROM=ubuntu:24.04
 FROM ${DOCKER_FROM} AS builder
 
 # By including multiple versions of PostgreSQL we can use the same Docker image,

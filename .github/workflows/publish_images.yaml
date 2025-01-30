@@ -41,7 +41,7 @@ jobs:
           - all_versions: "true"
             all: "-all"
           - platform: amd64
-            runs_on: ubuntu-22.04
+            runs_on: ubuntu-24.04
           - platform: arm64
             runs_on: cloud-image-runner-arm64
 
