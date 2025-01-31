@@ -54,7 +54,8 @@ WORKDIR /build/
 # We need full control over the running user, including the UID, therefore we
 # create the postgres user as the first thing on our list
 RUN <<EOT
-    adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" postgres
+    userdel ubuntu
+    useradd --home /home/postgres --create-home --uid 1000 --comment "" postgres
     echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/01norecommend
     echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 
@@ -100,7 +101,7 @@ RUN <<EOT
     sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
 
     # using uv with pgai reduces size of dependencies
-    python3 -m pip install uv
+    python3 -m pip install --break-system-packages uv
 EOT
 
 # pgbackrest-exporter
@@ -276,7 +277,7 @@ RUN <<EOT
 
     # Barman cloud
     # Required for CloudNativePG compatibility
-    pip3 install --no-cache-dir 'barman[cloud,azure,snappy,google]'
+    pip3 install --no-cache-dir --break-system-packages 'barman[cloud,azure,snappy,google]'
 
     apt-get install -y timescaledb-tools
 EOT
@@ -500,21 +501,21 @@ ARG DOCKER_FROM
 ARG BUILDER_URL
 ARG RELEASE_URL
 COPY <<EOF /.image_config
-OSS_ONLY=\"$OSS_ONLY\""
-PG_LOGERRORS=\"${PG_LOGERRORS}\""
-PG_STAT_MONITOR=\"${PG_STAT_MONITOR}\""
-PGVECTO_RS=\"${PGVECTO_RS}\""
-POSTGIS_VERSIONS=\"${POSTGIS_VERSIONS}\""
-PG_AUTH_MON=\"${PG_AUTH_MON}\""
-PGBOUNCER_EXPORTER_VERSION=\"${PGBOUNCER_EXPORTER_VERSION}\""
-PGBACKREST_EXPORTER_VERSION=\"${PGBACKREST_EXPORTER_VERSION}\""
-PGAI_VERSION=\"${PGAI_VERSION}\""
-PGVECTORSCALE_VERSIONS=\"${PGVECTORSCALE_VERSIONS}\""
-PG_MAJOR=\"${PG_MAJOR}\""
-PG_VERSIONS=\"${PG_VERSIONS}\""
-FROM=\"${DOCKER_FROM}\""
-RELEASE_URL=\"${RELEASE_URL}\""
-BUILDER_URL=\"${BUILDER_URL}\""
+OSS_ONLY="$OSS_ONLY"
+PG_LOGERRORS="${PG_LOGERRORS}"
+PG_STAT_MONITOR="${PG_STAT_MONITOR}"
+PGVECTO_RS="${PGVECTO_RS}"
+POSTGIS_VERSIONS="${POSTGIS_VERSIONS}"
+PG_AUTH_MON="${PG_AUTH_MON}"
+PGBOUNCER_EXPORTER_VERSION="${PGBOUNCER_EXPORTER_VERSION}"
+PGBACKREST_EXPORTER_VERSION="${PGBACKREST_EXPORTER_VERSION}"
+PGAI_VERSION="${PGAI_VERSION}"
+PGVECTORSCALE_VERSIONS="${PGVECTORSCALE_VERSIONS}"
+PG_MAJOR="${PG_MAJOR}"
+PG_VERSIONS="${PG_VERSIONS}"
+FROM="${DOCKER_FROM}"
+RELEASE_URL="${RELEASE_URL}"
+BUILDER_URL="${BUILDER_URL}"
 EOF
 
 RUN <<EOT
