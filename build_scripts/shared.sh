@@ -203,7 +203,8 @@ cargo_pgrx_init() {
     args=()
     for pg in $pg_versions; do
         # pgrx only got the pg15 feature in 0.6.0
-        [[ "$pgrx_version" =~ ^0\.[0-5]\.* && $pg -ge 15 ]] && continue
+        # TODO(james): why is this broken?
+        # [[ "$pgrx_version" =~ ^0\.[0-5]\.* && $pg -ge 15 ]] && continue
 
         args+=("--pg${pg}" "/usr/lib/postgresql/${pg}/bin/pg_config")
     done
