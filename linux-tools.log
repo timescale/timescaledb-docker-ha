@@ -1,0 +1,689 @@
+     prod@eu-west-2: i-006a00e58a0a5594c: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-02cee5ee63ad310c3: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-02bff1994030dc865: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-00f673d7e6931ddee: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-0540316e1cf262373: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-0586b74e645d47161: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-07d7f30759d96b2ae: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-089457855481bc8c9: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-0b8b7294386458149: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-0bb687ba51ca3af93: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-0c14d0c629d072125: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-0c16460c4acbbca2c: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-0f2a304c210b7c3e8: linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: error: i-0037d5a9dbfe1f1f3/172.28.0.180: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-2: i-03fd4c83afeb337bf/172.28.0.123: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-2: i-04038c3c84f4d0906/172.28.0.242: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-0061c68ddb19d5b15/172.28.0.67: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-2: i-01362e1a9fc00c365/172.28.0.72: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-2: i-01b2b8752f37031a7/172.28.0.87: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-2: i-041b557977b7d3f3d/172.28.1.163: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-2: i-04a0598e3248f4e5c/172.28.0.117: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-2: i-063060ac1e8bcc4e9/172.28.0.235: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-2: i-06ef2925a2818d6d2/172.28.0.52: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-2: i-081d530fa06b74556/172.28.1.147: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-2: i-0832844dc8c803249/172.28.0.130: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-2: i-0918b18ab7c515f0f/172.28.0.36: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-09cc149976a11cb5a/172.28.0.136: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@eu-west-2: i-0a6d6f1b7a938eac8/172.28.0.168: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-2: i-0d393fd9cf423fc1b/172.28.0.20: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+time=2025-02-05T13:22:46.095-07:00 level=ERROR msg="command failed" tsctx=prod@eu-west-2 error="exit status 1" duration=39.898s
+prod@ap-southeast-1: i-065f90cb72407899c: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-017a40c3ffc9311ab: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-01c79ade4ecb25746: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-04a93a3905e47a786: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-08b3195fd6b1e2f8c: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-091d9557e6dd16fe4: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-098c6912c28eac62c: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-0c3e585754a7e3d78: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-0ed8f5b63547f6b77: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-0f0e33ace2d4a96cd: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-0f4d2810132b59c64: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: error: i-032f76f1d19ce6bae/172.27.0.118: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-1: i-020f9b93e613d53a0/172.27.0.109: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-01b127adea428d436/172.27.1.134: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-027b04bbff9595fca/172.27.1.186: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-1: i-010a24909b5fca9dd/172.27.0.234: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-0604748fb31ed072c/172.27.0.180: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-1: i-08727a1898b3f6aeb/172.27.0.207: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-08a427c874ce3fef6/172.27.1.177: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-1: i-09ab80ef3ba2d4178/172.27.2.51: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-09c6a180d16405d2a/172.27.0.73: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-1: i-0ac4e412fb66c2248/172.27.0.239: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-1: i-0c0369cda3e370b99/172.27.0.157: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-0cb1b4ccf23f4ed6a/172.27.0.190: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-1: i-0ea01767dfe67d074/172.27.1.47: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+prod@ap-southeast-1: i-0f1e39e534a24072c/172.27.0.184: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-1: i-0fa529675fab5c27a/172.27.0.224: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-1: i-0fd370591f731fb20/172.27.1.79: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+time=2025-02-05T13:23:44.660-07:00 level=ERROR msg="command failed" tsctx=prod@ap-southeast-1 error="exit status 1" duration=58.564s
+     prod@us-east-1: i-0127754a20ea031af: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-009316eab3e4efbaf: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-000230d21ad415ffb: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0156057baca3d5766: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-015a90176dfc265ec: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-01f42eb1ad7002dee: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-022a18e5490aabcf7: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0210e769befda013b: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-024d52734b9a22437: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-02980c9909f7196f8: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-02b9b21c68ef30e2f: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-03026d75401766067: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0307a0b3bc795fabd: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-03271c9fd41f8a32b: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0347d3e9f6a64f0be: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-034bed10bb8f1d99d: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0349c3fd153a93a4d: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0354836deb8e0f879: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-03d78a54298e57886: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-03e7328eb1dcced47: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-040b8b218d4ea0290: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0459b2b0a71027c5c: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0436e53c95ccbea0b: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0485c380cd25dc398: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-04b2965e6a6d004f1: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0493067e1ff17ddf9: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-049783609222336bb: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-04d61003c842aa2a4: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-05080c8f723f6658c: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-04f70e8b1fe2b77b1: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-04f5fe721fd3593f0: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-053f333204af1db3e: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-052e52801079dbd6f: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-05842b8b32952fc5c: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0594bb2800a43dc80: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-05464442a96791da0: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-05a15e21e14718849: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-05d92153a1e5035f4: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-06042b28962053ee8: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0604aa4dd5f60e515: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-062fb23447cc01978: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0667be91fe949e555: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0645e318ef4a46b2f: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0672a4e9b5ca7d16b: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0658081e865fcfa8c: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-067fec21518fb920c: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-06b78e1a7482452ff: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-06944c39f83db343d: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-06c55690f1f9e684c: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-06cea72c428058c1d: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-06d699d6fafc67335: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-07235932650392088: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-078219c6b87fd3565: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-07431a586afdc056c: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-079dcdfe1a7d009a6: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-082b4c8c72dc84988: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-07af8c79c907a0756: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-08a6ea7a2cb902989: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0866771ab4563e880: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-08f9fa76ede82268d: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-092e94a490ff1df07: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-09a085ec5189dd50c: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-09f11f1dc60866e71: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0a0c07c30307cf1bf: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0a39266dbe4a90754: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0a8bbb4d62559cc76: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0aaf9ae103cc9f2e7: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0ae4caa0c0785d1ed: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0b1e3e1e1c7a87b0d: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0b4b9ad4c9fd26122: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0b5a1b51995755a50: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0ba04c2a3bb597740: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0bcad9cb7d15d444a: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0bb768c371aa140ac: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0bdc83c6fc4214388: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0be99346f28d6f531: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0c23baba571b3d0da: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0c2df9e68b984d1d3: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0ca7146e44e44d390: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0ce2d11c4b0d19522: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0ceeffb0d72e03d8a: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0caa7575b4455db21: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0d2ed835df73a724c: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0d4d45a95e91ae8b1: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0d5cf6ab85d0145b6: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0dc3635f03349783d: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0d81ab74e976b9b8d: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0df38405d21e4cc1d: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0db8e6ed3cfae572e: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0e162624461765a0a: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0e2b949679c3cc84f: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0e3670dd6b69182e0: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0e872907741fe31a1: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0e6b7ed6013942bd5: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0f04757ad1c42ca59: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0f24d0e02dc2abe4c: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0f806dc126653a71e: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0f5ecfa03417d4e09: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0f8dcf38e97366e7e: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0f7a6198c4b9204ab: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0f82553c838ee45f6: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0f9e722ece080477e: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0fc12acc1cd0f53f5: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0faf3816682283cf2: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0fdce12bd6b2dec39: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0fe295620496c89f0: linux-tools-6.10.13-zabbly+
+     prod@us-east-1: error: i-0200a407ee713ca36/172.20.43.108: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-1: i-00381522f768f4420/172.20.36.25: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-1: i-00de516a70ce154b2/172.20.58.238: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0167a3091b2e5e4df/172.20.53.253: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-026ac72383aa12589/172.20.49.142: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0365fb0d6f6222cfa/172.20.160.254: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-03d44971149d67346/172.20.160.39: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-1: i-036dd2376b61f521d/172.20.55.84: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-046e6022b6c142970/172.20.63.172: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-047ff5973db1b0dea/172.20.38.118: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-05bc35a9e2ca1f154/172.20.55.125: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-1: i-05af5bcf30f080611/172.20.44.23: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0616906353f975a6d/172.20.160.120: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-068f86b6eb68ab165/172.20.160.76: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-1: i-06888bb9c5cd7fb5a/172.20.160.223: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-06c4dc093a5c4e107/172.20.160.195: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-07414098477705678/172.20.56.74: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0796e2ec02f90b904/172.20.160.222: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-08b79d43d0405fcae/172.20.60.48: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-09018b1104b6a5930/172.20.160.231: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0913cfc4e66dca72a/172.20.41.46: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-1: i-0959b8932ecb19330/172.20.35.79: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-09719cf84a3e1a0ce/172.20.160.201: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0a8ff37fe16858284/172.20.33.35: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-1: i-0ad89afbaf1e03069/172.20.38.150: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0b1812a9fa5ef9a8e/172.20.127.26: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0b17e2a97669a7760/172.20.50.128: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0b2b9c724211b90d2/172.20.160.228: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0b9d11301767f3f37/172.20.48.64: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0b5804d71170def73/172.20.160.150: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0b80290940384f6fe/172.20.51.232: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0c1edc361ed00d670/172.20.160.28: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0c28914bb015d2a35/172.20.51.29: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0c859b1201c10b755/172.20.55.211: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-1: i-0d0d4e1636e372b64/172.20.160.123: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0cf5b946ba0a9fe58/172.20.44.91: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-1: i-0d43db8e8b11e8506/172.20.160.127: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-1: i-0ddb1f75c70a5cf83/172.20.34.219: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-1: i-0e05614df36cf7842/172.20.42.21: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0e217ea9155571584/172.20.53.191: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0e5204b2c616fcc7c/172.20.160.205: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0ead6474a69890ded/172.20.43.90: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-1: i-0ee7a470484f39634/172.20.160.157: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0f014ebe53256df52/172.20.160.69: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0f02922b52cb0fbd1/172.20.54.178: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0f1c5c89edd1d1bc5/172.20.160.109: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0f65fe444be22759e/172.20.160.149: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0fc245ddb51ba3e3f/172.20.42.1: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-1: i-0fcda3d2375d48abd/172.20.53.249: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+time=2025-02-05T13:25:14.530-07:00 level=ERROR msg="command failed" tsctx=prod@us-east-1 error="exit status 1" duration=1m29.87s
+   dev@eu-central-1: i-07317d00342785a37: linux-tools-6.11.11-zabbly+
+   dev@eu-central-1: i-00f1b442160bb9ac9: linux-tools-6.8.0-1016-aws
+   dev@eu-central-1: i-000cbb13ae102bf54: linux-tools-6.11.11-zabbly+
+   dev@eu-central-1: i-00bf82ab756106c26: linux-tools-6.10.14-zabbly+
+   dev@eu-central-1: i-02fa62db5b783cf4b: linux-tools-6.11.11-zabbly+
+   dev@eu-central-1: i-0540c8618a641e470: linux-tools-6.8.0-1016-aws
+   dev@eu-central-1: i-0516225751c933b0a: linux-tools-6.8.0-1016-aws
+   dev@eu-central-1: i-02e1e7783f5edab20: linux-tools-6.10.14-zabbly+
+   dev@eu-central-1: i-046c4a56d0799c8ca: linux-tools-6.11.11-zabbly+
+   dev@eu-central-1: i-07ab073920bb2a63b: linux-tools-6.8.0-1016-aws
+   dev@eu-central-1: i-07b771bcff3cb0090: linux-tools-6.11.11-zabbly+
+   dev@eu-central-1: i-087c2405e253f41a1: linux-tools-6.8.0-1011-aws
+   dev@eu-central-1: i-0a8d55c51f8b80ae3: linux-tools-6.12.11-zabbly+
+   dev@eu-central-1: i-0bf49ea2b58e80c0f: linux-tools-6.10.14-zabbly+
+   dev@eu-central-1: i-0ca2e025ee39252f0: linux-tools-6.8.0-1011-aws
+   dev@eu-central-1: i-0e7c6aae9e27d127f: linux-tools-6.11.11-zabbly+
+   dev@eu-central-1: error: i-0435c5465c217416a/18.159.129.42: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.11.7-zabbly+
+   dev@eu-central-1: failed ssh ubuntu@18.185.148.149: dial tcp 18.185.148.149:22: i/o timeout
+time=2025-02-05T13:25:55.651-07:00 level=ERROR msg="command failed" tsctx=dev@eu-central-1 error="exit status 1" duration=41.121s
+      dev@us-east-1: i-016b5e6c3037bb90c: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-00a3ecee6c3ea01bc: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-00777b7460090fa3f: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-007c1babe64056bba: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-000dfaaebb8a619f8: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-010f6c11b6e3cbf62: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-011eeb2ab6f19a6f2: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-000e4bab36662edf6: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-016708722b1035cdf: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0201bf72503da25fd: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-01da4d4f7a7794f2a: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-00df4e806e50cef63: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-02207d76d8e4d74e9: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-02a6c27ae7c5cfafd: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-022a086e14f4a9922: linux-tools-6.12.11-zabbly+
+      dev@us-east-1: i-02eae73d91a8b92ee: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0331a86314b2e7788: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-033b3bdc15fe9dd71: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0346abbfdf8644a68: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0385e4453f59a2ad8: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-03f803e7df92a9e5e: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-047797360cf3574a9: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-047a0915827fc7074: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-04be45324f3a751cc: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-05302de9d765b274e: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0530cb99d3055e1c7: linux-tools-6.8.0-1011-aws
+      dev@us-east-1: i-054489a87dead3249: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-05495b9369ee96419: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-05854c1dfaf7f9a46: linux-tools-6.8.0-1011-aws
+      dev@us-east-1: i-05966d98b4ce74108: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-05f46de26c0b687e6: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0531d7284f4de233d: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-060c48d13e3c80b83: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-063b74d191a5cf3ca: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-06481518b05ae6f61: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-067c53e8cbcf22555: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-06a3a1749a216f068: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-073f9afe3b56228bd: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-077856658661109f4: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-07d29fb9497e950e0: linux-tools-6.8.0-1011-aws
+      dev@us-east-1: i-07dbde9ad55f1f78d: linux-tools-6.8.0-1011-aws
+      dev@us-east-1: i-07e2d55c4c804e842: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-07f38bba3637e97e3: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-08078ea2bc76580a6: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-083956c5eefbda1bd: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-084abd590dca99620: linux-tools-6.8.0-1011-aws
+      dev@us-east-1: i-09238bd2bcddbdbca: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-09e266460d1ab6d19: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0a1613254b3b80a72: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0ad10b3e9a112f8f4: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0a50575e89eb1ec1c: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0b0a88f1f86a0c1f8: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0b5e63cea662676dd: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0b7c37634fee1b3c4: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0b8a347b289be42f8: linux-tools-6.12.11-zabbly+
+      dev@us-east-1: i-0b93252f923658ef7: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0bbc788e3c91896c4: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0c0462f28bcfad892: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0c312ffd26c4a1535: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0c31a373d4fe19f0b: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0c948e5718bcbfd9e: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0cdf4c1c2b65c8a0e: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0d0669816bf10d052: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0d135a7572ae7bda2: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0d984da94c4f902f2: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0e2a2faf997079ee2: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0e7d9d06914d18fe4: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0e8939b507e4e9aaa: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0ea4b53f1338a108b: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0e515ac5a32407622: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0ec2063c9ef1deb53: linux-tools-6.8.0-1011-aws
+      dev@us-east-1: i-0ed263a0feaea0e12: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0f06da222cc5ade48: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0f17f20007b651c77: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0f529f34766a64a28: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0f62060cf3641fafb: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0f6d4690e0c47dded: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: i-0fe74666a8d52985b: linux-tools-6.11.11-zabbly+
+      dev@us-east-1: error: i-02a9f2eebc1e67113/44.201.105.83: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.11.4-zabbly+
+time=2025-02-05T13:26:40.415-07:00 level=ERROR msg="command failed" tsctx=dev@us-east-1 error="exit status 1" duration=44.763s
+prod@ap-northeast-1: i-04b602cee20879fbc: linux-tools-6.8.0-1011-aws
+prod@ap-northeast-1: i-029b7a65ef637c623: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-003078d840d592ac1: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0071b7841be6b82a1: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-007292d7911721434: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-03d2b76471f34968d: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-02ff64e2ce352f364: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-021acd320c7a50c43: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0057b31b8d5456f74: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-040e280728266af62: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-059364856e13bc40b: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-059e437d59f172f0c: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-05a8b31f848566d44: linux-tools-6.8.0-1011-aws
+prod@ap-northeast-1: i-073624fb25dc2e1cb: linux-tools-6.8.0-1011-aws
+prod@ap-northeast-1: i-06ab69a047c089090: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0741666178d028c81: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-07513e6a8e93e45f8: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0766a2369dd5fbfc4: linux-tools-6.8.0-1011-aws
+prod@ap-northeast-1: i-080bd7583cc535b1e: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-081002bd378da2774: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0832856b4a3b8d45b: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-08a8078bc9fb5be24: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-08fb538db29a2f75b: linux-tools-6.8.0-1011-aws
+prod@ap-northeast-1: i-0981ec7d5e64a1e98: linux-tools-6.8.0-1011-aws
+prod@ap-northeast-1: i-0a57b5991aafa1caf: linux-tools-6.8.0-1011-aws
+prod@ap-northeast-1: i-0b813dd66efe82bfb: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0b9d46f449518e843: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0bc6227b2132f7021: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0c06168143eccf79a: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0c2ba1af4884db142: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0c3e6b5704c064eb7: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0d811e406ac510143: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0df690c2f1b467359: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0e0b450a1af6c7bda: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0e23d70f836274567: linux-tools-6.8.0-1011-aws
+prod@ap-northeast-1: i-0e572f08a4dbfd2b7: linux-tools-6.10.13-zabbly+
+prod@ap-northeast-1: i-0eb72ffa25f61f35d: linux-tools-6.8.0-1011-aws
+prod@ap-northeast-1: i-0fb028d6dcfb4ef45: linux-tools-6.8.0-1011-aws
+    prod@ap-south-1: i-07d2a1c312a534917: linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-0565a99877c80c5d9: linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-008a0bbc0891d2b92: linux-tools-6.10.14-zabbly+
+    prod@ap-south-1: i-03ff568a8aa08d3ac: linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-0124f5a04a0e1e218: linux-tools-6.10.14-zabbly+
+    prod@ap-south-1: i-03ecc5a38fe1b43bf: linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-01eac40583ddac4c2: linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-09104044b84174eff: linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-09d1548448183e646: linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-0a53246dc49bb31f7: linux-tools-6.10.14-zabbly+
+    prod@ap-south-1: i-0c6605a0996a83fec: linux-tools-6.10.14-zabbly+
+    prod@ap-south-1: i-0d85620cf7dfeafe8: linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-0e092f0b226f3a5d6: linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-0efef7a00d73c41ea: linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-0f1658de7ffd63a59: linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-0fad2433487c943e1: linux-tools-6.10.14-zabbly+
+    prod@ap-south-1: i-0fae6327d68324643: linux-tools-6.10.14-zabbly+
+    prod@ap-south-1: i-0fae729be3b7ff4b0: linux-tools-6.10.14-zabbly+
+    prod@ap-south-1: error: i-02091644741b6a038/172.19.0.4: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-062bcf823b4c6311a/172.19.0.77: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-00ef7195923d5478a/172.19.1.213: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.14-zabbly+
+    prod@ap-south-1: i-09394c2d05189e915/172.19.0.196: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-0af0c006876e5c7ac/172.19.0.210: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-0bf370014cd436389/172.19.0.171: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+    prod@ap-south-1: i-0e107ccfe2ca1ecff/172.19.0.176: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+time=2025-02-05T13:28:34.779-07:00 level=ERROR msg="command failed" tsctx=prod@ap-south-1 error="exit status 1" duration=1m1.057s
+  prod@ca-central-1: i-007bb3fb3b837d931: linux-tools-6.10.13-zabbly+
+  prod@ca-central-1: i-04f06fce4298613d0: linux-tools-6.10.13-zabbly+
+  prod@ca-central-1: i-014bc91d84a5d54be: linux-tools-6.10.13-zabbly+
+  prod@ca-central-1: i-01849297bf336252d: linux-tools-6.8.0-1011-aws
+  prod@ca-central-1: i-0263060662dc2e554: linux-tools-6.8.0-1011-aws
+  prod@ca-central-1: i-0399018c23438f824: linux-tools-6.10.13-zabbly+
+  prod@ca-central-1: i-02c281baf193eefac: linux-tools-6.8.0-1011-aws
+  prod@ca-central-1: i-04d36f3f782c51685: linux-tools-6.8.0-1011-aws
+  prod@ca-central-1: i-04952a62bb4960ead: linux-tools-6.10.13-zabbly+
+  prod@ca-central-1: i-04138744557477458: linux-tools-6.10.13-zabbly+
+  prod@ca-central-1: i-05cbef759f1181a60: linux-tools-6.8.0-1011-aws
+  prod@ca-central-1: i-074b6bfc81e33b808: linux-tools-6.10.13-zabbly+
+  prod@ca-central-1: i-07e12c445b2f1ba4e: linux-tools-6.10.13-zabbly+
+  prod@ca-central-1: i-079823b9d182f83b5: linux-tools-6.8.0-1011-aws
+  prod@ca-central-1: i-085d7226f75f59fd6: linux-tools-6.10.13-zabbly+
+  prod@ca-central-1: i-0898c73af9310cd24: linux-tools-6.8.0-1011-aws
+  prod@ca-central-1: i-08ebbd6e8e06e5834: linux-tools-6.8.0-1011-aws
+  prod@ca-central-1: i-09376ec4eac88f793: linux-tools-6.10.13-zabbly+
+  prod@ca-central-1: i-099417c4a210e299f: linux-tools-6.10.13-zabbly+
+  prod@ca-central-1: i-0d93f4ad3419cdcce: linux-tools-6.8.0-1011-aws
+  prod@ca-central-1: i-0e6578ffd6360ac70: linux-tools-6.8.0-1011-aws
+  prod@ca-central-1: i-0ea09a1a1b357c149: linux-tools-6.10.13-zabbly+
+  prod@ca-central-1: i-0ec0b15e06bf82109: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-000aa6863297057a7: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-032e3929a23e61a8b: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-0131b69aadb758b01: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-030f03e9de9029934: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-0200441d0eae971ae: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-0437d79887c63339d: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-041bf501690060324: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-048f6ccdb60f8a9a7: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-06d1d989a1f971b51: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-070cc7dca289045e4: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-079637c4168d1a4c1: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-07dc475c51735253f: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-099c5b10a2d10539c: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-0ab8872bdabc7dcbf: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-0b657032cd7cc993e: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-0bd0305ba9fbf9f61: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-0faa2b2e5e169ed28: linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: error: i-04f8fb8f1cc522365/172.25.0.231: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-2: i-008b9b561fc234ffe/172.25.0.42: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-2: i-07885a232d63db714/172.25.2.96: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-2: i-09017b462fb3e1ba8/172.25.0.225: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-2: i-09c04e4f5d05ebd8b/172.25.0.110: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+prod@ap-southeast-2: i-09f3df7a7acf9ddd9/172.25.0.228: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-2: i-0a2839e1c8af68934/172.25.2.181: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-2: i-0b3e16e4c2c3e41f4/172.25.0.156: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-2: i-0d5cf20b5b5f97993/172.25.0.59: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+prod@ap-southeast-2: i-0deeebe68108c0cb1/172.25.0.239: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+time=2025-02-05T13:29:32.105-07:00 level=ERROR msg="command failed" tsctx=prod@ap-southeast-2 error="exit status 1" duration=42.315s
+  prod@eu-central-1: i-00675335537d4a038: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-00397a9d9d7f9a4b8: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-002d8a01ee7aaddbd: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0191eaeeafcf76a5c: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-020a331313f4a5be4: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-02b96d6d489dfcda1: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-044668c953769b47d: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-046e5ace9020878bd: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-04bc3528ea50be4e9: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-049aede2ebe740cb5: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0552c43976e4cf282: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-05988dde226f1c046: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-05cf85bb62143de98: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-05dcf570c41efb352: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0659bd222e5644830: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0687fa6915d011a2e: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-06813cb22ea590c0e: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-069d3eea721fbb067: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-06da6f4a0b336f887: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-06e83049d5f365798: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-06efab7caf821adfb: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0701dfc048f4cda21: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-07f3ae7dd1399b110: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-08456b0af0505e3fe: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-088b9497ff00c3b36: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-088feeb43f74ef89a: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-08f180d3a44811835: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-09db9e83f676bce99: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-09ecf097ccdeff574: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0a0cb717dfee490a4: linux-tools-6.8.0-1017-aws
+  prod@eu-central-1: i-0a0384db9074545b8: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0aea4e7bba6ff92fd: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0b30cd090de28c6e2: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0b945d3f5f1791dc2: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0c2b5fc9508554844: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0cbf642dcb7263e18: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0ced2c3f211056817: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0cf75615b3fc40e3e: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0ddd1481c38f1e943: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0e31f7c39c3e9f061: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0ea5e281dc493cd62: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0f0edb52b134e97d6: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0f713e5f994f32c86: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0f834fb7972e85a6b: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0f7c85336c8d463d5: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0fedc615a5e0cd6a6: linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: error: i-0234d095c842b2974/172.24.0.210: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+  prod@eu-central-1: i-004720ce6273764d0/172.24.2.77: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-01ba0b9e532d65ac1/172.24.0.251: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-014387bd9d3bb190f/172.24.2.133: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0224100bf943f9092/172.24.0.116: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+  prod@eu-central-1: i-0338747a0529195e6/172.24.0.39: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0386eea5d54fe15f8/172.24.0.170: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-041e6759286a0f674/172.24.2.233: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+  prod@eu-central-1: i-03911e74ba7b1ae18/172.24.2.150: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-06c797ab6d241bb1f/172.24.2.222: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-06e57238229cd495a/172.24.0.131: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+  prod@eu-central-1: i-0800060ea2189396c/172.24.0.249: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-08873c64dfa78b50b/172.24.0.209: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-08b2dcb74b5608a58/172.24.0.75: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+  prod@eu-central-1: i-09540c78666a572c0/172.24.2.82: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0b61f3ccee1d1674c/172.24.0.180: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+  prod@eu-central-1: i-0b5cfad7218f07608/172.24.2.171: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0bab02b33fb83bc34/172.24.2.159: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+  prod@eu-central-1: i-0c4b939e16980289e/172.24.0.76: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+  prod@eu-central-1: i-0d4e3c4a94752f141/172.24.0.145: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+  prod@eu-central-1: i-0ecb0312a5e6ef7a3/172.24.0.213: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+time=2025-02-05T13:31:05.773-07:00 level=ERROR msg="command failed" tsctx=prod@eu-central-1 error="exit status 1" duration=1m33.668s
+     prod@eu-west-1: i-016f3211162e0884d: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0291e9e0baf1d429e: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-00bd28fd02a9ba3d9: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-01103d7894f7dffdb: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-023848bb8bb7cfa4b: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-01761b03b98e57c5d: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-02301da260bef1bbb: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0288b81f68a481906: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-023c122f55da5465a: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-03750f650da6ffc67: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-03aa139e5bcc731d1: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-043de860c7dd9be04: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-04787e88ecf69f929: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-052abb8c1d270ea0c: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-05b35098a4896973c: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-091eadd81fd07646e: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-092dc29044930af7b: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0ac5f24254ff8d7f2: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0b924b84ea09272d1: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0d276edadc7298568: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0c65dc1e5660c2b65: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0dcaa1776127647c1: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0dfe91c445f0765c3: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0e7850b592b1d0957: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0e9bfc76fb9c6d5fa: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0ed9edd7d9bb39ee3: linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: error: i-00c2d2133cb8fa018/172.23.0.77: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-02b76c99658d8c9cb/172.23.2.24: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-02df8607c2c745cf7/172.23.2.134: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-1: i-02d65cb0a8f62a9cf/172.23.0.132: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-03839aa32f27d9594/172.23.0.162: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-055606aa713bae8b5/172.23.0.182: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-1: i-08809a35f6d974d62/172.23.0.112: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-1: i-096c1ca2550949baf/172.23.0.123: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-1: i-0a1623d9f1ada4b77/172.23.2.209: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-1: i-0b9accf1e79714b1b/172.23.2.177: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0d78608e92f9158bf/172.23.0.42: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-1: i-0e35b94adbc0ce983/172.23.0.178: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@eu-west-1: i-0f81c74ec4ed9fb61/172.23.0.208: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@eu-west-1: i-0ff3af87fbb69ed40/172.23.0.196: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+time=2025-02-05T13:32:01.229-07:00 level=ERROR msg="command failed" tsctx=prod@eu-west-1 error="exit status 1" duration=55.456s
+     prod@sa-east-1: i-047bfc1b9e71f7dcd: linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: i-00b6041b3fbc4551a: linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: i-02ac30d5f089c0d1f: linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: i-059dcb57cdde5bd0f: linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: i-059a378e88bcbda8c: linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: i-09c2dbfa4845eb976: linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: i-0d37122489cf9bce1: linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: i-0dbe0aa058fb96684: linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: error: i-051bc7c35b91b0542/172.31.1.222: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: i-034467d94ce4fdda7/172.31.0.32: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: i-00d4c60562694742a/172.31.0.120: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@sa-east-1: i-02d9b37fd6e80e23e/172.31.0.65: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@sa-east-1: i-0312026cb0b3e568f/172.31.0.14: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@sa-east-1: i-046fe7a887684cfdd/172.31.1.11: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@sa-east-1: i-068be8c408a3a240d/172.31.1.129: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@sa-east-1: i-06d1ff8889a36cece/172.31.1.75: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: i-08335459164efccbc/172.31.0.98: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@sa-east-1: i-08f91b36ff96619b3/172.31.0.152: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: i-0a872b9bca36d82f0/172.31.0.34: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@sa-east-1: i-0b58f88613f7f49fa/172.31.0.228: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@sa-east-1: i-0c9aa96680c9fbc0b/172.31.1.213: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@sa-east-1: i-0ed940a363720c78b/172.31.0.66: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+time=2025-02-05T13:32:36.638-07:00 level=ERROR msg="command failed" tsctx=prod@sa-east-1 error="exit status 1" duration=35.409s
+     prod@us-east-2: i-056be16305158c0cb: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-02cca2c62adb15d73: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0247f8a66a869982e: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-005b1448d8057fcba: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0181dedf11304b30b: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0086322ccf2b1865f: linux-tools-6.8.0-1011-aws
+     prod@us-east-2: i-056acea507ba587bf: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-05acc10ff8a3c5595: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-05bff1e7c4f1c1764: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-071237946a6103f65: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-077e28748845d7e0e: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-05e33fc361c22865a: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-07ec43cab5c13f67b: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-06ec5bb51e91d339e: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-07f2a4656a1c6cd66: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0803767f7e30747cd: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0804c056d1a3cff4f: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-087bacce57cdc9c02: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-084be758894d644a9: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-088ed32bc12777a61: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0860bdd3f44870877: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-095053039f47b104b: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0b937db96f4975aa3: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0bfdc8122fa7abc46: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0b9c035096a7bfda3: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0cabe2b9fe922e060: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0d670f09e7301f661: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0d76330c7e2638619: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0edba57f3f73e74a1: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0ef5292b7107d7fe6: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0f8ae237a908781ca: linux-tools-6.10.13-zabbly+
+     prod@us-east-2: error: i-0555e7b465cbced71/172.26.0.187: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-2: i-025322eb27a6b10fe/172.26.0.54: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-2: i-03a3345a5794634c7/172.26.1.24: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-2: i-08d0c75fe7c165c94/172.26.0.44: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-2: i-0927ea5aef607876f/172.26.0.84: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-2: i-0ab7c87637ddaa431/172.26.1.108: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-2: i-0b3699194fe57b82f/172.26.0.72: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-08d6d3773996b21b1/172.26.1.58: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0a190c6310c15c5f2/172.26.1.202: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0c2c7ad1ae7f58601/172.26.1.172: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0d7898f3ee8394aef/172.26.0.8: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-2: i-0e1a09edf4dbb8251/172.26.1.6: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0f53d9ff255175b8e/172.26.0.220: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-east-2: i-0fb19f7d0c529b6fd/172.26.0.227: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-east-2: i-0fe848d100bdc2ca9/172.26.1.25: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+time=2025-02-05T13:33:01.003-07:00 level=ERROR msg="command failed" tsctx=prod@us-east-2 error="exit status 1" duration=24.365s
+     prod@us-west-2: i-028b1aae86e4ea3c2: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-004417655ce7f715f: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-02460ecd381092d36: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0049a312c7c146af2: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-01cd2b7813e1d7594: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0090805fc413c8a8c: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-006c6e6bbafe00903: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-032857f2f2d9e1397: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0381b3a0417af82a4: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-03d2340940d06ecba: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-03f8676a16ec3f401: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-03a6da7090378648b: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0584579b03b7e5d46: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-04a411f486798946e: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-05aa9556f82e3df25: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-068e90573bc507d75: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-05d53a55b44206707: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-065bb074de0308572: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-083cbcb10d9a5906b: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-079e02e6b8ae624d8: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-084f44507d339d210: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-06b6008683c82a4cf: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-084f9704fa9a33d88: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0875434811d25fde9: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-08894ec5b4d10f049: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0a368ac4657956e55: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-09ba1355941d34933: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-09e4ddde0fce91db0: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-08d2533a165844922: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-09e97b07253153a6e: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0aba1a752e96770fc: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0b423ba5502f93698: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0b6b36d466bccbf0d: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0b5d27f7f36262b69: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0c4247997b6458991: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0c8a38c30365b2c49: linux-tools-6.8.0-1011-aws
+     prod@us-west-2: i-0cc8e1d15c864c7c2: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0e2e2091b189e56bf: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0dd63de7241428334: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0e1d09aa980eb8947: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0ce7ddbfec9c84212: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0e558ce0e1e5f5d12: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0f2ffeca4e8bb1ce5: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0fd15d14be8b4c660: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0fd7cf0102c7d73a4: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0fb3223e4780f3639: linux-tools-6.10.13-zabbly+
+     prod@us-west-2: error: i-0083c0f7360ce7f4d/172.22.3.28: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-west-2: i-01463641723651c07/172.22.0.88: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-west-2: i-00346ece21b563090/172.22.2.55: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-04194bd7682d3f9cb/172.22.3.123: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-050e62082dbe96b8d/172.22.3.221: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-058827ffe724b447a/172.22.2.119: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-069ccc781b7057162/172.22.2.40: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-08b684a9e1f0fb7e6/172.22.3.239: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-west-2: i-0ae183594986238d5/172.22.2.252: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-west-2: i-0ab84cc451bf48d3b/172.22.2.30: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-west-2: i-0ac060d1f4fa5eaf5/172.22.0.201: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0bfefe815bc777989/172.22.3.34: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0c135f1dd65fdcc96/172.22.3.122: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0c0deb8b78f0617e1/172.22.2.117: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0c19fb4343370908d/172.22.2.98: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0cd44e1bc0caca73d/172.22.3.211: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0d30d96d3c3cbdba9/172.22.3.202: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0d807cdd2291ea526/172.22.0.174: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-west-2: i-0ec3125b7a0cea20e/172.22.3.206: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0f0442d582feb983e/172.22.3.13: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+     prod@us-west-2: i-0ea420b4b007a0260/172.22.0.214: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.8.0-1011-aws
+     prod@us-west-2: i-0ff0c782f6bf43e2a/172.22.3.129: ssh error: Process exited with status 1: dpkg-query: no packages found matching linux-tools-6.10.13-zabbly+
+time=2025-02-05T13:33:28.523-07:00 level=ERROR msg="command failed" tsctx=prod@us-west-2 error="exit status 1" duration=27.519s
+error: prod@eu-west-2: failed to wait: exit status 1
+prod@ap-southeast-1: failed to wait: exit status 1
+prod@us-east-1: failed to wait: exit status 1
+dev@eu-central-1: failed to wait: exit status 1
+dev@us-east-1: failed to wait: exit status 1
+prod@ap-south-1: failed to wait: exit status 1
+prod@ap-southeast-2: failed to wait: exit status 1
+prod@eu-central-1: failed to wait: exit status 1
+prod@eu-west-1: failed to wait: exit status 1
+prod@sa-east-1: failed to wait: exit status 1
+prod@us-east-2: failed to wait: exit status 1
+prod@us-west-2: failed to wait: exit status 1

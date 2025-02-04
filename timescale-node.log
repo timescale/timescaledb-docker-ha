@@ -1,0 +1,682 @@
+     prod@eu-west-2: i-04038c3c84f4d0906: timescale-node-0.33
+     prod@eu-west-2: i-02bff1994030dc865: timescale-node-0.33
+     prod@eu-west-2: i-02cee5ee63ad310c3: timescale-node-0.33
+     prod@eu-west-2: i-00f673d7e6931ddee: timescale-node-0.33
+     prod@eu-west-2: i-006a00e58a0a5594c: timescale-node-0.33
+     prod@eu-west-2: i-0540316e1cf262373: timescale-node-0.33
+     prod@eu-west-2: i-0586b74e645d47161: timescale-node-0.33
+     prod@eu-west-2: i-07d7f30759d96b2ae: timescale-node-0.33
+     prod@eu-west-2: i-089457855481bc8c9: timescale-node-0.33
+     prod@eu-west-2: i-0918b18ab7c515f0f: timescale-node-0.33
+     prod@eu-west-2: i-09cc149976a11cb5a: timescale-node-0.33
+     prod@eu-west-2: i-0b8b7294386458149: timescale-node-0.33
+     prod@eu-west-2: i-0bb687ba51ca3af93: timescale-node-0.33
+     prod@eu-west-2: i-0c14d0c629d072125: timescale-node-0.33
+     prod@eu-west-2: i-0c16460c4acbbca2c: timescale-node-0.33
+     prod@eu-west-2: i-0f2a304c210b7c3e8: timescale-node-0.33
+     prod@eu-west-2: error: i-0061c68ddb19d5b15/172.28.0.67: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-2: i-0037d5a9dbfe1f1f3/172.28.0.180: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-2: i-01b2b8752f37031a7/172.28.0.87: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-2: i-03fd4c83afeb337bf/172.28.0.123: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-2: i-01362e1a9fc00c365/172.28.0.72: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-2: i-041b557977b7d3f3d/172.28.1.163: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-2: i-04a0598e3248f4e5c/172.28.0.117: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-2: i-063060ac1e8bcc4e9/172.28.0.235: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-2: i-06ef2925a2818d6d2/172.28.0.52: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-2: i-081d530fa06b74556/172.28.1.147: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-2: i-0832844dc8c803249/172.28.0.130: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-2: i-0a6d6f1b7a938eac8/172.28.0.168: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-2: i-0d393fd9cf423fc1b/172.28.0.20: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+time=2025-02-05T14:28:36.022-07:00 level=ERROR msg="command failed" tsctx=prod@eu-west-2 error="exit status 1" duration=39.635s
+     prod@sa-east-1: i-02ac30d5f089c0d1f: timescale-node-0.33
+     prod@sa-east-1: i-059a378e88bcbda8c: timescale-node-0.33
+     prod@sa-east-1: i-00b6041b3fbc4551a: timescale-node-0.33
+     prod@sa-east-1: i-034467d94ce4fdda7: timescale-node-0.33
+     prod@sa-east-1: i-047bfc1b9e71f7dcd: timescale-node-0.33
+     prod@sa-east-1: i-051bc7c35b91b0542: timescale-node-0.33
+     prod@sa-east-1: i-059dcb57cdde5bd0f: timescale-node-0.33
+     prod@sa-east-1: i-06d1ff8889a36cece: timescale-node-0.33
+     prod@sa-east-1: i-08f91b36ff96619b3: timescale-node-0.33
+     prod@sa-east-1: i-09c2dbfa4845eb976: timescale-node-0.33
+     prod@sa-east-1: i-0c9aa96680c9fbc0b: timescale-node-0.33
+     prod@sa-east-1: i-0d37122489cf9bce1: timescale-node-0.33
+     prod@sa-east-1: i-0dbe0aa058fb96684: timescale-node-0.33
+     prod@sa-east-1: error: i-00d4c60562694742a/172.31.0.120: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@sa-east-1: i-0312026cb0b3e568f/172.31.0.14: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@sa-east-1: i-046fe7a887684cfdd/172.31.1.11: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@sa-east-1: i-02d9b37fd6e80e23e/172.31.0.65: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@sa-east-1: i-068be8c408a3a240d/172.31.1.129: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@sa-east-1: i-08335459164efccbc/172.31.0.98: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@sa-east-1: i-0a872b9bca36d82f0/172.31.0.34: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@sa-east-1: i-0b58f88613f7f49fa/172.31.0.228: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@sa-east-1: i-0ed940a363720c78b/172.31.0.66: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+time=2025-02-05T14:29:10.825-07:00 level=ERROR msg="command failed" tsctx=prod@sa-east-1 error="exit status 1" duration=34.803s
+prod@ap-southeast-1: i-017a40c3ffc9311ab: timescale-node-0.33
+prod@ap-southeast-1: i-020f9b93e613d53a0: timescale-node-0.33
+prod@ap-southeast-1: i-065f90cb72407899c: timescale-node-0.33
+prod@ap-southeast-1: i-01b127adea428d436: timescale-node-0.33
+prod@ap-southeast-1: i-01c79ade4ecb25746: timescale-node-0.33
+prod@ap-southeast-1: i-04a93a3905e47a786: timescale-node-0.33
+prod@ap-southeast-1: i-010a24909b5fca9dd: timescale-node-0.33
+prod@ap-southeast-1: i-08727a1898b3f6aeb: timescale-node-0.33
+prod@ap-southeast-1: i-08b3195fd6b1e2f8c: timescale-node-0.33
+prod@ap-southeast-1: i-091d9557e6dd16fe4: timescale-node-0.33
+prod@ap-southeast-1: i-098c6912c28eac62c: timescale-node-0.33
+prod@ap-southeast-1: i-09ab80ef3ba2d4178: timescale-node-0.33
+prod@ap-southeast-1: i-0c0369cda3e370b99: timescale-node-0.33
+prod@ap-southeast-1: i-0c3e585754a7e3d78: timescale-node-0.33
+prod@ap-southeast-1: i-0ea01767dfe67d074: timescale-node-0.33
+prod@ap-southeast-1: i-0ed8f5b63547f6b77: timescale-node-0.33
+prod@ap-southeast-1: i-0f0e33ace2d4a96cd: timescale-node-0.33
+prod@ap-southeast-1: i-0f4d2810132b59c64: timescale-node-0.33
+prod@ap-southeast-1: i-0fd370591f731fb20: timescale-node-0.33
+prod@ap-southeast-1: error: i-027b04bbff9595fca/172.27.1.186: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-1: i-032f76f1d19ce6bae/172.27.0.118: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-1: i-0604748fb31ed072c/172.27.0.180: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-1: i-08a427c874ce3fef6/172.27.1.177: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-1: i-09c6a180d16405d2a/172.27.0.73: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-1: i-0ac4e412fb66c2248/172.27.0.239: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-1: i-0cb1b4ccf23f4ed6a/172.27.0.190: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-1: i-0f1e39e534a24072c/172.27.0.184: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-1: i-0fa529675fab5c27a/172.27.0.224: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+time=2025-02-05T14:30:09.070-07:00 level=ERROR msg="command failed" tsctx=prod@ap-southeast-1 error="exit status 1" duration=58.245s
+   dev@eu-central-1: i-07317d00342785a37: timescale-node-0.34
+   dev@eu-central-1: i-02fa62db5b783cf4b: timescale-node-0.34
+   dev@eu-central-1: i-00bf82ab756106c26: timescale-node-0.33
+   dev@eu-central-1: i-000cbb13ae102bf54: timescale-node-0.34
+   dev@eu-central-1: i-02e1e7783f5edab20: timescale-node-0.34
+   dev@eu-central-1: i-046c4a56d0799c8ca: timescale-node-0.34
+   dev@eu-central-1: i-00f1b442160bb9ac9: timescale-node-0.33
+   dev@eu-central-1: i-0540c8618a641e470: timescale-node-0.34
+   dev@eu-central-1: i-0435c5465c217416a: timescale-node-0.34
+   dev@eu-central-1: i-0516225751c933b0a: timescale-node-0.34
+   dev@eu-central-1: i-07ab073920bb2a63b: timescale-node-0.33
+   dev@eu-central-1: i-07b771bcff3cb0090: timescale-node-0.34
+   dev@eu-central-1: i-0a8d55c51f8b80ae3: timescale-node-0.31
+   dev@eu-central-1: i-087c2405e253f41a1: timescale-node-0.34
+   dev@eu-central-1: i-0bf49ea2b58e80c0f: timescale-node-0.34
+   dev@eu-central-1: i-0e7c6aae9e27d127f: timescale-node-0.33
+   dev@eu-central-1: i-0ca2e025ee39252f0: timescale-node-0.34
+      dev@us-east-1: i-016b5e6c3037bb90c: timescale-node-0.34
+      dev@us-east-1: i-007c1babe64056bba: timescale-node-0.34
+      dev@us-east-1: i-000e4bab36662edf6: timescale-node-0.34
+      dev@us-east-1: i-00777b7460090fa3f: timescale-node-0.34
+      dev@us-east-1: i-000dfaaebb8a619f8: timescale-node-0.34
+      dev@us-east-1: i-00a3ecee6c3ea01bc: timescale-node-0.34
+      dev@us-east-1: i-016708722b1035cdf: timescale-node-0.34
+      dev@us-east-1: i-011eeb2ab6f19a6f2: timescale-node-0.34
+      dev@us-east-1: i-010f6c11b6e3cbf62: timescale-node-0.34
+      dev@us-east-1: i-0201bf72503da25fd: timescale-node-0.34
+      dev@us-east-1: i-01da4d4f7a7794f2a: timescale-node-0.34
+      dev@us-east-1: i-02207d76d8e4d74e9: timescale-node-0.34
+      dev@us-east-1: i-00df4e806e50cef63: timescale-node-0.34
+      dev@us-east-1: i-022a086e14f4a9922: timescale-node-0.33
+      dev@us-east-1: i-02a6c27ae7c5cfafd: timescale-node-0.33
+      dev@us-east-1: i-02a9f2eebc1e67113: timescale-node-0.34
+      dev@us-east-1: i-02eae73d91a8b92ee: timescale-node-0.34
+      dev@us-east-1: i-0331a86314b2e7788: timescale-node-0.33
+      dev@us-east-1: i-033b3bdc15fe9dd71: timescale-node-0.33
+      dev@us-east-1: i-0346abbfdf8644a68: timescale-node-0.34
+      dev@us-east-1: i-0385e4453f59a2ad8: timescale-node-0.34
+      dev@us-east-1: i-03f803e7df92a9e5e: timescale-node-0.34
+      dev@us-east-1: i-047797360cf3574a9: timescale-node-0.33
+      dev@us-east-1: i-047a0915827fc7074: timescale-node-0.33
+      dev@us-east-1: i-04be45324f3a751cc: timescale-node-0.33
+      dev@us-east-1: i-05302de9d765b274e: timescale-node-0.34
+      dev@us-east-1: i-0530cb99d3055e1c7: timescale-node-0.33
+      dev@us-east-1: i-054489a87dead3249: timescale-node-0.34
+      dev@us-east-1: i-05495b9369ee96419: timescale-node-0.34
+      dev@us-east-1: i-05854c1dfaf7f9a46: timescale-node-0.34
+      dev@us-east-1: i-05966d98b4ce74108: timescale-node-0.33
+      dev@us-east-1: i-0531d7284f4de233d: timescale-node-0.33
+      dev@us-east-1: i-05f46de26c0b687e6: timescale-node-0.34
+      dev@us-east-1: i-060c48d13e3c80b83: timescale-node-0.34
+      dev@us-east-1: i-063b74d191a5cf3ca: timescale-node-0.34
+      dev@us-east-1: i-06481518b05ae6f61: timescale-node-0.34
+      dev@us-east-1: i-067c53e8cbcf22555: timescale-node-0.34
+      dev@us-east-1: i-06a3a1749a216f068: timescale-node-0.34
+      dev@us-east-1: i-073f9afe3b56228bd: timescale-node-0.33
+      dev@us-east-1: i-077856658661109f4: timescale-node-0.34
+      dev@us-east-1: i-07d29fb9497e950e0: timescale-node-0.34
+      dev@us-east-1: i-07dbde9ad55f1f78d: timescale-node-0.34
+      dev@us-east-1: i-07e2d55c4c804e842: timescale-node-0.34
+      dev@us-east-1: i-07f38bba3637e97e3: timescale-node-0.34
+      dev@us-east-1: i-08078ea2bc76580a6: timescale-node-0.33
+      dev@us-east-1: i-083956c5eefbda1bd: timescale-node-0.33
+      dev@us-east-1: i-084abd590dca99620: timescale-node-0.33
+      dev@us-east-1: i-09238bd2bcddbdbca: timescale-node-0.34
+      dev@us-east-1: i-09e266460d1ab6d19: timescale-node-0.34
+      dev@us-east-1: i-0a1613254b3b80a72: timescale-node-0.34
+      dev@us-east-1: i-0ad10b3e9a112f8f4: timescale-node-0.33
+      dev@us-east-1: i-0a50575e89eb1ec1c: timescale-node-0.33
+      dev@us-east-1: i-0b0a88f1f86a0c1f8: timescale-node-0.34
+      dev@us-east-1: i-0b5e63cea662676dd: timescale-node-0.34
+      dev@us-east-1: i-0b7c37634fee1b3c4: timescale-node-0.34
+      dev@us-east-1: i-0b8a347b289be42f8: timescale-node-0.33
+      dev@us-east-1: i-0b93252f923658ef7: timescale-node-0.33
+      dev@us-east-1: i-0bbc788e3c91896c4: timescale-node-0.34
+      dev@us-east-1: i-0c0462f28bcfad892: timescale-node-0.34
+      dev@us-east-1: i-0c312ffd26c4a1535: timescale-node-0.34
+      dev@us-east-1: i-0c31a373d4fe19f0b: timescale-node-0.34
+      dev@us-east-1: i-0c948e5718bcbfd9e: timescale-node-0.34
+      dev@us-east-1: i-0cdf4c1c2b65c8a0e: timescale-node-0.33
+      dev@us-east-1: i-0d0669816bf10d052: timescale-node-0.33
+      dev@us-east-1: i-0d135a7572ae7bda2: timescale-node-0.33
+      dev@us-east-1: i-0d984da94c4f902f2: timescale-node-0.34
+      dev@us-east-1: i-0e2a2faf997079ee2: timescale-node-0.33
+      dev@us-east-1: i-0e7d9d06914d18fe4: timescale-node-0.34
+      dev@us-east-1: i-0e8939b507e4e9aaa: timescale-node-0.34
+      dev@us-east-1: i-0ea4b53f1338a108b: timescale-node-0.34
+      dev@us-east-1: i-0e515ac5a32407622: timescale-node-0.34
+      dev@us-east-1: i-0ec2063c9ef1deb53: timescale-node-0.34
+      dev@us-east-1: i-0ed263a0feaea0e12: timescale-node-0.34
+      dev@us-east-1: i-0f06da222cc5ade48: timescale-node-0.34
+      dev@us-east-1: i-0f17f20007b651c77: timescale-node-0.34
+      dev@us-east-1: i-0f529f34766a64a28: timescale-node-0.33
+      dev@us-east-1: i-0f62060cf3641fafb: timescale-node-0.33
+      dev@us-east-1: i-0f6d4690e0c47dded: timescale-node-0.34
+      dev@us-east-1: i-0fe74666a8d52985b: timescale-node-0.33
+prod@ap-northeast-1: i-04b602cee20879fbc: timescale-node-0.33
+prod@ap-northeast-1: i-003078d840d592ac1: timescale-node-0.33
+prod@ap-northeast-1: i-021acd320c7a50c43: timescale-node-0.33
+prod@ap-northeast-1: i-0057b31b8d5456f74: timescale-node-0.33
+prod@ap-northeast-1: i-0071b7841be6b82a1: timescale-node-0.33
+prod@ap-northeast-1: i-007292d7911721434: timescale-node-0.33
+prod@ap-northeast-1: i-02ff64e2ce352f364: timescale-node-0.33
+prod@ap-northeast-1: i-029b7a65ef637c623: timescale-node-0.33
+prod@ap-northeast-1: i-03d2b76471f34968d: timescale-node-0.33
+prod@ap-northeast-1: i-059364856e13bc40b: timescale-node-0.33
+prod@ap-northeast-1: i-040e280728266af62: timescale-node-0.33
+prod@ap-northeast-1: i-059e437d59f172f0c: timescale-node-0.33
+prod@ap-northeast-1: i-05a8b31f848566d44: timescale-node-0.33
+prod@ap-northeast-1: i-073624fb25dc2e1cb: timescale-node-0.33
+prod@ap-northeast-1: i-06ab69a047c089090: timescale-node-0.33
+prod@ap-northeast-1: i-0741666178d028c81: timescale-node-0.33
+prod@ap-northeast-1: i-07513e6a8e93e45f8: timescale-node-0.33
+prod@ap-northeast-1: i-0766a2369dd5fbfc4: timescale-node-0.33
+prod@ap-northeast-1: i-080bd7583cc535b1e: timescale-node-0.33
+prod@ap-northeast-1: i-081002bd378da2774: timescale-node-0.33
+prod@ap-northeast-1: i-0832856b4a3b8d45b: timescale-node-0.33
+prod@ap-northeast-1: i-08a8078bc9fb5be24: timescale-node-0.33
+prod@ap-northeast-1: i-08fb538db29a2f75b: timescale-node-0.33
+prod@ap-northeast-1: i-0981ec7d5e64a1e98: timescale-node-0.33
+prod@ap-northeast-1: i-0a57b5991aafa1caf: timescale-node-0.33
+prod@ap-northeast-1: i-0b813dd66efe82bfb: timescale-node-0.33
+prod@ap-northeast-1: i-0b9d46f449518e843: timescale-node-0.33
+prod@ap-northeast-1: i-0bc6227b2132f7021: timescale-node-0.33
+prod@ap-northeast-1: i-0c06168143eccf79a: timescale-node-0.33
+prod@ap-northeast-1: i-0c2ba1af4884db142: timescale-node-0.33
+prod@ap-northeast-1: i-0c3e6b5704c064eb7: timescale-node-0.33
+prod@ap-northeast-1: i-0d811e406ac510143: timescale-node-0.33
+prod@ap-northeast-1: i-0df690c2f1b467359: timescale-node-0.33
+prod@ap-northeast-1: i-0e0b450a1af6c7bda: timescale-node-0.33
+prod@ap-northeast-1: i-0e23d70f836274567: timescale-node-0.33
+prod@ap-northeast-1: i-0e572f08a4dbfd2b7: timescale-node-0.33
+prod@ap-northeast-1: i-0eb72ffa25f61f35d: timescale-node-0.33
+prod@ap-northeast-1: i-0fb028d6dcfb4ef45: timescale-node-0.33
+    prod@ap-south-1: i-07d2a1c312a534917: timescale-node-0.33
+    prod@ap-south-1: i-02091644741b6a038: timescale-node-0.33
+    prod@ap-south-1: i-008a0bbc0891d2b92: timescale-node-0.33
+    prod@ap-south-1: i-00ef7195923d5478a: timescale-node-0.33
+    prod@ap-south-1: i-03ff568a8aa08d3ac: timescale-node-0.33
+    prod@ap-south-1: i-0124f5a04a0e1e218: timescale-node-0.33
+    prod@ap-south-1: i-01eac40583ddac4c2: timescale-node-0.33
+    prod@ap-south-1: i-0565a99877c80c5d9: timescale-node-0.33
+    prod@ap-south-1: i-062bcf823b4c6311a: timescale-node-0.33
+    prod@ap-south-1: i-03ecc5a38fe1b43bf: timescale-node-0.33
+    prod@ap-south-1: i-09104044b84174eff: timescale-node-0.33
+    prod@ap-south-1: i-09394c2d05189e915: timescale-node-0.33
+    prod@ap-south-1: i-09d1548448183e646: timescale-node-0.33
+    prod@ap-south-1: i-0a53246dc49bb31f7: timescale-node-0.33
+    prod@ap-south-1: i-0af0c006876e5c7ac: timescale-node-0.33
+    prod@ap-south-1: i-0bf370014cd436389: timescale-node-0.33
+    prod@ap-south-1: i-0c6605a0996a83fec: timescale-node-0.33
+    prod@ap-south-1: i-0d85620cf7dfeafe8: timescale-node-0.33
+    prod@ap-south-1: i-0e092f0b226f3a5d6: timescale-node-0.33
+    prod@ap-south-1: i-0e107ccfe2ca1ecff: timescale-node-0.33
+    prod@ap-south-1: i-0efef7a00d73c41ea: timescale-node-0.33
+    prod@ap-south-1: i-0f1658de7ffd63a59: timescale-node-0.33
+    prod@ap-south-1: i-0fad2433487c943e1: timescale-node-0.33
+    prod@ap-south-1: i-0fae6327d68324643: timescale-node-0.33
+    prod@ap-south-1: i-0fae729be3b7ff4b0: timescale-node-0.33
+  prod@ca-central-1: i-007bb3fb3b837d931: timescale-node-0.33
+  prod@ca-central-1: i-02c281baf193eefac: timescale-node-0.33
+  prod@ca-central-1: i-014bc91d84a5d54be: timescale-node-0.33
+  prod@ca-central-1: i-04f06fce4298613d0: timescale-node-0.33
+  prod@ca-central-1: i-04138744557477458: timescale-node-0.33
+  prod@ca-central-1: i-01849297bf336252d: timescale-node-0.33
+  prod@ca-central-1: i-0263060662dc2e554: timescale-node-0.33
+  prod@ca-central-1: i-0399018c23438f824: timescale-node-0.33
+  prod@ca-central-1: i-04d36f3f782c51685: timescale-node-0.33
+  prod@ca-central-1: i-04952a62bb4960ead: timescale-node-0.33
+  prod@ca-central-1: i-05cbef759f1181a60: timescale-node-0.33
+  prod@ca-central-1: i-074b6bfc81e33b808: timescale-node-0.33
+  prod@ca-central-1: i-07e12c445b2f1ba4e: timescale-node-0.33
+  prod@ca-central-1: i-079823b9d182f83b5: timescale-node-0.33
+  prod@ca-central-1: i-085d7226f75f59fd6: timescale-node-0.33
+  prod@ca-central-1: i-0898c73af9310cd24: timescale-node-0.33
+  prod@ca-central-1: i-08ebbd6e8e06e5834: timescale-node-0.33
+  prod@ca-central-1: i-09376ec4eac88f793: timescale-node-0.33
+  prod@ca-central-1: i-099417c4a210e299f: timescale-node-0.33
+  prod@ca-central-1: i-0d93f4ad3419cdcce: timescale-node-0.33
+  prod@ca-central-1: i-0e6578ffd6360ac70: timescale-node-0.33
+  prod@ca-central-1: i-0ea09a1a1b357c149: timescale-node-0.33
+  prod@ca-central-1: i-0ec0b15e06bf82109: timescale-node-0.33
+prod@ap-southeast-2: i-041bf501690060324: timescale-node-0.33
+prod@ap-southeast-2: i-030f03e9de9029934: timescale-node-0.33
+prod@ap-southeast-2: i-0131b69aadb758b01: timescale-node-0.33
+prod@ap-southeast-2: i-0200441d0eae971ae: timescale-node-0.33
+prod@ap-southeast-2: i-0437d79887c63339d: timescale-node-0.33
+prod@ap-southeast-2: i-000aa6863297057a7: timescale-node-0.33
+prod@ap-southeast-2: i-032e3929a23e61a8b: timescale-node-0.33
+prod@ap-southeast-2: i-06d1d989a1f971b51: timescale-node-0.33
+prod@ap-southeast-2: i-048f6ccdb60f8a9a7: timescale-node-0.33
+prod@ap-southeast-2: i-070cc7dca289045e4: timescale-node-0.33
+prod@ap-southeast-2: i-079637c4168d1a4c1: timescale-node-0.33
+prod@ap-southeast-2: i-07dc475c51735253f: timescale-node-0.33
+prod@ap-southeast-2: i-099c5b10a2d10539c: timescale-node-0.33
+prod@ap-southeast-2: i-09c04e4f5d05ebd8b: timescale-node-0.33
+prod@ap-southeast-2: i-0ab8872bdabc7dcbf: timescale-node-0.33
+prod@ap-southeast-2: i-0b657032cd7cc993e: timescale-node-0.33
+prod@ap-southeast-2: i-0bd0305ba9fbf9f61: timescale-node-0.33
+prod@ap-southeast-2: i-0faa2b2e5e169ed28: timescale-node-0.33
+prod@ap-southeast-2: error: i-04f8fb8f1cc522365/172.25.0.231: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-2: i-008b9b561fc234ffe/172.25.0.42: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-2: i-07885a232d63db714/172.25.2.96: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-2: i-09017b462fb3e1ba8/172.25.0.225: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-2: i-09f3df7a7acf9ddd9/172.25.0.228: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-2: i-0a2839e1c8af68934/172.25.2.181: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-2: i-0b3e16e4c2c3e41f4/172.25.0.156: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-2: i-0d5cf20b5b5f97993/172.25.0.59: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+prod@ap-southeast-2: i-0deeebe68108c0cb1/172.25.0.239: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+time=2025-02-05T14:34:09.668-07:00 level=ERROR msg="command failed" tsctx=prod@ap-southeast-2 error="exit status 1" duration=41.932s
+  prod@eu-central-1: i-002d8a01ee7aaddbd: timescale-node-0.33
+  prod@eu-central-1: i-00397a9d9d7f9a4b8: timescale-node-0.33
+  prod@eu-central-1: i-004720ce6273764d0: timescale-node-0.33
+  prod@eu-central-1: i-00675335537d4a038: timescale-node-0.33
+  prod@eu-central-1: i-014387bd9d3bb190f: timescale-node-0.33
+  prod@eu-central-1: i-01ba0b9e532d65ac1: timescale-node-0.33
+  prod@eu-central-1: i-0191eaeeafcf76a5c: timescale-node-0.33
+  prod@eu-central-1: i-020a331313f4a5be4: timescale-node-0.33
+  prod@eu-central-1: i-02b96d6d489dfcda1: timescale-node-0.33
+  prod@eu-central-1: i-0338747a0529195e6: timescale-node-0.33
+  prod@eu-central-1: i-0386eea5d54fe15f8: timescale-node-0.33
+  prod@eu-central-1: i-03911e74ba7b1ae18: timescale-node-0.33
+  prod@eu-central-1: i-044668c953769b47d: timescale-node-0.33
+  prod@eu-central-1: i-046e5ace9020878bd: timescale-node-0.33
+  prod@eu-central-1: i-04bc3528ea50be4e9: timescale-node-0.33
+  prod@eu-central-1: i-049aede2ebe740cb5: timescale-node-0.33
+  prod@eu-central-1: i-0552c43976e4cf282: timescale-node-0.33
+  prod@eu-central-1: i-05988dde226f1c046: timescale-node-0.33
+  prod@eu-central-1: i-05cf85bb62143de98: timescale-node-0.33
+  prod@eu-central-1: i-05dcf570c41efb352: timescale-node-0.33
+  prod@eu-central-1: i-0659bd222e5644830: timescale-node-0.33
+  prod@eu-central-1: i-06813cb22ea590c0e: timescale-node-0.33
+  prod@eu-central-1: i-0687fa6915d011a2e: timescale-node-0.33
+  prod@eu-central-1: i-069d3eea721fbb067: timescale-node-0.33
+  prod@eu-central-1: i-06c797ab6d241bb1f: timescale-node-0.33
+  prod@eu-central-1: i-06da6f4a0b336f887: timescale-node-0.33
+  prod@eu-central-1: i-06e83049d5f365798: timescale-node-0.33
+  prod@eu-central-1: i-06efab7caf821adfb: timescale-node-0.33
+  prod@eu-central-1: i-0701dfc048f4cda21: timescale-node-0.33
+  prod@eu-central-1: i-07f3ae7dd1399b110: timescale-node-0.33
+  prod@eu-central-1: i-0800060ea2189396c: timescale-node-0.33
+  prod@eu-central-1: i-08456b0af0505e3fe: timescale-node-0.33
+  prod@eu-central-1: i-08873c64dfa78b50b: timescale-node-0.33
+  prod@eu-central-1: i-088b9497ff00c3b36: timescale-node-0.33
+  prod@eu-central-1: i-088feeb43f74ef89a: timescale-node-0.33
+  prod@eu-central-1: i-08f180d3a44811835: timescale-node-0.33
+  prod@eu-central-1: i-09db9e83f676bce99: timescale-node-0.33
+  prod@eu-central-1: i-09540c78666a572c0: timescale-node-0.33
+  prod@eu-central-1: i-09ecf097ccdeff574: timescale-node-0.33
+  prod@eu-central-1: i-0a0cb717dfee490a4: timescale-node-0.33
+  prod@eu-central-1: i-0a0384db9074545b8: timescale-node-0.33
+  prod@eu-central-1: i-0aea4e7bba6ff92fd: timescale-node-0.33
+  prod@eu-central-1: i-0b30cd090de28c6e2: timescale-node-0.33
+  prod@eu-central-1: i-0b5cfad7218f07608: timescale-node-0.33
+  prod@eu-central-1: i-0b945d3f5f1791dc2: timescale-node-0.33
+  prod@eu-central-1: i-0c2b5fc9508554844: timescale-node-0.33
+  prod@eu-central-1: i-0c4b939e16980289e: timescale-node-0.33
+  prod@eu-central-1: i-0cbf642dcb7263e18: timescale-node-0.33
+  prod@eu-central-1: i-0ced2c3f211056817: timescale-node-0.33
+  prod@eu-central-1: i-0cf75615b3fc40e3e: timescale-node-0.33
+  prod@eu-central-1: i-0ddd1481c38f1e943: timescale-node-0.33
+  prod@eu-central-1: i-0e31f7c39c3e9f061: timescale-node-0.33
+  prod@eu-central-1: i-0ea5e281dc493cd62: timescale-node-0.33
+  prod@eu-central-1: i-0f0edb52b134e97d6: timescale-node-0.33
+  prod@eu-central-1: i-0f713e5f994f32c86: timescale-node-0.33
+  prod@eu-central-1: i-0f834fb7972e85a6b: timescale-node-0.33
+  prod@eu-central-1: i-0f7c85336c8d463d5: timescale-node-0.33
+  prod@eu-central-1: i-0fedc615a5e0cd6a6: timescale-node-0.33
+  prod@eu-central-1: error: i-0234d095c842b2974/172.24.0.210: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+  prod@eu-central-1: i-0224100bf943f9092/172.24.0.116: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+  prod@eu-central-1: i-041e6759286a0f674/172.24.2.233: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+  prod@eu-central-1: i-06e57238229cd495a/172.24.0.131: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+  prod@eu-central-1: i-08b2dcb74b5608a58/172.24.0.75: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+  prod@eu-central-1: i-0b61f3ccee1d1674c/172.24.0.180: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+  prod@eu-central-1: i-0bab02b33fb83bc34/172.24.2.159: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+  prod@eu-central-1: i-0d4e3c4a94752f141/172.24.0.145: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+  prod@eu-central-1: i-0ecb0312a5e6ef7a3/172.24.0.213: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+time=2025-02-05T14:35:43.044-07:00 level=ERROR msg="command failed" tsctx=prod@eu-central-1 error="exit status 1" duration=1m33.375s
+     prod@eu-west-1: i-01761b03b98e57c5d: timescale-node-0.33
+     prod@eu-west-1: i-02301da260bef1bbb: timescale-node-0.33
+     prod@eu-west-1: i-0291e9e0baf1d429e: timescale-node-0.33
+     prod@eu-west-1: i-023848bb8bb7cfa4b: timescale-node-0.33
+     prod@eu-west-1: i-00c2d2133cb8fa018: timescale-node-0.33
+     prod@eu-west-1: i-0288b81f68a481906: timescale-node-0.33
+     prod@eu-west-1: i-023c122f55da5465a: timescale-node-0.33
+     prod@eu-west-1: i-00bd28fd02a9ba3d9: timescale-node-0.33
+     prod@eu-west-1: i-016f3211162e0884d: timescale-node-0.33
+     prod@eu-west-1: i-01103d7894f7dffdb: timescale-node-0.33
+     prod@eu-west-1: i-02b76c99658d8c9cb: timescale-node-0.33
+     prod@eu-west-1: i-02d65cb0a8f62a9cf: timescale-node-0.33
+     prod@eu-west-1: i-03750f650da6ffc67: timescale-node-0.33
+     prod@eu-west-1: i-03839aa32f27d9594: timescale-node-0.33
+     prod@eu-west-1: i-03aa139e5bcc731d1: timescale-node-0.33
+     prod@eu-west-1: i-043de860c7dd9be04: timescale-node-0.33
+     prod@eu-west-1: i-04787e88ecf69f929: timescale-node-0.33
+     prod@eu-west-1: i-052abb8c1d270ea0c: timescale-node-0.33
+     prod@eu-west-1: i-05b35098a4896973c: timescale-node-0.33
+     prod@eu-west-1: i-091eadd81fd07646e: timescale-node-0.33
+     prod@eu-west-1: i-092dc29044930af7b: timescale-node-0.33
+     prod@eu-west-1: i-0ac5f24254ff8d7f2: timescale-node-0.33
+     prod@eu-west-1: i-0b924b84ea09272d1: timescale-node-0.33
+     prod@eu-west-1: i-0b9accf1e79714b1b: timescale-node-0.33
+     prod@eu-west-1: i-0d276edadc7298568: timescale-node-0.33
+     prod@eu-west-1: i-0c65dc1e5660c2b65: timescale-node-0.33
+     prod@eu-west-1: i-0dcaa1776127647c1: timescale-node-0.33
+     prod@eu-west-1: i-0dfe91c445f0765c3: timescale-node-0.33
+     prod@eu-west-1: i-0e7850b592b1d0957: timescale-node-0.33
+     prod@eu-west-1: i-0e9bfc76fb9c6d5fa: timescale-node-0.33
+     prod@eu-west-1: i-0ed9edd7d9bb39ee3: timescale-node-0.33
+     prod@eu-west-1: i-0f81c74ec4ed9fb61: timescale-node-0.33
+     prod@eu-west-1: error: i-02df8607c2c745cf7/172.23.2.134: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-1: i-055606aa713bae8b5/172.23.0.182: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-1: i-08809a35f6d974d62/172.23.0.112: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-1: i-096c1ca2550949baf/172.23.0.123: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-1: i-0a1623d9f1ada4b77/172.23.2.209: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-1: i-0d78608e92f9158bf/172.23.0.42: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-1: i-0e35b94adbc0ce983/172.23.0.178: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@eu-west-1: i-0ff3af87fbb69ed40/172.23.0.196: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+time=2025-02-05T14:36:38.361-07:00 level=ERROR msg="command failed" tsctx=prod@eu-west-1 error="exit status 1" duration=55.317s
+     prod@us-east-1: i-000230d21ad415ffb: timescale-node-0.33
+     prod@us-east-1: i-009316eab3e4efbaf: timescale-node-0.33
+     prod@us-east-1: i-015a90176dfc265ec: timescale-node-0.33
+     prod@us-east-1: i-0156057baca3d5766: timescale-node-0.33
+     prod@us-east-1: i-0167a3091b2e5e4df: timescale-node-0.33
+     prod@us-east-1: i-01f42eb1ad7002dee: timescale-node-0.33
+     prod@us-east-1: i-00de516a70ce154b2: timescale-node-0.33
+     prod@us-east-1: i-0127754a20ea031af: timescale-node-0.33
+     prod@us-east-1: i-0210e769befda013b: timescale-node-0.33
+     prod@us-east-1: i-022a18e5490aabcf7: timescale-node-0.33
+     prod@us-east-1: i-024d52734b9a22437: timescale-node-0.33
+     prod@us-east-1: i-02980c9909f7196f8: timescale-node-0.33
+     prod@us-east-1: i-02b9b21c68ef30e2f: timescale-node-0.33
+     prod@us-east-1: i-026ac72383aa12589: timescale-node-0.33
+     prod@us-east-1: i-03026d75401766067: timescale-node-0.33
+     prod@us-east-1: i-0307a0b3bc795fabd: timescale-node-0.33
+     prod@us-east-1: i-03271c9fd41f8a32b: timescale-node-0.33
+     prod@us-east-1: i-0347d3e9f6a64f0be: timescale-node-0.33
+     prod@us-east-1: i-034bed10bb8f1d99d: timescale-node-0.33
+     prod@us-east-1: i-0354836deb8e0f879: timescale-node-0.33
+     prod@us-east-1: i-0349c3fd153a93a4d: timescale-node-0.33
+     prod@us-east-1: i-0365fb0d6f6222cfa: timescale-node-0.33
+     prod@us-east-1: i-036dd2376b61f521d: timescale-node-0.33
+     prod@us-east-1: i-03d78a54298e57886: timescale-node-0.33
+     prod@us-east-1: i-03e7328eb1dcced47: timescale-node-0.33
+     prod@us-east-1: i-040b8b218d4ea0290: timescale-node-0.33
+     prod@us-east-1: i-0459b2b0a71027c5c: timescale-node-0.33
+     prod@us-east-1: i-046e6022b6c142970: timescale-node-0.33
+     prod@us-east-1: i-047ff5973db1b0dea: timescale-node-0.33
+     prod@us-east-1: i-0436e53c95ccbea0b: timescale-node-0.33
+     prod@us-east-1: i-0485c380cd25dc398: timescale-node-0.33
+     prod@us-east-1: i-04b2965e6a6d004f1: timescale-node-0.33
+     prod@us-east-1: i-0493067e1ff17ddf9: timescale-node-0.33
+     prod@us-east-1: i-049783609222336bb: timescale-node-0.33
+     prod@us-east-1: i-04d61003c842aa2a4: timescale-node-0.33
+     prod@us-east-1: i-04f70e8b1fe2b77b1: timescale-node-0.33
+     prod@us-east-1: i-05080c8f723f6658c: timescale-node-0.33
+     prod@us-east-1: i-04f5fe721fd3593f0: timescale-node-0.33
+     prod@us-east-1: i-053f333204af1db3e: timescale-node-0.33
+     prod@us-east-1: i-052e52801079dbd6f: timescale-node-0.33
+     prod@us-east-1: i-05842b8b32952fc5c: timescale-node-0.33
+     prod@us-east-1: i-0594bb2800a43dc80: timescale-node-0.33
+     prod@us-east-1: i-05464442a96791da0: timescale-node-0.33
+     prod@us-east-1: i-05a15e21e14718849: timescale-node-0.33
+     prod@us-east-1: i-05af5bcf30f080611: timescale-node-0.33
+     prod@us-east-1: i-05d92153a1e5035f4: timescale-node-0.33
+     prod@us-east-1: i-0616906353f975a6d: timescale-node-0.33
+     prod@us-east-1: i-0604aa4dd5f60e515: timescale-node-0.33
+     prod@us-east-1: i-06042b28962053ee8: timescale-node-0.33
+     prod@us-east-1: i-062fb23447cc01978: timescale-node-0.33
+     prod@us-east-1: i-0667be91fe949e555: timescale-node-0.33
+     prod@us-east-1: i-0645e318ef4a46b2f: timescale-node-0.33
+     prod@us-east-1: i-0672a4e9b5ca7d16b: timescale-node-0.33
+     prod@us-east-1: i-0658081e865fcfa8c: timescale-node-0.33
+     prod@us-east-1: i-06888bb9c5cd7fb5a: timescale-node-0.33
+     prod@us-east-1: i-067fec21518fb920c: timescale-node-0.33
+     prod@us-east-1: i-06c4dc093a5c4e107: timescale-node-0.33
+     prod@us-east-1: i-06b78e1a7482452ff: timescale-node-0.33
+     prod@us-east-1: i-06944c39f83db343d: timescale-node-0.33
+     prod@us-east-1: i-06c55690f1f9e684c: timescale-node-0.33
+     prod@us-east-1: i-06d699d6fafc67335: timescale-node-0.33
+     prod@us-east-1: i-06cea72c428058c1d: timescale-node-0.33
+     prod@us-east-1: i-07235932650392088: timescale-node-0.33
+     prod@us-east-1: i-07414098477705678: timescale-node-0.33
+     prod@us-east-1: i-078219c6b87fd3565: timescale-node-0.33
+     prod@us-east-1: i-07431a586afdc056c: timescale-node-0.33
+     prod@us-east-1: i-0796e2ec02f90b904: timescale-node-0.33
+     prod@us-east-1: i-079dcdfe1a7d009a6: timescale-node-0.33
+     prod@us-east-1: i-082b4c8c72dc84988: timescale-node-0.33
+     prod@us-east-1: i-07af8c79c907a0756: timescale-node-0.33
+     prod@us-east-1: i-08a6ea7a2cb902989: timescale-node-0.33
+     prod@us-east-1: i-08b79d43d0405fcae: timescale-node-0.33
+     prod@us-east-1: i-0866771ab4563e880: timescale-node-0.33
+     prod@us-east-1: i-09018b1104b6a5930: timescale-node-0.33
+     prod@us-east-1: i-08f9fa76ede82268d: timescale-node-0.33
+     prod@us-east-1: i-092e94a490ff1df07: timescale-node-0.33
+     prod@us-east-1: i-0959b8932ecb19330: timescale-node-0.33
+     prod@us-east-1: i-09719cf84a3e1a0ce: timescale-node-0.33
+     prod@us-east-1: i-09a085ec5189dd50c: timescale-node-0.33
+     prod@us-east-1: i-09f11f1dc60866e71: timescale-node-0.33
+     prod@us-east-1: i-0a0c07c30307cf1bf: timescale-node-0.33
+     prod@us-east-1: i-0a39266dbe4a90754: timescale-node-0.33
+     prod@us-east-1: i-0a8bbb4d62559cc76: timescale-node-0.33
+     prod@us-east-1: i-0aaf9ae103cc9f2e7: timescale-node-0.33
+     prod@us-east-1: i-0ad89afbaf1e03069: timescale-node-0.33
+     prod@us-east-1: i-0ae4caa0c0785d1ed: timescale-node-0.33
+     prod@us-east-1: i-0b17e2a97669a7760: timescale-node-0.33
+     prod@us-east-1: i-0b1812a9fa5ef9a8e: timescale-node-0.33
+     prod@us-east-1: i-0b1e3e1e1c7a87b0d: timescale-node-0.33
+     prod@us-east-1: i-0b2b9c724211b90d2: timescale-node-0.33
+     prod@us-east-1: i-0b4b9ad4c9fd26122: timescale-node-0.33
+     prod@us-east-1: i-0b9d11301767f3f37: timescale-node-0.33
+     prod@us-east-1: i-0b5a1b51995755a50: timescale-node-0.33
+     prod@us-east-1: i-0b5804d71170def73: timescale-node-0.33
+     prod@us-east-1: i-0b80290940384f6fe: timescale-node-0.33
+     prod@us-east-1: i-0ba04c2a3bb597740: timescale-node-0.33
+     prod@us-east-1: i-0bcad9cb7d15d444a: timescale-node-0.33
+     prod@us-east-1: i-0bb768c371aa140ac: timescale-node-0.33
+     prod@us-east-1: i-0bdc83c6fc4214388: timescale-node-0.33
+     prod@us-east-1: i-0be99346f28d6f531: timescale-node-0.33
+     prod@us-east-1: i-0c1edc361ed00d670: timescale-node-0.33
+     prod@us-east-1: i-0c23baba571b3d0da: timescale-node-0.33
+     prod@us-east-1: i-0c28914bb015d2a35: timescale-node-0.33
+     prod@us-east-1: i-0c2df9e68b984d1d3: timescale-node-0.33
+     prod@us-east-1: i-0ca7146e44e44d390: timescale-node-0.33
+     prod@us-east-1: i-0ce2d11c4b0d19522: timescale-node-0.33
+     prod@us-east-1: i-0caa7575b4455db21: timescale-node-0.33
+     prod@us-east-1: i-0ceeffb0d72e03d8a: timescale-node-0.33
+     prod@us-east-1: i-0d0d4e1636e372b64: timescale-node-0.33
+     prod@us-east-1: i-0d2ed835df73a724c: timescale-node-0.33
+     prod@us-east-1: i-0d4d45a95e91ae8b1: timescale-node-0.33
+     prod@us-east-1: i-0d5cf6ab85d0145b6: timescale-node-0.33
+     prod@us-east-1: i-0dc3635f03349783d: timescale-node-0.33
+     prod@us-east-1: i-0d81ab74e976b9b8d: timescale-node-0.33
+     prod@us-east-1: i-0db8e6ed3cfae572e: timescale-node-0.33
+     prod@us-east-1: i-0df38405d21e4cc1d: timescale-node-0.33
+     prod@us-east-1: i-0e05614df36cf7842: timescale-node-0.33
+     prod@us-east-1: i-0e217ea9155571584: timescale-node-0.33
+     prod@us-east-1: i-0e162624461765a0a: timescale-node-0.33
+     prod@us-east-1: i-0e2b949679c3cc84f: timescale-node-0.33
+     prod@us-east-1: i-0e3670dd6b69182e0: timescale-node-0.33
+     prod@us-east-1: i-0e5204b2c616fcc7c: timescale-node-0.33
+     prod@us-east-1: i-0e872907741fe31a1: timescale-node-0.33
+     prod@us-east-1: i-0e6b7ed6013942bd5: timescale-node-0.33
+     prod@us-east-1: i-0ee7a470484f39634: timescale-node-0.33
+     prod@us-east-1: i-0f014ebe53256df52: timescale-node-0.33
+     prod@us-east-1: i-0f02922b52cb0fbd1: timescale-node-0.33
+     prod@us-east-1: i-0f04757ad1c42ca59: timescale-node-0.33
+     prod@us-east-1: i-0f1c5c89edd1d1bc5: timescale-node-0.33
+     prod@us-east-1: i-0f24d0e02dc2abe4c: timescale-node-0.33
+     prod@us-east-1: i-0f65fe444be22759e: timescale-node-0.33
+     prod@us-east-1: i-0f5ecfa03417d4e09: timescale-node-0.33
+     prod@us-east-1: i-0f806dc126653a71e: timescale-node-0.33
+     prod@us-east-1: i-0f8dcf38e97366e7e: timescale-node-0.33
+     prod@us-east-1: i-0f7a6198c4b9204ab: timescale-node-0.33
+     prod@us-east-1: i-0f9e722ece080477e: timescale-node-0.33
+     prod@us-east-1: i-0f82553c838ee45f6: timescale-node-0.33
+     prod@us-east-1: i-0fc12acc1cd0f53f5: timescale-node-0.33
+     prod@us-east-1: i-0fc245ddb51ba3e3f: timescale-node-0.33
+     prod@us-east-1: i-0faf3816682283cf2: timescale-node-0.33
+     prod@us-east-1: i-0fdce12bd6b2dec39: timescale-node-0.33
+     prod@us-east-1: i-0fe295620496c89f0: timescale-node-0.33
+     prod@us-east-1: error: i-0200a407ee713ca36/172.20.43.108: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-1: i-00381522f768f4420/172.20.36.25: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-1: i-03d44971149d67346/172.20.160.39: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-1: i-05bc35a9e2ca1f154/172.20.55.125: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-1: i-068f86b6eb68ab165/172.20.160.76: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-1: i-0913cfc4e66dca72a/172.20.41.46: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-1: i-0a8ff37fe16858284/172.20.33.35: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-1: i-0c859b1201c10b755/172.20.55.211: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-1: i-0cf5b946ba0a9fe58/172.20.44.91: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-1: i-0d43db8e8b11e8506/172.20.160.127: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-1: i-0ddb1f75c70a5cf83/172.20.34.219: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-1: i-0ead6474a69890ded/172.20.43.90: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-1: i-0fcda3d2375d48abd/172.20.53.249: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+time=2025-02-05T14:38:08.790-07:00 level=ERROR msg="command failed" tsctx=prod@us-east-1 error="exit status 1" duration=1m30.43s
+     prod@us-east-2: i-056be16305158c0cb: timescale-node-0.33
+     prod@us-east-2: i-0181dedf11304b30b: timescale-node-0.33
+     prod@us-east-2: i-0247f8a66a869982e: timescale-node-0.33
+     prod@us-east-2: i-02cca2c62adb15d73: timescale-node-0.33
+     prod@us-east-2: i-005b1448d8057fcba: timescale-node-0.33
+     prod@us-east-2: i-056acea507ba587bf: timescale-node-0.33
+     prod@us-east-2: i-05acc10ff8a3c5595: timescale-node-0.33
+     prod@us-east-2: i-05bff1e7c4f1c1764: timescale-node-0.33
+     prod@us-east-2: i-071237946a6103f65: timescale-node-0.33
+     prod@us-east-2: i-05e33fc361c22865a: timescale-node-0.33
+     prod@us-east-2: i-077e28748845d7e0e: timescale-node-0.33
+     prod@us-east-2: i-06ec5bb51e91d339e: timescale-node-0.33
+     prod@us-east-2: i-07ec43cab5c13f67b: timescale-node-0.33
+     prod@us-east-2: i-07f2a4656a1c6cd66: timescale-node-0.33
+     prod@us-east-2: i-0803767f7e30747cd: timescale-node-0.33
+     prod@us-east-2: i-0804c056d1a3cff4f: timescale-node-0.33
+     prod@us-east-2: i-087bacce57cdc9c02: timescale-node-0.33
+     prod@us-east-2: i-084be758894d644a9: timescale-node-0.33
+     prod@us-east-2: i-0860bdd3f44870877: timescale-node-0.33
+     prod@us-east-2: i-088ed32bc12777a61: timescale-node-0.33
+     prod@us-east-2: i-0b3699194fe57b82f: timescale-node-0.33
+     prod@us-east-2: i-095053039f47b104b: timescale-node-0.33
+     prod@us-east-2: i-08d6d3773996b21b1: timescale-node-0.33
+     prod@us-east-2: i-0a190c6310c15c5f2: timescale-node-0.33
+     prod@us-east-2: i-0b937db96f4975aa3: timescale-node-0.33
+     prod@us-east-2: i-0bfdc8122fa7abc46: timescale-node-0.33
+     prod@us-east-2: i-0c2c7ad1ae7f58601: timescale-node-0.33
+     prod@us-east-2: i-0b9c035096a7bfda3: timescale-node-0.33
+     prod@us-east-2: i-0cabe2b9fe922e060: timescale-node-0.33
+     prod@us-east-2: i-0e1a09edf4dbb8251: timescale-node-0.33
+     prod@us-east-2: i-0d670f09e7301f661: timescale-node-0.33
+     prod@us-east-2: i-0d76330c7e2638619: timescale-node-0.33
+     prod@us-east-2: i-0edba57f3f73e74a1: timescale-node-0.33
+     prod@us-east-2: i-0ef5292b7107d7fe6: timescale-node-0.33
+     prod@us-east-2: i-0f8ae237a908781ca: timescale-node-0.33
+     prod@us-east-2: i-0fb19f7d0c529b6fd: timescale-node-0.33
+     prod@us-east-2: i-0fe848d100bdc2ca9: timescale-node-0.33
+     prod@us-east-2: error: i-025322eb27a6b10fe/172.26.0.54: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-2: i-03a3345a5794634c7/172.26.1.24: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-2: i-0086322ccf2b1865f/172.26.0.27: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-2: i-0555e7b465cbced71/172.26.0.187: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-2: i-08d0c75fe7c165c94/172.26.0.44: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-2: i-0927ea5aef607876f/172.26.0.84: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-2: i-0ab7c87637ddaa431/172.26.1.108: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-2: i-0d7898f3ee8394aef/172.26.0.8: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-east-2: i-0f53d9ff255175b8e/172.26.0.220: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+time=2025-02-05T14:38:32.930-07:00 level=ERROR msg="command failed" tsctx=prod@us-east-2 error="exit status 1" duration=24.139s
+     prod@us-west-2: i-00346ece21b563090: timescale-node-0.33
+     prod@us-west-2: i-004417655ce7f715f: timescale-node-0.33
+     prod@us-west-2: i-028b1aae86e4ea3c2: timescale-node-0.33
+     prod@us-west-2: i-0049a312c7c146af2: timescale-node-0.33
+     prod@us-west-2: i-01cd2b7813e1d7594: timescale-node-0.33
+     prod@us-west-2: i-006c6e6bbafe00903: timescale-node-0.33
+     prod@us-west-2: i-02460ecd381092d36: timescale-node-0.33
+     prod@us-west-2: i-0090805fc413c8a8c: timescale-node-0.33
+     prod@us-west-2: i-032857f2f2d9e1397: timescale-node-0.33
+     prod@us-west-2: i-0381b3a0417af82a4: timescale-node-0.33
+     prod@us-west-2: i-03d2340940d06ecba: timescale-node-0.33
+     prod@us-west-2: i-03a6da7090378648b: timescale-node-0.33
+     prod@us-west-2: i-03f8676a16ec3f401: timescale-node-0.33
+     prod@us-west-2: i-04194bd7682d3f9cb: timescale-node-0.33
+     prod@us-west-2: i-050e62082dbe96b8d: timescale-node-0.33
+     prod@us-west-2: i-0584579b03b7e5d46: timescale-node-0.33
+     prod@us-west-2: i-04a411f486798946e: timescale-node-0.33
+     prod@us-west-2: i-058827ffe724b447a: timescale-node-0.33
+     prod@us-west-2: i-05aa9556f82e3df25: timescale-node-0.33
+     prod@us-west-2: i-065bb074de0308572: timescale-node-0.33
+     prod@us-west-2: i-069ccc781b7057162: timescale-node-0.33
+     prod@us-west-2: i-068e90573bc507d75: timescale-node-0.33
+     prod@us-west-2: i-05d53a55b44206707: timescale-node-0.33
+     prod@us-west-2: i-06b6008683c82a4cf: timescale-node-0.33
+     prod@us-west-2: i-083cbcb10d9a5906b: timescale-node-0.33
+     prod@us-west-2: i-079e02e6b8ae624d8: timescale-node-0.33
+     prod@us-west-2: i-084f44507d339d210: timescale-node-0.33
+     prod@us-west-2: i-0875434811d25fde9: timescale-node-0.33
+     prod@us-west-2: i-084f9704fa9a33d88: timescale-node-0.33
+     prod@us-west-2: i-08894ec5b4d10f049: timescale-node-0.33
+     prod@us-west-2: i-09ba1355941d34933: timescale-node-0.33
+     prod@us-west-2: i-08d2533a165844922: timescale-node-0.33
+     prod@us-west-2: i-09e4ddde0fce91db0: timescale-node-0.33
+     prod@us-west-2: i-0a368ac4657956e55: timescale-node-0.33
+     prod@us-west-2: i-09e97b07253153a6e: timescale-node-0.33
+     prod@us-west-2: i-0aba1a752e96770fc: timescale-node-0.33
+     prod@us-west-2: i-0ac060d1f4fa5eaf5: timescale-node-0.33
+     prod@us-west-2: i-0b423ba5502f93698: timescale-node-0.33
+     prod@us-west-2: i-0bfefe815bc777989: timescale-node-0.33
+     prod@us-west-2: i-0b6b36d466bccbf0d: timescale-node-0.33
+     prod@us-west-2: i-0b5d27f7f36262b69: timescale-node-0.33
+     prod@us-west-2: i-0c135f1dd65fdcc96: timescale-node-0.33
+     prod@us-west-2: i-0c4247997b6458991: timescale-node-0.33
+     prod@us-west-2: i-0c19fb4343370908d: timescale-node-0.33
+     prod@us-west-2: i-0c0deb8b78f0617e1: timescale-node-0.33
+     prod@us-west-2: i-0c8a38c30365b2c49: timescale-node-0.33
+     prod@us-west-2: i-0cc8e1d15c864c7c2: timescale-node-0.33
+     prod@us-west-2: i-0cd44e1bc0caca73d: timescale-node-0.33
+     prod@us-west-2: i-0dd63de7241428334: timescale-node-0.33
+     prod@us-west-2: i-0d30d96d3c3cbdba9: timescale-node-0.33
+     prod@us-west-2: i-0e2e2091b189e56bf: timescale-node-0.33
+     prod@us-west-2: i-0e1d09aa980eb8947: timescale-node-0.33
+     prod@us-west-2: i-0ce7ddbfec9c84212: timescale-node-0.33
+     prod@us-west-2: i-0e558ce0e1e5f5d12: timescale-node-0.33
+     prod@us-west-2: i-0f2ffeca4e8bb1ce5: timescale-node-0.33
+     prod@us-west-2: i-0f0442d582feb983e: timescale-node-0.33
+     prod@us-west-2: i-0ec3125b7a0cea20e: timescale-node-0.33
+     prod@us-west-2: i-0fd15d14be8b4c660: timescale-node-0.33
+     prod@us-west-2: i-0fd7cf0102c7d73a4: timescale-node-0.33
+     prod@us-west-2: i-0fb3223e4780f3639: timescale-node-0.33
+     prod@us-west-2: i-0ff0c782f6bf43e2a: timescale-node-0.33
+     prod@us-west-2: error: i-0083c0f7360ce7f4d/172.22.3.28: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-west-2: i-01463641723651c07/172.22.0.88: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-west-2: i-08b684a9e1f0fb7e6/172.22.3.239: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-west-2: i-0ab84cc451bf48d3b/172.22.2.30: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-west-2: i-0ae183594986238d5/172.22.2.252: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-west-2: i-0d807cdd2291ea526/172.22.0.174: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+     prod@us-west-2: i-0ea420b4b007a0260/172.22.0.214: ssh error: Process exited with status 1: dpkg-query: no packages found matching timescale-node
+time=2025-02-05T14:38:59.109-07:00 level=ERROR msg="command failed" tsctx=prod@us-west-2 error="exit status 1" duration=26.179s
+error: prod@eu-west-2: failed to wait: exit status 1
+prod@sa-east-1: failed to wait: exit status 1
+prod@ap-southeast-1: failed to wait: exit status 1
+prod@ap-southeast-2: failed to wait: exit status 1
+prod@eu-central-1: failed to wait: exit status 1
+prod@eu-west-1: failed to wait: exit status 1
+prod@us-east-1: failed to wait: exit status 1
+prod@us-east-2: failed to wait: exit status 1
+prod@us-west-2: failed to wait: exit status 1

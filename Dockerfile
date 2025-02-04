@@ -39,6 +39,9 @@ SHELL ["/bin/bash", "-eu", "-o", "pipefail", "-c"]
 ARG PG_VERSIONS="17 16 15 14 13"
 ARG PG_MAJOR=17
 
+ARG NOAI
+ARG SLIM
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 # We install some build dependencies and mark the installed packages as auto-installed,

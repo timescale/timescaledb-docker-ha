@@ -5,23 +5,42 @@ SHELL = bash
 
 all: help
 
+# setting SLIM changes a bit about what we build, removing some larger things
+SLIM ?=
+
 PG_MAJOR?=17
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
 PG_VERSIONS?=
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
-PGAI_VERSION?=extension-0.8.0
-PGVECTORSCALE_VERSIONS?=all
-POSTGIS_VERSIONS?=3
-PG_AUTH_MON?=v3.0
-PG_STAT_MONITOR?=2.1.0
-PG_LOGERRORS?=v2.1.3
-PGVECTO_RS?=0.4.0
-TIMESCALEDB_VERSIONS?=all
-TOOLKIT_VERSIONS?=all
-PGBOUNCER_EXPORTER_VERSION?=0.9.0
-PGBACKREST_EXPORTER_VERSION?=0.18.0
+ifneq ($(SLIM),)
+	# Slim:
+	PGAI_VERSION?=extension-0.8.0
+	PGVECTORSCALE_VERSIONS?=all
+	POSTGIS_VERSIONS?=3
+	PG_AUTH_MON?=v3.0
+	PG_STAT_MONITOR?=2.1.0
+	PG_LOGERRORS?=v2.1.3
+	PGVECTO_RS?=
+	TIMESCALEDB_VERSIONS?=all
+	TOOLKIT_VERSIONS?=all
+	PGBOUNCER_EXPORTER_VERSION?=0.9.0
+	PGBACKREST_EXPORTER_VERSION?=0.18.0
+else
+	# Regular:
+	PGAI_VERSION?=extension-0.8.0
+	PGVECTORSCALE_VERSIONS?=all
+	POSTGIS_VERSIONS?=3
+	PG_AUTH_MON?=v3.0
+	PG_STAT_MONITOR?=2.1.0
+	PG_LOGERRORS?=v2.1.3
+	PGVECTO_RS?=0.4.0
+	TIMESCALEDB_VERSIONS?=all
+	TOOLKIT_VERSIONS?=all
+	PGBOUNCER_EXPORTER_VERSION?=0.9.0
+	PGBACKREST_EXPORTER_VERSION?=0.18.0
+endif
 
 # This is used to build the docker --platform, so pick amd64 or arm64
 PLATFORM?=amd64
@@ -56,6 +75,12 @@ ifeq ($(ALL_VERSIONS),true)
   endif
 else
   PG_VERSIONS := $(PG_MAJOR)
+endif
+
+ifneq ($(SLIM),)
+	DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-slim
+	PG_MAJOR := 17
+	PG_VERSIONS := 17 16
 endif
 
 ifeq ($(OSS_ONLY),true)
@@ -141,6 +166,7 @@ DOCKER_BUILD_COMMAND=docker build \
 					 --platform "linux/$(PLATFORM)" \
 					 --pull \
 					 --progress=plain \
+					 --build-arg SLIM="$(SLIM)" \
 					 --build-arg DOCKER_FROM="$(DOCKER_FROM)" \
 					 --build-arg ALLOW_ADDING_EXTENSIONS="$(ALLOW_ADDING_EXTENSIONS)" \
 					 --build-arg GITHUB_DOCKERLIB_POSTGRES_REF="$(GITHUB_DOCKERLIB_POSTGRES_REF)" \

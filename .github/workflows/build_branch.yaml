@@ -17,6 +17,7 @@ env:
   DOCKER_REGISTRY: docker.io
   PG_MAJOR: 17
   ALL_VERSIONS: "true"
+  SLIM: "true"
   OSS_ONLY: "false"
 
 jobs:
