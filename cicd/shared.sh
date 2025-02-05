@@ -271,7 +271,7 @@ check_others() {
                 record_ext_version "$extname" "$pg" "unknown"
             else
                 ls "$lib"
-                error "pg$pg extension $extname not found: $status (and not at $lib/${extname}.so"
+                error "pg$pg extension $extname not found: $status (and not at $lib/${extname}.so)"
             fi
         fi
     done

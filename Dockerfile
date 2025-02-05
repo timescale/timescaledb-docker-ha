@@ -207,7 +207,8 @@ RUN <<EOT
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger postgresql-${pg}-pgpcre \
             postgresql-${pg}-pglogical postgresql-${pg}-wal2json postgresql-${pg}-pgq3 postgresql-${pg}-pg-qualstats \
             postgresql-${pg}-pgaudit postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-orafce \
-            postgresql-${pg}-pgvector postgresql-${pg}-h3 postgresql-${pg}-rum"; \
+            postgresql-${pg}-h3 postgresql-${pg}-rum"; \
+        [ -z "$NOAI" ] && packages="$packages postgresql-${pg}-pgvector"
     done; \
     apt-get install -y $packages
 EOT
@@ -417,10 +418,14 @@ RUN OSS_ONLY="${OSS_ONLY}" \
         /build/scripts/install_extensions rust
 
 ARG PGVECTORSCALE_VERSIONS
-RUN OSS_ONLY="${OSS_ONLY}" \
-    RUST_RELEASE="${RUST_RELEASE}" \
-    PGVECTORSCALE_VERSIONS="${PGVECTORSCALE_VERSIONS}" \
-    /build/scripts/install_extensions pgvectorscale
+RUN <<EOT
+    if [ -n "$PGVECTORSCALE_VERSIONS" ]; then
+        OSS_ONLY="${OSS_ONLY}" \
+        RUST_RELEASE="${RUST_RELEASE}" \
+        PGVECTORSCALE_VERSIONS="${PGVECTORSCALE_VERSIONS}" \
+        /build/scripts/install_extensions pgvectorscale
+    fi
+EOT
 
 USER root
 
