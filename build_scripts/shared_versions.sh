@@ -2,7 +2,8 @@
 
 # Check to make sure these extensions are available in all pg versions
 PG_WANTED_EXTENSIONS="pglogical wal2json pgextwlist pgrouting pg-stat-kcache cron pldebugger hypopg unit repack hll \
-    pgpcre h3 h3_postgis orafce ip4r pg_uuidv7 pgvector pgaudit pgsodium"
+    pgpcre h3 h3_postgis orafce ip4r pg_uuidv7 pgaudit pgsodium"
+[ -z "${NOAI}" ] && PG_WANTED_EXTENSIONS="$PG_WANTED_EXTENSIONS pgvector"
 
 WANTED_PACKAGES="patroni pgbackrest timescaledb-tools"
 

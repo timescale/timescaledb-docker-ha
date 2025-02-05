@@ -8,6 +8,9 @@ all: help
 # setting SLIM changes a bit about what we build, removing some larger things
 SLIM ?=
 
+# NOAI doesn't include the ai packages since they are quite large
+NOAI ?=
+
 PG_MAJOR?=17
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
@@ -40,6 +43,12 @@ else
 	TOOLKIT_VERSIONS?=all
 	PGBOUNCER_EXPORTER_VERSION?=0.9.0
 	PGBACKREST_EXPORTER_VERSION?=0.18.0
+endif
+
+ifneq ($(NOAI),)
+	PGAI_VERSION=
+	PGVECTORSCALE_VERSIONS=
+	PGVECTO_RS=
 endif
 
 # This is used to build the docker --platform, so pick amd64 or arm64
@@ -81,6 +90,10 @@ ifneq ($(SLIM),)
 	DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-slim
 	PG_MAJOR := 17
 	PG_VERSIONS := 17 16
+endif
+
+ifneq ($(NOAI),)
+	DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-noai
 endif
 
 ifeq ($(OSS_ONLY),true)
@@ -167,6 +180,7 @@ DOCKER_BUILD_COMMAND=docker build \
 					 --pull \
 					 --progress=plain \
 					 --build-arg SLIM="$(SLIM)" \
+					 --build-arg NOAI="$(NOAI)" \
 					 --build-arg DOCKER_FROM="$(DOCKER_FROM)" \
 					 --build-arg ALLOW_ADDING_EXTENSIONS="$(ALLOW_ADDING_EXTENSIONS)" \
 					 --build-arg GITHUB_DOCKERLIB_POSTGRES_REF="$(GITHUB_DOCKERLIB_POSTGRES_REF)" \
@@ -353,6 +367,8 @@ check: # check images to see if they have all the requested content
 			-d \
 			--name "$$check_name" \
 			-e PGDATA=/tmp/pgdata \
+			-e SLIM="$(SLIM)" \
+			-e NOAI="$(NOAI)" \
 			--user=postgres \
 			"$(DOCKER_RELEASE_URL)" sleep 300
 		docker exec -u root "$$check_name" mkdir -p /cicd/scripts
@@ -380,6 +396,8 @@ check-sha: # check a specific git commit-based image
 		-d \
 		--name "$$check_name" \
 		-e PGDATA=/tmp/pgdata \
+		-e SLIM="$(SLIM)" \
+		-e NOAI="$(NOAI)" \
 		--user=postgres \
 		"$(CICD_ARCH_URL)" sleep 300
 	docker exec -u root "$$check_name" mkdir -p /cicd/scripts
