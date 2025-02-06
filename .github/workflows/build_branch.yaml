@@ -16,9 +16,9 @@ env:
   DOCKER_REPOSITORY: timescaledev/timescaledb-ha
   DOCKER_REGISTRY: docker.io
   PG_MAJOR: 17
-  ALL_VERSIONS: "true"
+  ALL_VERSIONS: "false"
   SLIM: "true"
-  NOAI: "true"
+  NOAI: "false"
   OSS_ONLY: "false"
 
 jobs:
