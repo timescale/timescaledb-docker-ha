@@ -16,6 +16,14 @@ PG_MAJOR?=17
 # specifying multiple versions will allow things like pg_upgrade etc to work.
 PG_VERSIONS?=
 
+ALL_VERSIONS?=false
+
+# This is used to build the docker --platform, so pick amd64 or arm64
+PLATFORM?=amd64
+
+DOCKER_TAG_POSTFIX?=
+OSS_ONLY?=false
+
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 ifneq ($(SLIM),)
 	# Slim:
@@ -30,6 +38,7 @@ ifneq ($(SLIM),)
 	TOOLKIT_VERSIONS?=all
 	PGBOUNCER_EXPORTER_VERSION?=0.9.0
 	PGBACKREST_EXPORTER_VERSION?=0.18.0
+	ALL_VERSIONS := false
 else
 	# Regular:
 	PGAI_VERSION?=extension-0.8.0
@@ -51,12 +60,14 @@ ifneq ($(NOAI),)
 	PGVECTO_RS=
 endif
 
-# This is used to build the docker --platform, so pick amd64 or arm64
-PLATFORM?=amd64
+ifneq ($(SLIM),)
+	DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-slim
+endif
 
-DOCKER_TAG_POSTFIX?=
-ALL_VERSIONS?=false
-OSS_ONLY?=false
+ifneq ($(NOAI),)
+	DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-noai
+endif
+
 
 # If you're using ephemeral runners, then we want to use the cache, otherwise we don't want caching so that
 # we always get updated upstream packages
@@ -84,16 +95,6 @@ ifeq ($(ALL_VERSIONS),true)
   endif
 else
   PG_VERSIONS := $(PG_MAJOR)
-endif
-
-ifneq ($(SLIM),)
-	DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-slim
-	PG_MAJOR := 17
-	PG_VERSIONS := 17 16
-endif
-
-ifneq ($(NOAI),)
-	DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-noai
 endif
 
 ifeq ($(OSS_ONLY),true)
