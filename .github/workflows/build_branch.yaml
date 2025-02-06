@@ -8,6 +8,21 @@ on:
       - ".github/workflows/publish*.yaml"
       - "*.md"
 
+  workflow_dispatch:
+    inputs:
+      noai:
+        required: false
+        type: string
+        # WIP: should be empty normally, "true" only for this PR
+        default: "true"
+        description: set to any none-empty value to build without AI packages
+      slim:
+        required: false
+        type: string
+        # WIP: should be empty normally, "true" only for this PR
+        default: "true"
+        description: set to any none-empty value to build a smaller image
+
 concurrency:
   group: build-branch-${{ github.ref }}
   cancel-in-progress: true
@@ -17,8 +32,8 @@ env:
   DOCKER_REGISTRY: docker.io
   PG_MAJOR: 17
   ALL_VERSIONS: "true"
-  SLIM: "true"
-  NOAI: "true"
+  SLIM: ${{ inputs.slim }}
+  NOAI: ${{ inputs.noai }}
   OSS_ONLY: "false"
 
 jobs:
