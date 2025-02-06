@@ -25,20 +25,19 @@ DOCKER_TAG_POSTFIX?=
 OSS_ONLY?=false
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
-ifneq ($(SLIM),)
+ifneq ($(strip $(SLIM)),)
 	# Slim:
 	PGAI_VERSION?=extension-0.8.0
-	PGVECTORSCALE_VERSIONS?=all
+	PGVECTORSCALE_VERSIONS?=latest
 	POSTGIS_VERSIONS?=
 	PG_AUTH_MON?=v3.0
 	PG_STAT_MONITOR?=2.1.0
 	PG_LOGERRORS?=v2.1.3
 	PGVECTO_RS?=
-	TIMESCALEDB_VERSIONS?=all
-	TOOLKIT_VERSIONS?=all
+	TIMESCALEDB_VERSIONS?=latest
+	TOOLKIT_VERSIONS?=latest
 	PGBOUNCER_EXPORTER_VERSION?=0.9.0
 	PGBACKREST_EXPORTER_VERSION?=0.18.0
-	ALL_VERSIONS := false
 else
 	# Regular:
 	PGAI_VERSION?=extension-0.8.0
@@ -54,17 +53,17 @@ else
 	PGBACKREST_EXPORTER_VERSION?=0.18.0
 endif
 
-ifneq ($(NOAI),)
+ifneq ($(strip $(NOAI)),)
 	PGAI_VERSION=
 	PGVECTORSCALE_VERSIONS=
 	PGVECTO_RS=
 endif
 
-ifneq ($(SLIM),)
+ifneq ($(strip $(SLIM)),)
 	DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-slim
 endif
 
-ifneq ($(NOAI),)
+ifneq ($(strip $(NOAI)),)
 	DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-noai
 endif
 
@@ -78,26 +77,27 @@ else
   DOCKER_CACHE := --no-cache
 endif
 
-ifeq ($(ALL_VERSIONS),true)
+# if SLIM is set at all, it'll break this ifeq and end up in the else clause
+ifeq ($(strip $(ALL_VERSIONS))-$(strip $(SLIM)),true-)
   DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-all
-  ifeq ($(PG_MAJOR),17)
+  ifeq ($(strip $(PG_MAJOR)),17)
     PG_VERSIONS := 17 16 15 14 13 12
-  else ifeq ($(PG_MAJOR),16)
+  else ifeq ($(strip $(PG_MAJOR)),16)
     PG_VERSIONS := 16 15 14 13 12
-  else ifeq ($(PG_MAJOR),15)
+  else ifeq ($(strip $(PG_MAJOR)),15)
     PG_VERSIONS := 15 14 13 12
-  else ifeq ($(PG_MAJOR),14)
+  else ifeq ($(strip $(PG_MAJOR)),14)
     PG_VERSIONS := 14 13 12
-  else ifeq ($(PG_MAJOR),13)
+  else ifeq ($(strip $(PG_MAJOR)),13)
     PG_VERSIONS := 13 12
-  else ifeq ($(PG_MAJOR),12)
+  else ifeq ($(strip $(PG_MAJOR)),12)
     PG_VERSIONS := 12
   endif
 else
   PG_VERSIONS := $(PG_MAJOR)
 endif
 
-ifeq ($(OSS_ONLY),true)
+ifeq ($(strip $(OSS_ONLY)),true)
   DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-oss
 endif
 
@@ -146,7 +146,7 @@ VAR_TSMAJOR="$$(awk -F '[.=]' '/timescaledb.version=/ {print $$3 "." $$4}' $(VER
 # We will then attach this information as OCI labels to the final Docker image
 # docker buildx build does a push to export it, so it doesn't exist in the regular local registry yet
 VERSION_TAG?=
-ifeq ($(VERSION_TAG),)
+ifeq ($(strip $(VERSION_TAG)),)
 VERSION_TAG := pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-builder-$(PLATFORM)
 $(VERSION_INFO): builder
 endif
@@ -237,7 +237,7 @@ latest: build
 prune: # docker system prune -af
 	docker system prune -af
 
-ifeq ($(USE_DOCKER_CACHE),false)
+ifeq ($(strip $(USE_DOCKER_CACHE)),false)
 builder: prune
 endif
 

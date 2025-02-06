@@ -32,8 +32,11 @@ env:
   DOCKER_REGISTRY: docker.io
   PG_MAJOR: 17
   ALL_VERSIONS: "true"
-  SLIM: ${{ inputs.slim }}
-  NOAI: ${{ inputs.noai }}
+  # these are commented out until this is merged and the build branch workflow is available to manually dispatch
+  #SLIM: ${{ inputs.slim }}
+  #NOAI: ${{ inputs.noai }}
+  SLIM: true
+  NOAI: true
   OSS_ONLY: "false"
 
 jobs:
