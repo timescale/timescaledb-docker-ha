@@ -112,7 +112,7 @@ EOT
 # pgbackrest-exporter
 ARG PGBACKREST_EXPORTER_VERSION="0.18.0"
 RUN <<EOT
-    if [ -n "${PGBACKREST_EXPORTER_VERSION}"]; then
+    if [ -n "${PGBACKREST_EXPORTER_VERSION}" ]; then
       arch="$(arch)"; [ "$arch" = aarch64 ] && arch=arm64; pkg="pgbackrest_exporter_${PGBACKREST_EXPORTER_VERSION}_linux_${arch}"
       curl --silent \
           --location \
