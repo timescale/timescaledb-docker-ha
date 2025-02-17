@@ -89,19 +89,22 @@ EOT
 # The following tools are required for some of the processes we (TimescaleDB) regularly
 # run inside the containers that use this Docker Image
 # awscli is useful in many situations, for example, to list backup buckets etc
+ARG TOOLS
 RUN <<EOT
     apt-get update
     apt-get upgrade -y
-    apt-get install -y \
-        less jq strace procps awscli vim-tiny gdb gdbserver dumb-init daemontools \
-        postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop libnss-wrapper gosu \
-        pg-activity lsof htop python3 python3-pip
-    curl -Lso /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_"$(dpkg --print-architecture)"
-    chmod 755 /usr/local/bin/yq
+    apt-get install -y python3 python3-pip
+    if [ -n "${TOOLS}" ]; then
+      apt-get install -y \
+          less jq strace procps awscli vim-tiny gdb gdbserver dumb-init daemontools \
+          postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop libnss-wrapper gosu \
+          pg-activity lsof htop
+      curl -Lso /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_"$(dpkg --print-architecture)"
+      chmod 755 /usr/local/bin/yq
 
-    # forbid creation of a main cluster when package is installed
-    sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
-
+      # forbid creation of a main cluster when package is installed
+      sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
+    fi
     # using uv with pgai reduces size of dependencies
     python3 -m pip install uv
 EOT
@@ -109,28 +112,32 @@ EOT
 # pgbackrest-exporter
 ARG PGBACKREST_EXPORTER_VERSION="0.18.0"
 RUN <<EOT
-    arch="$(arch)"; [ "$arch" = aarch64 ] && arch=arm64; pkg="pgbackrest_exporter_${PGBACKREST_EXPORTER_VERSION}_linux_${arch}"
-    curl --silent \
-        --location \
-        --output /tmp/pkg.deb \
-        "https://github.com/woblerr/pgbackrest_exporter/releases/download/v${PGBACKREST_EXPORTER_VERSION}/${pkg}.deb"
-    cd /tmp
-    dpkg -i ./pkg.deb
-    rm -rfv /tmp/pkg.deb
+    if [ -n "${PGBACKREST_EXPORTER_VERSION}"]; then
+      arch="$(arch)"; [ "$arch" = aarch64 ] && arch=arm64; pkg="pgbackrest_exporter_${PGBACKREST_EXPORTER_VERSION}_linux_${arch}"
+      curl --silent \
+          --location \
+          --output /tmp/pkg.deb \
+          "https://github.com/woblerr/pgbackrest_exporter/releases/download/v${PGBACKREST_EXPORTER_VERSION}/${pkg}.deb"
+      cd /tmp
+      dpkg -i ./pkg.deb
+      rm -rfv /tmp/pkg.deb
+    fi
 EOT
 
 # pgbouncer-exporter
 ARG PGBOUNCER_EXPORTER_VERSION="0.9.0"
 RUN <<EOT
-    pkg="pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-$(dpkg --print-architecture)"
-    curl --silent \
-        --location \
-        --output /tmp/pkg.tgz \
-        "https://github.com/prometheus-community/pgbouncer_exporter/releases/download/v${PGBOUNCER_EXPORTER_VERSION}/${pkg}.tar.gz"
-    cd /tmp
-    tar xvzf /tmp/pkg.tgz "$pkg"/pgbouncer_exporter
-    mv -v /tmp/"$pkg"/pgbouncer_exporter /usr/local/bin/pgbouncer_exporter
-    rm -rfv /tmp/pkg.tgz /tmp/"$pkg"
+    if [ -n "${PGBOUNCER_EXPORTER_VERSION}" ]; then
+      pkg="pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-$(dpkg --print-architecture)"
+      curl --silent \
+          --location \
+          --output /tmp/pkg.tgz \
+          "https://github.com/prometheus-community/pgbouncer_exporter/releases/download/v${PGBOUNCER_EXPORTER_VERSION}/${pkg}.tar.gz"
+      cd /tmp
+      tar xvzf /tmp/pkg.tgz "$pkg"/pgbouncer_exporter
+      mv -v /tmp/"$pkg"/pgbouncer_exporter /usr/local/bin/pgbouncer_exporter
+      rm -rfv /tmp/pkg.tgz /tmp/"$pkg"
+    fi
 EOT
 
 # The next 2 instructions (ENV + RUN) are directly copied from https://github.com/rust-lang/docker-rust/blob/master/stable/bullseye/Dockerfile
@@ -259,15 +266,22 @@ EOT
 
 COPY --chown=postgres:postgres build_scripts /build/scripts/
 
+ARG PATRONI
 RUN <<EOT
-    # Some Patroni prerequisites
-    # This need to be done after the PostgreSQL packages have been installed,
-    # to ensure we have the preferred libpq installations etc.
-    apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj patroni
-
-    # Barman cloud
-    # Required for CloudNativePG compatibility
-    pip3 install --no-cache-dir 'barman[cloud,azure,snappy,google]'
+    if [ -n "${PATRONI}" ]; then
+      # Some Patroni prerequisites
+      # This need to be done after the PostgreSQL packages have been installed,
+      # to ensure we have the preferred libpq installations etc.
+      apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj patroni
+    fi
+EOT
+ARG BARMAN
+RUN <<EOT
+    if [ -n "${BARMAN}" ]; then
+      # Barman cloud
+      # Required for CloudNativePG compatibility
+      pip3 install --no-cache-dir 'barman[cloud,azure,snappy,google]'
+    fi
 
     apt-get install -y timescaledb-tools
 EOT
