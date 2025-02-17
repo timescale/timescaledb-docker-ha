@@ -93,11 +93,11 @@ ARG TOOLS
 RUN <<EOT
     apt-get update
     apt-get upgrade -y
-    apt-get install -y python3 python3-pip
+    apt-get install -y python3 python3-pip postgresql-common pgbouncer pgbackrest
     if [ -n "${TOOLS}" ]; then
       apt-get install -y \
           less jq strace procps awscli vim-tiny gdb gdbserver dumb-init daemontools \
-          postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop libnss-wrapper gosu \
+          lz4 libpq-dev libpq5 pgtop libnss-wrapper gosu \
           pg-activity lsof htop
       # forbid creation of a main cluster when package is installed
       sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
