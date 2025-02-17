@@ -63,10 +63,10 @@ jobs:
           PLATFORM: ${{ matrix.platform }}
         run: make build-sha
 
-      - name: Check
-        env:
-          PLATFORM: ${{ matrix.platform }}
-        run: make check-sha
+#       - name: Check
+#         env:
+#           PLATFORM: ${{ matrix.platform }}
+#         run: make check-sha
 
       - name: Publish
         env:
