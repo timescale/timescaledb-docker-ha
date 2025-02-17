@@ -89,7 +89,7 @@ endif
 ifneq ($(SLIM),)
 	DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-slim
 	PG_MAJOR := 17
-	PG_VERSIONS := 17 16
+	PG_VERSIONS := 17
 endif
 
 ifneq ($(NOAI),)
