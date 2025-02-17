@@ -19,7 +19,7 @@ PG_VERSIONS?=
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 ifneq ($(SLIM),)
 	# Slim:
-	PGAI_VERSION?=extension-0.8.0
+	PGAI_VERSION?=main
 	PGVECTORSCALE_VERSIONS?=all
 	POSTGIS_VERSIONS?=
 	PG_AUTH_MON?=v3.0
