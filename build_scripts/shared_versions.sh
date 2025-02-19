@@ -1,14 +1,15 @@
 #!/bin/bash
 
 # Check to make sure these extensions are available in all pg versions
-PG_WANTED_EXTENSIONS="pglogical wal2json pgextwlist pgrouting pg-stat-kcache cron pldebugger hypopg unit repack hll \
-    pgpcre h3 h3_postgis orafce ip4r pg_uuidv7 pgaudit pgsodium"
-[ -z "${NOAI}" ] && PG_WANTED_EXTENSIONS="$PG_WANTED_EXTENSIONS pgvector"
+PG_WANTED_EXTENSIONS="plperl"
+[ "${SLIM}" != "true" ] && PG_WANTED_EXTENSIONS="$PG_WANTED_EXTENSIONS pgaudit ip4r pglogical wal2json pgextwlist pgrouting pg-stat-kcache cron pldebugger hypopg unit repack hll h3 h3_postgis orafce pg_uuidv7 pgsodium pgpcre"
+[ "${NOAI}" != "true" ] && PG_WANTED_EXTENSIONS="$PG_WANTED_EXTENSIONS pgvector"
 
-WANTED_PACKAGES="patroni pgbackrest timescaledb-tools"
+WANTED_PACKAGES="timescaledb-tools"
+[ "${SLIM}" != "true" ] && WANTED_PACKAGES="$WANTED_PACKAGES patroni pgbackrest"
 
-WANTED_FILES="/usr/bin/timescaledb-tune /usr/local/bin/yq /usr/local/bin/pgbouncer_exporter \
-    /usr/bin/pgbackrest_exporter"
+WANTED_FILES="/usr/bin/timescaledb-tune /usr/local/bin/yq"
+[ "${SLIM}" != "true" ] && WANTED_FILES="$WANTED_FILES  /usr/local/bin/pgbouncer_exporter /usr/bin/pgbackrest_exporter"
 
 # These functions return "" if the combination of architecture, pg version, and package version are supported,
 # otherwise it returns a reason string. Both the cicd/install_checks, and the install_extensions scripts use

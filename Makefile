@@ -28,6 +28,8 @@ ifneq ($(SLIM),)
 	PGVECTO_RS?=
 	TIMESCALEDB_VERSIONS?=latest
 	TOOLKIT_VERSIONS?=all
+	PGBOUNCER?=
+	PGBACKREST?=
 	PGBOUNCER_EXPORTER_VERSION?=
 	PGBACKREST_EXPORTER_VERSION?=
 	PATRONI?=
@@ -44,6 +46,8 @@ else
 	PGVECTO_RS?=0.4.0
 	TIMESCALEDB_VERSIONS?=all
 	TOOLKIT_VERSIONS?=all
+	PGBOUNCER?=true
+	PGBACKREST?=true
 	PGBOUNCER_EXPORTER_VERSION?=0.9.0
 	PGBACKREST_EXPORTER_VERSION?=0.18.0
 	PATRONI?=true
@@ -92,13 +96,12 @@ else
   PG_VERSIONS := $(PG_MAJOR)
 endif
 
-ifneq ($(SLIM),)
+ifeq ($(SLIM),true)
 	DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-slim
-	PG_MAJOR := 17
-	PG_VERSIONS := 17
+	PG_VERSIONS := $(PG_MAJOR)
 endif
 
-ifneq ($(NOAI),)
+ifeq ($(NOAI),true)
 	DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-noai
 endif
 
@@ -208,6 +211,8 @@ DOCKER_BUILD_COMMAND=docker build \
 					 --build-arg TOOLS="$(TOOLS)" \
 					 --build-arg PATRONI="$(PATRONI)" \
 					 --build-arg BARMAN="$(BARMAN)" \
+					 --build-arg PGBOUNCER="$(PGBOUNCER)" \
+					 --build-arg PGBACKREST="$(PGBACKREST)" \
 					 --build-arg RELEASE_URL="$(DOCKER_RELEASE_URL)" \
 					 --build-arg BUILDER_URL="$(DOCKER_BUILDER_URL)" \
 					 --build-arg PGBOUNCER_EXPORTER_VERSION=$(PGBOUNCER_EXPORTER_VERSION) \
