@@ -64,9 +64,11 @@ RUN chmod 777 /build
 WORKDIR /build/
 
 RUN curl -Ls https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor --output /usr/share/keyrings/postgresql.keyring
-RUN for t in deb deb-src; do \
-        echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -s -c)-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
-    done
+RUN set -eux; \
+    for t in deb deb-src; do \
+        echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] https://apt.postgresql.org/pub/repos/apt/ $(lsb_release -s -c)-pgdg main" >> /etc/apt/sources.list.d/pgdg.list; \
+        echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] https://apt-archive.postgresql.org/pub/repos/apt $(lsb_release -s -c)-pgdg-archive main" >> /etc/apt/sources.list.d/pgdg.list; \
+    done 
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
 RUN curl -Ls https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor --output /usr/share/keyrings/timescaledb.keyring
@@ -164,10 +166,12 @@ RUN apt-mark auto ${BUILD_PACKAGES}
 # do something more drastic.
 RUN apt-get install -y --allow-downgrades tzdata="2022a-*"
 
+COPY --chown=postgres:postgres build_scripts /build/scripts/
+
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
 RUN set -eux; \
     for pg in ${PG_VERSIONS}; do \
-        mk-build-deps postgresql-${pg} && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
+        mk-build-deps "postgresql-${pg}" && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
     done
 
 # TODO: There's currently a build-dependency problem related to tzdata, remove this when it's resolved
@@ -176,8 +180,9 @@ RUN apt-get install -y tzdata
 RUN set -eux; \
     packages=""; \
     for pg in ${PG_VERSIONS}; do \
-        packages="$packages postgresql-${pg} postgresql-server-dev-${pg} postgresql-${pg}-dbgsym \
-            postgresql-plpython3-${pg} postgresql-plperl-${pg} postgresql-${pg}-pgextwlist postgresql-${pg}-hll \
+        export FULL_VERSION="$(/build/scripts/pg_version.sh ${pg})*" ; \
+        packages="$packages postgresql-client-${pg}=${FULL_VERSION} postgresql-${pg}=${FULL_VERSION} postgresql-server-dev-${pg}=${FULL_VERSION} postgresql-${pg}-dbgsym=${FULL_VERSION} \
+            postgresql-plpython3-${pg}=${FULL_VERSION} postgresql-plperl-${pg}=${FULL_VERSION} postgresql-${pg}-pgextwlist postgresql-${pg}-hll \
             postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger postgresql-${pg}-pgpcre \
             postgresql-${pg}-pglogical postgresql-${pg}-wal2json postgresql-${pg}-pgq3 postgresql-${pg}-pg-qualstats \
@@ -241,8 +246,6 @@ RUN set -ex; \
             fi \
         done; \
     fi
-
-COPY --chown=postgres:postgres build_scripts /build/scripts/
 
 # Some Patroni prerequisites
 # This need to be done after the PostgreSQL packages have been installed,
