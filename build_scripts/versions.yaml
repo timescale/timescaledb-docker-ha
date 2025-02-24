@@ -23,14 +23,15 @@ default-pg-max: 15
 default-cargo-pgx: 0.6.1
 default-arch: both
 
-## this contains the specific pg versions that will be installed.
-## from https://www.postgresql.org/about/news/postgresql-172-166-1510-1415-1318-and-1222-released-2965/
+## This session contains the specific pg versions that will be installed.
+## Please notice that pg 12 is EOL now and has no more updates.
+## from https://www.postgresql.org/about/news/postgresql-174-168-1512-1417-and-1320-released-3018/
 postgres_versions:
-  17: 17.2
-  16: 16.6
-  15: 15.10
-  14: 14.15
-  13: 13.18
+  17: 17.4
+  16: 16.8
+  15: 15.12
+  14: 14.17
+  13: 13.20
   12: 12.22
 
 timescaledb:
