@@ -18,7 +18,7 @@ env:
   PG_MAJOR: 17
   ALL_VERSIONS: "false"
   SLIM: "true"
-  NOAI: ""
+  NOAI: "true"
   OSS_ONLY: "false"
 
 jobs:
