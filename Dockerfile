@@ -209,7 +209,7 @@ RUN set -ex; \
         cd /build/pgai; \
         for pg in ${PG_VERSIONS}; do \
             if [ "$pg" -gt 15 ]; then \
-                PG_BIN=$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir) PG_MAJOR=${pg} ./projects/extension/build.py install; \
+                PG_BIN=$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir) PG_MAJOR=${pg} ./projects/extension/build.py install all; \
             fi; \
         done; \
     fi
