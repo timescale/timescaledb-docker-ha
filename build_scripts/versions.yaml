@@ -152,46 +152,6 @@ timescaledb:
     pg-max: 17
 
 toolkit:
-  1.6.0:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.2.4
-  1.7.0:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.2.4
-  1.8.0:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.4.5
-  1.10.1:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.4.5
-  1.11.0:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.4.5
-  1.12.0:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.5.4
-  1.12.1:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.5.4
-  1.13.0:
-    arch: amd64
-    pg-max: 14
-    cargo-pgrx: 0.6.1
-  1.13.1:
-    cargo-pgrx: 0.6.1
-  1.14.0:
-    cargo-pgrx: 0.6.1
-  1.15.0:
-    cargo-pgrx: 0.7.1
-  1.16.0:
-    cargo-pgrx: 0.7.1
   1.17.0:
     cargo-pgrx: 0.9.7
   1.18.0:
