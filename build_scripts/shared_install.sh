@@ -38,6 +38,7 @@ install_timescaledb() {
                 -DREGRESS_CHECKS=OFF \
                 -DGENERATE_DOWNGRADE_SCRIPT=ON \
                 -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}" \
+                -DCMAKE_C_FLAGS="-march=x86-64-v4" \
                 ${oss_only}
 
             cd build
