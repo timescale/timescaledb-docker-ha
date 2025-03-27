@@ -42,17 +42,17 @@ endif
 ifeq ($(ALL_VERSIONS),true)
   DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-all
   ifeq ($(PG_MAJOR),17)
-    PG_VERSIONS := 17 16 15 14 13 12
+    PG_VERSIONS := 17 16 15 14 13
   else ifeq ($(PG_MAJOR),16)
-    PG_VERSIONS := 16 15 14 13 12
+    PG_VERSIONS := 16 15 14 13
   else ifeq ($(PG_MAJOR),15)
-    PG_VERSIONS := 15 14 13 12
+    PG_VERSIONS := 15 14 13
   else ifeq ($(PG_MAJOR),14)
-    PG_VERSIONS := 14 13 12
+    PG_VERSIONS := 14 13
   else ifeq ($(PG_MAJOR),13)
-    PG_VERSIONS := 13 12
+    PG_VERSIONS := 13
   else ifeq ($(PG_MAJOR),12)
-    PG_VERSIONS := 12
+  	$(error pg12 is no longer supported)
   endif
 else
   PG_VERSIONS := $(PG_MAJOR)
@@ -116,10 +116,10 @@ VERSION_IMAGE := $(DOCKER_PUBLISH_URL):$(VERSION_TAG)
 # The purpose of publishing the images under many tags, is to provide
 # some choice to the user as to their appetite for volatility.
 #
-#  1. timescale/timescaledb-ha:pg12
-#  2. timescale/timescaledb-ha:pg12-ts1.7
-#  3. timescale/timescaledb-ha:pg12.3-ts1.7
-#  4. timescale/timescaledb-ha:pg12.3-ts1.7.1
+#  1. timescale/timescaledb-ha:pg17
+#  2. timescale/timescaledb-ha:pg17-ts2.19
+#  3. timescale/timescaledb-ha:pg17.3-ts2.19
+#  4. timescale/timescaledb-ha:pg17.3-ts2.19.0
 
 $(VERSION_INFO):
 	docker rm --force builder_inspector >&/dev/null || true

@@ -135,5 +135,5 @@ For `OSS_ONLY` builds, the following tags will be published:
 - timescale/timescaledb-ha:pg15.2-ts2.10.3-oss
 - timescale/timescaledb-ha:pg15.2-ts2.10.3-all-oss
 
-The `-all` portion of the tags specifies that the image contains pg15, as well as version 12, 13, and 14. Otherwise, only
+The `-all` portion of the tags specifies that the image contains pg15, as well as version 13, and 14. Otherwise, only
 the single version of PostgreSQL is included in the image.

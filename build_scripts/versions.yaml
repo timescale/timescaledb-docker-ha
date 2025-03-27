@@ -12,19 +12,19 @@
 # cargo-pgrx: <version>
 #
 # Specify which version of postgresql this version supports:
-# pg-min: <version>  (defaults to 12 if not specified)
+# pg-min: <version>  (defaults to 13 if not specified)
 # pg-max: <version>  (defaults to 15 if not specified)
-# pg: [ 12, 13, 14, 15 ] (pick specific versions to build this extension with)
+# pg: [ 13, 14, 15 ] (pick specific versions to build this extension with)
 #
 # arch: <amd64|aarch64|both>
 
-default-pg-min: 12
+default-pg-min: 13
 default-pg-max: 15
 default-cargo-pgx: 0.6.1
 default-arch: both
 
 ## This session contains the specific pg versions that will be installed.
-## Please notice that pg 12 is EOL now and has no more updates.
+## Please notice that pg 12 is EOL now and has no more updates, which is why it was removed:
 ## from https://www.postgresql.org/about/news/postgresql-174-168-1512-1417-and-1320-released-3018/
 postgres_versions:
   17: 17.4
@@ -32,17 +32,10 @@ postgres_versions:
   15: 15.12
   14: 14.17
   13: 13.20
-  12: 12.22
 
 timescaledb:
-  1.7.5:
-    # in the previous -ha versions, pg12 has every timescaledb version
-    pg-max: 12
   2.1.0:
-    # in the previous -ha versions, pg13 has 2.x+
-    #pg-max: 13
-    # using pg: for testing
-    pg: [12, 13]
+    pg: [13]
   2.1.1:
     pg-max: 13
   2.2.0:
