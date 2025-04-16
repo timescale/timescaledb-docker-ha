@@ -154,13 +154,15 @@ timescaledb:
     pg-max: 17
 
 toolkit:
-  1.17.0:
-    cargo-pgrx: 0.9.7
   1.18.0:
     cargo-pgrx: 0.10.2
     pg-max: 16
   1.19.0:
     cargo-pgrx: 0.12.8
+    pg-max: 17
+  1.21.0:
+    cargo-pgrx: 0.12.9
+    pg-min: 15
     pg-max: 17
 
 pgvectorscale:
