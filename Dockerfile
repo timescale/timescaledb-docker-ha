@@ -201,19 +201,6 @@ RUN set -ex; \
         done; \
     fi
 
-# pgai is an extension for artificial intelligence workloads
-ARG PGAI_VERSION
-RUN set -ex; \
-    if [ "${PG_MAJOR}" -gt 15 ] && [ -n "${PGAI_VERSION}" ]; then \
-        git clone --branch "${PGAI_VERSION}" https://github.com/timescale/pgai.git /build/pgai; \
-        cd /build/pgai; \
-        for pg in ${PG_VERSIONS}; do \
-            if [ "$pg" -gt 15 ]; then \
-                PG_BIN=$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir) PG_MAJOR=${pg} ./projects/extension/build.py install all; \
-            fi; \
-        done; \
-    fi
-
 # Add a couple 3rd party extension managers to make extension additions easier
 RUN set -eux; \
     apt-get install -y pgxnclient
@@ -313,9 +300,26 @@ RUN set -ex; \
     chgrp -R postgres /usr/lib/debug; \
     chmod -R g+w /usr/lib/debug
 
+## Prepare pgai, needs a separate directory
+RUN install -o postgres -g postgres -m 0750 -d /usr/local/lib/pgai
+
 USER postgres
 
 ENV MAKEFLAGS=-j4
+
+# pgai is an extension for artificial intelligence workloads
+ARG PGAI_VERSION
+RUN set -ex; \
+    if [ "${PG_MAJOR}" -gt 15 ] && [ -n "${PGAI_VERSION}" ]; then \
+        git clone --branch "${PGAI_VERSION}" https://github.com/timescale/pgai.git /build/pgai; \
+        cd /build/pgai; \
+        for pg in ${PG_VERSIONS}; do \
+            if [ "$pg" -gt 15 ]; then \
+                PG_BIN=$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir) PG_MAJOR=${pg} ./projects/extension/build.py install all; \
+            fi; \
+        done; \
+    fi
+
 
 # pg_stat_monitor is a Query Performance Monitoring tool for PostgreSQL
 # https://github.com/percona/pg_stat_monitor
