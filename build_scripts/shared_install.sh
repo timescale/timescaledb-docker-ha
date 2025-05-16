@@ -13,7 +13,7 @@ install_timescaledb() {
             continue
         fi
 
-        if [ "$version" = main -a "$pg" -lt 14 ]; then
+        if [[ "$version" = main && "$pg" -lt 14 ]]; then
             log "$pkg-$version: unsupported for < pg14"
             continue
         fi

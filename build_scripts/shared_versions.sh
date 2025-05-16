@@ -1,13 +1,75 @@
 #!/bin/bash
 
 # Check to make sure these extensions are available in all pg versions
-PG_WANTED_EXTENSIONS="pglogical wal2json pgextwlist pgrouting pg-stat-kcache cron pldebugger hypopg unit repack hll \
-    pgpcre h3 h3_postgis orafce ip4r pg_uuidv7 pgvector pgaudit pgsodium"
+PG_WANTED_EXTENSIONS=(
+    cron
+    h3
+    h3_postgis
+    hll
+    hypopg
+    ip4r
+    orafce
+    pg-qualstats
+    pg-stat-kcache
+    pg_uuidv7
+    pgaudit
+    pgextwlist
+    pglogical
+    pgpcre
+    pgrouting
+    pgsodium
+    pgvector
+    pldebugger
+    repack
+    rum
+    unit
+    wal2json
+)
 
-WANTED_PACKAGES="patroni pgbackrest timescaledb-tools"
+# These aren't available yet in pg18. This should be modified as time gets closer to the full release, and then
+# eventually updated for pg19
+SKIP_FOR_PG18=(
+    ai
+    cron
+    h3
+    h3_postgis
+    hll
+    hypopg
+    logerrors
+    pg-qualstats
+    pg-stat-kcache
+    pg_stat_monitor
+    pgaudit
+    pglogical
+    pgrouting
+    pgvector
+    pldebugger
+    "postgis-3"
+    rum
+    timescaledb
+)
 
-WANTED_FILES="/usr/bin/timescaledb-tune /usr/local/bin/yq /usr/local/bin/pgbouncer_exporter \
-    /usr/bin/pgbackrest_exporter"
+should_skip_for_pg18() {
+    local pg="$1" pkg="$2"
+    [ "$pg" -lt 18 ] && return 1
+    for p in "${SKIP_FOR_PG18[@]}"; do
+        [ "$p" = "$pkg" ] && return 0
+    done
+    return 1
+}
+
+WANTED_PACKAGES=(
+    patroni
+    pgbackrest
+    timescaledb-tools
+)
+
+WANTED_FILES=(
+    /usr/bin/pgbackrest_exporter
+    /usr/bin/timescaledb-tune
+    /usr/local/bin/pgbouncer_exporter
+    /usr/local/bin/yq
+)
 
 # These functions return "" if the combination of architecture, pg version, and package version are supported,
 # otherwise it returns a reason string. Both the cicd/install_checks, and the install_extensions scripts use
