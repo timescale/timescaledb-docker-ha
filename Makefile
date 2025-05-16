@@ -42,7 +42,9 @@ endif
 
 ifeq ($(ALL_VERSIONS),true)
   DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-all
-  ifeq ($(PG_MAJOR),17)
+  ifeq ($(PG_MAJOR),18)
+    PG_VERSIONS := 18 17 16 15 14 13
+  else ifeq ($(PG_MAJOR),17)
     PG_VERSIONS := 17 16 15 14 13
   else ifeq ($(PG_MAJOR),16)
     PG_VERSIONS := 16 15 14 13
