@@ -4,19 +4,34 @@ set -e
 
 SCRIPTDIR="$(dirname "$0")"
 
+# import the image configuration so we get PG_MAJOR for conditionally checking against pg18
+. /.image_config
+echo
+echo " ** /.image_config:"
+cat /.image_config
+echo
+
 initdb
+
+# TODO: fix timescaledb/toolkit parts after they're available for pg18
 
 SHARED_PRELOAD_LIBRARIES="timescaledb"
 EXTENSION_DIR="$(pg_config --sharedir)/extension"
 
-echo "shared_preload_libraries='${SHARED_PRELOAD_LIBRARIES}'" >> "${PGDATA}/postgresql.conf"
+if [ "$PG_MAJOR" -ge 18 ]; then
+    echo "TODO: skipping timescaledb until it's ready to be included"
+else
+    echo "shared_preload_libraries='${SHARED_PRELOAD_LIBRARIES}'" >> "${PGDATA}/postgresql.conf"
+fi
+
 pg_ctl start
 
 while ! pg_isready; do
     sleep 0.2
 done
 
-psql -d postgres -f - <<__SQL__
+if [ "$PG_MAJOR" -lt 18 ]; then
+    psql -d postgres -f - <<__SQL__
 ALTER SYSTEM set log_statement to 'all';
 SELECT pg_reload_conf();
 
@@ -34,6 +49,7 @@ ORDER BY
 \gexec
 
 __SQL__
+fi
 
 psql -AtXq -f "${SCRIPTDIR}/version_info.sql" > /tmp/version_info.log
 pg_ctl stop -m immediate
