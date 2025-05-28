@@ -320,7 +320,6 @@ RUN set -ex; \
         done; \
     fi
 
-
 # pg_stat_monitor is a Query Performance Monitoring tool for PostgreSQL
 # https://github.com/percona/pg_stat_monitor
 ARG PG_STAT_MONITOR
@@ -367,6 +366,12 @@ RUN set -ex; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install; \
         done; \
     fi
+
+RUN set -ex; \
+	git clone https://github.com/petere/pguint /build/pguint; \
+	cd /build/pguint; \
+	make; \
+	make install
 
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
 ARG INSTALL_METHOD=docker-ha
