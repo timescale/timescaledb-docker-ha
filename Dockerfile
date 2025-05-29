@@ -500,6 +500,7 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "PG_LOGERRORS=\"${PG_LOGERRORS}\"" >> /.image_config; \
     echo "PG_STAT_MONITOR=\"${PG_STAT_MONITOR}\"" >> /.image_config; \
     echo "PGVECTO_RS=\"${PGVECTO_RS}\"" >> /.image_config; \
+    echo "VECTORCHORD=\"${VECTORCHORD}\"" >> /.image_config; \
     echo "POSTGIS_VERSIONS=\"${POSTGIS_VERSIONS}\"" >> /.image_config; \
     echo "PG_AUTH_MON=\"${PG_AUTH_MON}\"" >> /.image_config; \
     echo "PGBOUNCER_EXPORTER_VERSION=\"${PGBOUNCER_EXPORTER_VERSION}\"" >> /.image_config; \
