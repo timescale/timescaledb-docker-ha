@@ -234,6 +234,23 @@ RUN set -ex; \
         done; \
     fi
 
+# VectorChord (vchord) is a PostgreSQL extension designed for scalable, high-performance, and disk-efficient vector similarity search. It's the successor of pgvecto.rs
+ARG VECTORCHORD
+RUN set -ex; \
+    if [ -n "${VECTORCHORD}" ]; then \
+        for pg in ${PG_VERSIONS}; do \
+            # VectorChord only support PostgreSQL 13+
+            if [ $pg -ge 13 ]; then \
+                curl --silent \
+                    --location \
+                    --output /tmp/vectorchord.deb \
+                    "https://github.com/tensorchord/VectorChord/releases/download/${VECTORCHORD}/postgresql-${pg}-vchord_{VECTORCHORD}-1_$(dpkg --print-architecture).deb" && \
+                dpkg -i /tmp/vectorchord.deb && \
+                rm -rfv /tmp/vectorchord.deb && \
+            fi \
+        done; \
+    fi
+
 # Some Patroni prerequisites
 # This need to be done after the PostgreSQL packages have been installed,
 # to ensure we have the preferred libpq installations etc.
