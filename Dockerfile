@@ -244,9 +244,9 @@ RUN set -ex; \
                 curl --silent \
                     --location \
                     --output /tmp/vectorchord.deb \
-                    "https://github.com/tensorchord/VectorChord/releases/download/${VECTORCHORD}/postgresql-${pg}-vchord_{VECTORCHORD}-1_$(dpkg --print-architecture).deb" && \
+                    "https://github.com/tensorchord/VectorChord/releases/download/${VECTORCHORD}/postgresql-${pg}-vchord_${VECTORCHORD}-1_$(dpkg --print-architecture).deb" && \
                 dpkg -i /tmp/vectorchord.deb && \
-                rm -rfv /tmp/vectorchord.deb && \
+                rm -rfv /tmp/vectorchord.deb; \
             fi \
         done; \
     fi
