@@ -246,7 +246,9 @@ RUN set -ex; \
                     --output /tmp/vectorchord.deb \
                     "https://github.com/tensorchord/VectorChord/releases/download/${VECTORCHORD}/postgresql-${pg}-vchord_${VECTORCHORD}-1_$(dpkg --print-architecture).deb" && \
                 dpkg -i /tmp/vectorchord.deb && \
-                rm -rfv /tmp/vectorchord.deb; \
+                rm -rfv /tmp/vectorchord.deb && \
+                # 93MB before stripping, 3.5MB after
+                strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vchord.so"; \
             fi \
         done; \
     fi
