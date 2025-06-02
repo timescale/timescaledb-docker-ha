@@ -29,18 +29,16 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ "amd64", "arm64" ]
-        pg_major: [ "17", "16", "15", "14", "13" ]
-        all_versions: [ "false", "true" ]
-        oss_only: [ "false", "true" ]
+        pg_major: [ "17" ]
+        all_versions: [ "true" ]
+        oss_only: [ "false" ]
 
         include:
-          - oss_only: "true"
-            oss: "-oss"
           - all_versions: "true"
             all: "-all"
-          - platform: amd64
+          - platform: "amd64"
             runs_on: ubuntu-22.04
-          - platform: arm64
+          - platform: "arm64"
             runs_on: cloud-image-runner-arm64
 
     runs-on: "${{ matrix.runs_on }}"
@@ -106,8 +104,8 @@ jobs:
       fail-fast: false
 
       matrix:
-        pg_major: [ "17", "16", "15", "14", "13" ]
-        docker_tag_postfix: ["", "-all", "-oss", "-all-oss" ]
+        pg_major: [ "17" ]
+        docker_tag_postfix: ["-all"]
         include:
           - docker_tag_postfix: ""
             oss_only: "false"
@@ -155,7 +153,7 @@ jobs:
       - name: Publish combined manifest for pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
           PG_MAJOR: ${{ matrix.pg_major }}
-          VERSION_TAG: pg${{ matrix.pg_major}}${{ matrix.docker_tag_postfix }}-builder
+          VERSION_TAG: pg${{ matrix.pg_major}}${{ matrix.docker_tag_postfix }}-builder-backport
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
         run: make publish-manifests
 
