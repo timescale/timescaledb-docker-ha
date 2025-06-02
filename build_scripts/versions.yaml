@@ -27,7 +27,7 @@ default-arch: both
 ## Please notice that pg 12 is EOL now and has no more updates, which is why it was removed:
 ## from https://www.postgresql.org/about/news/postgresql-174-168-1512-1417-and-1320-released-3018/
 postgres_versions:
-  17: 17.5
+  17: 17.4
   16: 16.9
   15: 15.13
   14: 14.18
@@ -165,7 +165,6 @@ timescaledb:
     pg-min: 15
     pg-max: 17
 
-
 toolkit:
   1.18.0:
     cargo-pgrx: 0.10.2
@@ -198,8 +197,5 @@ pgvectorscale:
     pg-min: 13
     pg-max: 17
   0.7.0:
-    pg-min: 13
-    pg-max: 17
-  0.7.1:
     pg-min: 13
     pg-max: 17
