@@ -103,6 +103,7 @@ install_rust_extensions() {
 
 version_is_supported() {
     local pkg="$1" pg="$2" ver="$3" pdata pgmin pgmax arch
+    pg="$(major_version_only "$pg")"
     local -a pgversions
 
     pdata="$(yq ".$pkg | pick([\"$ver\"]) | .[]" <<<"$VERSION_DATA")"
@@ -116,10 +117,12 @@ version_is_supported() {
     if [[ "$arch" != "both" && "$arch" != "$ARCH" ]]; then echo "unsupported arch $ARCH"; return; fi
 
     pgmin="$(yq .pg-min <<<"$pdata")"
+    pgmin="$(major_version_only "$pgmin")"
     if [ "$pgmin" = null ]; then pgmin="$DEFAULT_PG_MIN"; fi
     if [ "$pg" -lt "$pgmin" ]; then echo "pg$pg is too old"; return; fi
 
     pgmax="$(yq .pg-max <<<"$pdata")"
+    pgmax="$(major_version_only "$pgmax")"
     if [ "$pgmax" = null ]; then pgmax="$DEFAULT_PG_MAX"; fi
     if [ "$pg" -gt "$pgmax" ]; then echo "pg$pg is too new"; return; fi
 
@@ -132,6 +135,14 @@ version_is_supported() {
         done
         if [ "$found" = "false" ]; then echo "does not support pg$pg"; return; fi
     fi
+}
+
+# Ensure PG version matching is performed only based upon MAJOR version.
+#
+# This is a bit simplistic, but the system will otherwise break when
+# building a version of PG which specifies a minor or patch version.
+major_version_only() {
+    echo -n "${1%%.*}" # Trim the longest matching pattern `.*` (bash pattern, not regex).
 }
 
 supported_timescaledb() {
