@@ -77,7 +77,8 @@ check_timescaledb() {
     # record an empty version so we'll get an empty table row if we don't have any versions
     record_ext_version timescaledb "$pg" ""
 
-    if [ ! -s "$lib/timescaledb.so" ]; then
+    # TODO: fix after pg18 is released
+    if [[ "$pg" -lt 18 && ! -s "$lib/timescaledb.so" ]]; then
         error "no timescaledb loader found for pg$pg"
     fi
 
@@ -111,7 +112,8 @@ check_timescaledb() {
         fi
     done
 
-    if [ "$found" = false ]; then error "failed to find any timescaledb extensions for pg$pg"; fi
+    # TODO: fix after pg18 is released
+    if [[ "$found" = false && "$pg" -lt 18 ]]; then error "failed to find any timescaledb extensions for pg$pg"; fi
 }
 
 check_oss_extensions() {
@@ -155,7 +157,8 @@ check_toolkit() {
         fi
     done
 
-    if [ "$found" = false ]; then error "no toolkit versions found for pg$pg"; fi
+    # TODO: fix after pg18 is released
+    if [[ "$found" = false && "$pg" -lt 18 ]]; then error "no toolkit versions found for pg$pg"; fi
 }
 
 check_pgvectorscale() {
@@ -196,7 +199,7 @@ check_others() {
         if [ -s "$lib/logerrors.so" ]; then
             record_ext_version logerrors "$pg" "$PG_LOGERRORS"
         else
-            error "logerrors not found for pg$pg"
+            should_skip_for_pg18 "$pg" "logerrors" || error "logerrors not found for pg$pg"
         fi
     fi
 
@@ -205,7 +208,7 @@ check_others() {
         if [ -s "$lib/pg_stat_monitor.so" ]; then
             record_ext_version pg_stat_monitor "$pg" "$PG_STAT_MONITOR"
         else
-            error "pg_stat_monitor not found for pg$pg"
+            should_skip_for_pg18 "$pg" pg_stat_monitor || error "pg_stat_monitor not found for pg$pg"
         fi
     fi
 
@@ -225,7 +228,7 @@ check_others() {
         if [ -f "$pgai_control" ]; then
             record_ext_version ai "$pg" "$PGAI_VERSION"
         else
-            error "ai not found for pg$pg"
+            should_skip_for_pg18 "$pg" ai || error "ai not found for pg$pg"
         fi
     fi
 
@@ -251,18 +254,19 @@ check_others() {
     record_ext_version postgis "$pg" ""
     if [ -n "$POSTGIS_VERSIONS" ]; then
         for ver in $POSTGIS_VERSIONS; do
-            IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "postgresql-$pg-postgis-$ver")"
+            IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "postgresql-$pg-postgis-$ver" 2>/dev/null)" || true
             if [ "$status" = "install ok installed" ]; then
                 record_ext_version postgis "$pg" "$version"
             else
+                should_skip_for_pg18 "$pg" "postgis-$ver" && continue
                 error "pg$pg extension postgis-$ver not found: $status"
             fi
         done
     fi
 
-    for extname in $PG_WANTED_EXTENSIONS; do
+    for extname in "${PG_WANTED_EXTENSIONS[@]}"; do
         record_ext_version "$extname" "$pg" ""
-        IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "postgresql-$pg-$extname" 2>/dev/null)"
+        IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "postgresql-$pg-$extname" 2>/dev/null)" || true
         if [ "$status" = "install ok installed" ]; then
             record_ext_version "$extname" "$pg" "$version"
         else
@@ -270,8 +274,9 @@ check_others() {
             if [ -f "$lib/${extname}.so" ]; then
                 record_ext_version "$extname" "$pg" "unknown"
             else
+                should_skip_for_pg18 "$pg" "$extname" && continue
                 ls "$lib"
-                error "pg$pg extension $extname not found: $status (and not at $lib/${extname}.so"
+                error "pg$pg extension $extname not found: $status (and not at $lib/${extname}.so)"
             fi
         fi
     done
@@ -279,11 +284,12 @@ check_others() {
 
 check_packages() {
     local pkg
-    for pkg in $WANTED_PACKAGES; do
-        IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "$pkg")"
+    for pkg in "${WANTED_PACKAGES[@]}"; do
+        IFS=\| read -rs version status <<< "$(dpkg-query -W -f '${version}|${status}' "$pkg")" || true
         if [ "$status" = "install ok installed" ]; then
             log "found package $pkg-$version"
         else
+            should_skip_for_pg18 "$pg" "$pkg" && continue
             error "package $pkg not found: $status"
         fi
     done
@@ -291,7 +297,7 @@ check_packages() {
 
 check_files() {
     local file
-    for file in $WANTED_FILES; do
+    for file in "${WANTED_FILES[@]}"; do
         if [ -f "$file" ]; then
             log "found file $file"
         else
