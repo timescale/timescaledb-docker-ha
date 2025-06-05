@@ -31,6 +31,14 @@ install_timescaledb() {
 
             [ "$version" = "2.2.0" ] && sed -i 's/RelWithDebugInfo/RelWithDebInfo/g' CMakeLists.txt
 
+            # Set architecture-specific flags
+            local cmake_c_flags=""
+            # this part could use a more precise check, but most modern ARM CPUs already support
+            # +crypto extensions, so in reality we can just rely on the architecture.
+            if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
+                cmake_c_flags="-DCMAKE_C_FLAGS=-march=armv8.2-a+crypto"
+            fi
+
             ./bootstrap \
                 -DTAP_CHECKS=OFF \
                 -DWARNINGS_AS_ERRORS=off \
@@ -38,6 +46,8 @@ install_timescaledb() {
                 -DREGRESS_CHECKS=OFF \
                 -DGENERATE_DOWNGRADE_SCRIPT=ON \
                 -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}" \
+                -DUSE_UMASH=1 \
+                ${cmake_c_flags} \
                 ${oss_only}
 
             cd build
