@@ -7,7 +7,6 @@ on:
     branches:
       - master
       - main
-      - brent/pg18
     paths-ignore:
       - "*.md"
 
@@ -15,7 +14,7 @@ on:
     - cron: '0 7 * * 2'
 
 concurrency:
-  group: publish-ha-images-${{ github.ref }}
+  group: publish-ha-pg18-images-${{ github.ref }}
   cancel-in-progress: true
 
 env:
