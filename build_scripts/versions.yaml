@@ -27,8 +27,7 @@ default-arch: both
 ## Please notice that pg 12 is EOL now and has no more updates, which is why it was removed:
 ## from https://www.postgresql.org/about/news/postgresql-174-168-1512-1417-and-1320-released-3018/
 postgres_versions:
-  18: 18~beta1
-  17: 17.5
+  17: 17.4
   16: 16.9
   15: 15.13
   14: 14.18
@@ -165,13 +164,9 @@ timescaledb:
   2.20.3:
     pg-min: 15
     pg-max: 17
-
-
-  # TODO: once timescaledb main has initial pg18 support, this can be enabled:
-  # main is the tip of timescaledb
-  #main:
-  #  pg-min: 15
-  #  pg-max: 18
+  2.21.0:
+    pg-min: 15
+    pg-max: 17
 
 toolkit:
   1.18.0:
@@ -205,8 +200,5 @@ pgvectorscale:
     pg-min: 13
     pg-max: 17
   0.7.0:
-    pg-min: 13
-    pg-max: 17
-  0.7.1:
     pg-min: 13
     pg-max: 17
