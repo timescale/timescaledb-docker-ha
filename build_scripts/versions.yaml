@@ -165,6 +165,9 @@ timescaledb:
   2.20.3:
     pg-min: 15
     pg-max: 17
+  2.21.0:
+    pg-min: 15
+    pg-max: 17
 
 
   # TODO: once timescaledb main has initial pg18 support, this can be enabled:
