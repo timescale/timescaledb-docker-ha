@@ -213,3 +213,6 @@ pgvectorscale:
   0.7.1:
     pg-min: 13
     pg-max: 17
+  0.8.0:
+    pg-min: 13
+    pg-max: 17
