@@ -323,7 +323,7 @@ RUN if [ -n "${PGAI_VERSION}" ]; then \
         git clone --branch "${PGAI_VERSION}" https://github.com/timescale/pgai.git /build/pgai; \
         cd /build/pgai; \
         for pg in ${PG_VERSIONS}; do \
-            [[ "$pg" -lt 16 && "$pg" -gt 17 ]] && continue; \
+            [[ "$pg" -lt 16 || "$pg" -gt 17 ]] && continue; \
             PG_BIN=$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir) PG_MAJOR=${pg} ./projects/extension/build.py install all; \
         done; \
     fi
