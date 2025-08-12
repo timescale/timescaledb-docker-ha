@@ -34,7 +34,7 @@ SHELL ["/bin/bash", "-exu", "-o", "pipefail", "-c"]
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
 # pg_upgrade from one major version to another,
 # so we need all the postgres & timescale libraries for all versions
-ARG PG_VERSIONS="17 16 15 14 13"
+ARG PG_VERSIONS="18 17 16 15 14 13"
 ARG PG_MAJOR=17
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -66,12 +66,15 @@ WORKDIR /build/
 RUN curl -Ls https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor --output /usr/share/keyrings/postgresql.keyring
 RUN for t in deb deb-src; do \
         echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] https://apt.postgresql.org/pub/repos/apt/ $(lsb_release -s -c)-pgdg main 18" >> /etc/apt/sources.list.d/pgdg.list; \
+        echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] https://apt.postgresql.org/pub/repos/apt/ $(lsb_release -s -c)-pgdg-snapshot main 18" >> /etc/apt/sources.list.d/pgdg.list; \
         echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] https://apt-archive.postgresql.org/pub/repos/apt $(lsb_release -s -c)-pgdg-archive main" >> /etc/apt/sources.list.d/pgdg.list; \
     done 
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
 RUN curl -Ls https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor --output /usr/share/keyrings/timescaledb.keyring
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/timescaledb.keyring] https://packagecloud.io/timescale/timescaledb/ubuntu/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/timescaledb.list
+RUN echo "Package: *\nPin: release o=apt.postgresql.org,a=$(lsb_release -s -c)-pgdg-snapshot\nPin-Priority: 990" > /etc/apt/preferences.d/pgdg-snapshot-pin
+
 
 # The following tools are required for some of the processes we (TimescaleDB) regularly
 # run inside the containers that use this Docker Image
