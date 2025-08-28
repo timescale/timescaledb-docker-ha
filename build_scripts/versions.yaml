@@ -12,14 +12,14 @@
 # cargo-pgrx: <version>
 #
 # Specify which version of postgresql this version supports:
-# pg-min: <version>  (defaults to 13 if not specified)
-# pg-max: <version>  (defaults to 15 if not specified)
-# pg: [ 13, 14, 15 ] (pick specific versions to build this extension with)
+# pg-min: <version>  (defaults to 15 if not specified)
+# pg-max: <version>  (defaults to 17 if not specified)
+# pg: [ 15, 16 ] (pick specific versions to build this extension with)
 #
 # arch: <amd64|aarch64|both>
 
-default-pg-min: 13
-default-pg-max: 15
+default-pg-min: 15
+default-pg-max: 17
 default-cargo-pgx: 0.6.1
 default-arch: both
 
@@ -31,127 +31,77 @@ postgres_versions:
   17: 17.6
   16: 16.10
   15: 15.14
-  14: 14.19
-  13: 13.22
 
 timescaledb:
-  2.1.0:
-    pg: [13]
-  2.1.1:
-    pg-max: 13
-  2.2.0:
-    pg-max: 13
-  2.2.1:
-    pg-max: 13
-  2.3.0:
-    pg-max: 13
-  2.3.1:
-    pg-max: 13
-  2.4.0:
-    pg-max: 13
-  2.4.1:
-    pg-max: 13
-  2.4.2:
-    pg-max: 13
-  2.5.0:
-    pg-max: 14
-  2.5.1:
-    pg-max: 14
-  2.5.2:
-    pg-max: 14
-  2.6.0:
-    pg-max: 14
-  2.6.1:
-    pg-max: 14
-  2.7.0:
-    pg-max: 14
-  2.7.1:
-    pg-max: 14
-  2.7.2:
-    pg-max: 14
-  2.8.0:
-    pg-max: 14
-  2.8.1:
-    pg-max: 14
   2.9.0:
+    pg-max: 15
   2.9.1:
+    pg-max: 15
   2.9.2:
+    pg-max: 15
   2.9.3:
+    pg-max: 15
   2.10.0:
+    pg-max: 15
   2.10.1:
+    pg-max: 15
   2.10.2:
+    pg-max: 15
   2.10.3:
+    pg-max: 15
   2.11.0:
+    pg-max: 15
   2.11.1:
+    pg-max: 15
   2.11.2:
+    pg-max: 15
   2.12.0:
-    pg-min: 13
+    pg-max: 15
   2.12.1:
-    pg-min: 13
+    pg-max: 15
   2.12.2:
-    pg-min: 13
+    pg-max: 15
   2.13.0:
-    pg-min: 13
     pg-max: 16
   2.13.1:
-    pg-min: 13
     pg-max: 16
   2.14.0:
-    pg-min: 13
     pg-max: 16
   2.14.1:
-    pg-min: 13
     pg-max: 16
   2.14.2:
-    pg-min: 13
     pg-max: 16
   2.15.0:
-    pg-min: 13
     pg-max: 16
   2.15.1:
-    pg-min: 13
     pg-max: 16
   2.15.2:
-    pg-min: 13
     pg-max: 16
   2.15.3:
-    pg-min: 13
     pg-max: 16
   2.16.0:
-    pg-min: 14
     pg-max: 16
   2.16.1:
-    pg-min: 14
     pg-max: 16
   2.17.0:
-    pg-min: 14
     pg-max: 17
   2.17.1:
-    pg-min: 14
     pg-max: 17
   2.17.2:
-    pg-min: 14
     pg-max: 17
   2.18.0:
-    pg-min: 14
     pg-max: 17
   2.18.1:
-    pg-min: 14
     pg-max: 17
   2.18.2:
-    pg-min: 14
     pg-max: 17
   2.19.0:
-    pg-min: 14
     pg-max: 17
   2.19.1:
-    pg-min: 14
     pg-max: 17
   2.19.2:
-    pg-min: 14
     pg-max: 17
   2.19.3:
-    pg-min: 14
     pg-max: 17
   2.20.0:
     pg-min: 15
@@ -219,23 +169,16 @@ pgvectorscale:
     pg-min: 15
     pg-max: 16
   0.4.0:
-    pg-min: 13
     pg-max: 17
   0.5.0:
-    pg-min: 13
     pg-max: 17
   0.5.1:
-    pg-min: 13
     pg-max: 17
   0.6.0:
-    pg-min: 13
     pg-max: 17
   0.7.0:
-    pg-min: 13
     pg-max: 17
   0.7.1:
-    pg-min: 13
     pg-max: 17
   0.8.0:
-    pg-min: 13
     pg-max: 17

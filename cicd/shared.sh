@@ -185,7 +185,7 @@ check_pgvectorscale() {
 		fi
 	done
 
-	if [[ "$found" = false && "$pg" -ge 13 && "$pg" -le 17 ]]; then error "no pgvectorscale versions found for pg$pg"; fi
+	if [[ "$found" = false && "$pg" -le 17 ]]; then error "no pgvectorscale versions found for pg$pg"; fi
 }
 
 # this checks for other extensions that should always exist
@@ -230,15 +230,15 @@ check_others() {
 		fi
 	fi
 
-	record_ext_version pgvecto.rs "$pg" ""
-	# TODO: pgvecto.rs hasn't released a pg17 compatible version yet, check https://github.com/tensorchord/pgvecto.rs/releases
-	if [[ -n "$PGVECTO_RS" && "$pg" -gt 13 && "$pg" -lt 17 ]]; then
-		if [ -s "$lib/vectors.so" ]; then
-			record_ext_version pgvecto.rs "$pg" "$PGVECTO_RS"
-		else
-			error "pgvecto.rs not found for pg$pg"
-		fi
-	fi
+    record_ext_version pgvecto.rs "$pg" ""
+    # TODO: pgvecto.rs hasn't released a pg17 compatible version yet, check https://github.com/tensorchord/pgvecto.rs/releases
+    if [[ -n "$PGVECTO_RS" && "$pg" -lt 17 ]]; then
+        if [ -s "$lib/vectors.so" ]; then
+            record_ext_version pgvecto.rs "$pg" "$PGVECTO_RS"
+        else
+            error "pgvecto.rs not found for pg$pg"
+        fi
+    fi
 
 	record_ext_version pg_auth_mon "$pg" ""
 	if [ -n "$PG_AUTH_MON" ]; then
