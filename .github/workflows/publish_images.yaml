@@ -7,6 +7,7 @@ on:
     branches:
       - master
       - main
+      - brent/drop-pg13-and-14
     paths-ignore:
       - "*.md"
 
@@ -18,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOCKER_REPOSITORY: timescale/timescaledb-ha
+  DOCKER_REPOSITORY: timescaledev/timescaledb-ha
   DOCKER_REGISTRY: docker.io
 
 jobs:
@@ -29,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ "amd64", "arm64" ]
-        pg_major: [ "17", "16", "15", "14", "13" ]
+        pg_major: [ "17", "16", "15" ]
         all_versions: [ "false", "true" ]
         oss_only: [ "false", "true" ]
 
@@ -106,7 +107,7 @@ jobs:
       fail-fast: false
 
       matrix:
-        pg_major: [ "17", "16", "15", "14", "13" ]
+        pg_major: [ "17", "16", "15" ]
         docker_tag_postfix: ["", "-all", "-oss", "-all-oss" ]
         include:
           - docker_tag_postfix: ""
@@ -166,7 +167,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pg_major: [ "17", "16", "15", "14", "13" ]
+        pg_major: [ "17", "16", "15" ]
         docker_tag_postfix: ["", "-all", "-oss", "-all-oss" ]
 
     steps:
