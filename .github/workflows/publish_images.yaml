@@ -7,6 +7,7 @@ on:
     branches:
       - master
       - main
+      - brent/drop-pg13-and-14
     paths-ignore:
       - "*.md"
 
@@ -18,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOCKER_REPOSITORY: timescale/timescaledb-ha
+  DOCKER_REPOSITORY: timescaledev/timescaledb-ha
   DOCKER_REGISTRY: docker.io
 
 jobs:
