@@ -186,7 +186,7 @@ RUN packages=""; \
     done; \
     apt-get install -y $packages
 
-ARG POSTGIS_VERSIONS="3"
+ARG POSTGIS_VERSIONS
 RUN if [ -n "${POSTGIS_VERSIONS}" ]; then \
         for postgisv in ${POSTGIS_VERSIONS}; do \
             for pg in ${PG_VERSIONS}; do \
