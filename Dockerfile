@@ -34,7 +34,7 @@ SHELL ["/bin/bash", "-exu", "-o", "pipefail", "-c"]
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
 # pg_upgrade from one major version to another,
 # so we need all the postgres & timescale libraries for all versions
-ARG PG_VERSIONS="17 16 15 14 13"
+ARG PG_VERSIONS="18 17 16 15 14 13"
 ARG PG_MAJOR=17
 
 ENV DEBIAN_FRONTEND=noninteractive
