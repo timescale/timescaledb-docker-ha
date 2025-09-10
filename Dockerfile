@@ -190,7 +190,6 @@ ARG POSTGIS_VERSIONS="3"
 RUN if [ -n "${POSTGIS_VERSIONS}" ]; then \
         for postgisv in ${POSTGIS_VERSIONS}; do \
             for pg in ${PG_VERSIONS}; do \
-                [ "$pg" -gt 17 ] && continue; \
                 apt-get install -y postgresql-${pg}-postgis-${postgisv}; \
             done; \
         done; \
@@ -338,7 +337,7 @@ RUN if [ -n "${PG_STAT_MONITOR}"  ]; then \
         git checkout "${PG_STAT_MONITOR}"; \
         git reset HEAD --hard; \
         for pg in ${PG_VERSIONS}; do \
-            [ $pg -gt 17 ] && continue; \
+            [ "$pg" -gt 17 ] && continue; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make USE_PGXS=1 clean; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make USE_PGXS=1 all; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make USE_PGXS=1 install; \
@@ -368,7 +367,7 @@ RUN if [ -n "${PG_LOGERRORS}" ]; then \
         cd /build/logerrors; \
         git checkout "${PG_LOGERRORS}"; \
         for pg in ${PG_VERSIONS}; do \
-            [ $pg -gt 17 ] && continue; \
+            [ "$pg" -gt 17 ] && continue; \
             git reset HEAD --hard; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make clean; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install; \
