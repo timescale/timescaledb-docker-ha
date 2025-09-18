@@ -30,21 +30,6 @@ PG_WANTED_EXTENSIONS=(
 # eventually updated for pg19
 SKIP_FOR_PG18=(
     ai
-    cron
-    h3
-    h3_postgis
-    hll
-    hypopg
-    logerrors
-    pg-qualstats
-    pg-stat-kcache
-    pg_stat_monitor
-    pgaudit
-    pglogical
-    pgrouting
-    pgvector
-    pldebugger
-    rum
     timescaledb
 )
 
