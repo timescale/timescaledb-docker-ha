@@ -44,7 +44,6 @@ SKIP_FOR_PG18=(
     pgrouting
     pgvector
     pldebugger
-    "postgis-3"
     rum
     timescaledb
 )
