@@ -30,6 +30,7 @@ PG_WANTED_EXTENSIONS=(
 # eventually updated for pg19
 SKIP_FOR_PG18=(
     ai
+    rum
     timescaledb
 )
 
