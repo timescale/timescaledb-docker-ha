@@ -31,6 +31,7 @@ PG_WANTED_EXTENSIONS=(
 SKIP_FOR_PG18=(
     ai
     rum
+    pgvector
     pldebugger
     timescaledb
 )
