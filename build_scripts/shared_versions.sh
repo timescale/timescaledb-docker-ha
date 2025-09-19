@@ -16,7 +16,6 @@ PG_WANTED_EXTENSIONS=(
     pgextwlist
     pglogical
     pgpcre
-    pgrouting
     pgsodium
     pgvector
     pldebugger
@@ -33,6 +32,7 @@ SKIP_FOR_PG18=(
     rum
     pgvector
     pldebugger
+    pgrouting
     timescaledb
 )
 
