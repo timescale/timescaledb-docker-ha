@@ -32,6 +32,7 @@ SKIP_FOR_PG18=(
     rum
     pgvector
     pldebugger
+    pglogical
     pgrouting
     timescaledb
 )
