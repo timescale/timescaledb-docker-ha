@@ -34,6 +34,7 @@ SKIP_FOR_PG18=(
     pldebugger
     pglogical
     pgrouting
+    pgaudit
     timescaledb
 )
 
