@@ -35,6 +35,7 @@ SKIP_FOR_PG18=(
     pglogical
     pgrouting
     pgaudit
+    pg-stat-kcache
     timescaledb
 )
 
