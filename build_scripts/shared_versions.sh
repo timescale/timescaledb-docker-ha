@@ -9,7 +9,6 @@ PG_WANTED_EXTENSIONS=(
     hypopg
     ip4r
     orafce
-    pg-qualstats
     pg-stat-kcache
     pg_uuidv7
     pgaudit
@@ -36,6 +35,7 @@ SKIP_FOR_PG18=(
     pgrouting
     pgaudit
     pg-stat-kcache
+    pg-qualstats
     timescaledb
 )
 
