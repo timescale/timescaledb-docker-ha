@@ -176,12 +176,14 @@ RUN packages=""; \
             postgresql-plpython3-${pg}=${FULL_VERSION} postgresql-plperl-${pg}=${FULL_VERSION} postgresql-${pg}-pgextwlist \
             postgresql-${pg}-repack postgresql-${pg}-unit postgresql-${pg}-pgpcre postgresql-${pg}-wal2json \
             postgresql-${pg}-pgq3 postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-semver \
-            postgresql-${pg}-orafce"; \
+            postgresql-${pg}-orafce postgresql-${pg}-hypopg postgresql-${pg}-cron postgresql-${pg}-pglogical \
+            postgresql-${pg}-pgvector postgresql-${pg}-pldebugger postgresql-${pg}-pg-qualstats \
+            postgresql-${pg}-hll postgresql-${pg}-h3"; \
         if [ "$pg" -lt 18 ]; then \
-            packages="$packages postgresql-${pg}-hypopg postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron \
-                postgresql-${pg}-pglogical postgresql-${pg}-pg-qualstats postgresql-${pg}-pgaudit postgresql-${pg}-hll \
-                postgresql-${pg}-pgrouting postgresql-${pg}-pgvector postgresql-${pg}-pldebugger postgresql-${pg}-h3 \
-                postgresql-${pg}-rum"; \
+                packages="$packages postgresql-${pg}-pg-stat-kcache \
+                    postgresql-${pg}-pgaudit \
+                    postgresql-${pg}-pgrouting \
+                    postgresql-${pg}-rum"; \
         fi; \
     done; \
     apt-get install -y $packages

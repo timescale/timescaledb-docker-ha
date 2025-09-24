@@ -29,13 +29,9 @@ PG_WANTED_EXTENSIONS=(
 SKIP_FOR_PG18=(
     ai
     rum
-    pgvector
-    pldebugger
-    pglogical
     pgrouting
     pgaudit
     pg-stat-kcache
-    pg-qualstats
     timescaledb
 )
 
