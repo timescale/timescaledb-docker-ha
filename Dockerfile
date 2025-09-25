@@ -176,12 +176,22 @@ RUN packages=""; \
             postgresql-plpython3-${pg}=${FULL_VERSION} postgresql-plperl-${pg}=${FULL_VERSION} postgresql-${pg}-pgextwlist \
             postgresql-${pg}-repack postgresql-${pg}-unit postgresql-${pg}-pgpcre postgresql-${pg}-wal2json \
             postgresql-${pg}-pgq3 postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-semver \
+            postgresql-${pg}-hypopg \
+            postgresql-${pg}-h3 \
+            postgresql-${pg}-pgvector \
+            postgresql-${pg}-pgrouting \
+            postgresql-${pg}-cron \
             postgresql-${pg}-orafce"; \
         if [ "$pg" -lt 18 ]; then \
-            packages="$packages postgresql-${pg}-hypopg postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron \
-                postgresql-${pg}-pglogical postgresql-${pg}-pg-qualstats postgresql-${pg}-pgaudit postgresql-${pg}-hll \
-                postgresql-${pg}-pgrouting postgresql-${pg}-pgvector postgresql-${pg}-pldebugger postgresql-${pg}-h3 \
-                postgresql-${pg}-rum"; \
+            packages="$packages \
+                postgresql-${pg}-pg-qualstats \
+                postgresql-${pg}-pg-stat-kcache \
+                postgresql-${pg}-pglogical \
+                postgresql-${pg}-pgaudit \
+                postgresql-${pg}-hll \
+                postgresql-${pg}-pldebugger \
+                postgresql-${pg}-rum \
+                "; \
         fi; \
     done; \
     apt-get install -y $packages
@@ -367,7 +377,6 @@ RUN if [ -n "${PG_LOGERRORS}" ]; then \
         cd /build/logerrors; \
         git checkout "${PG_LOGERRORS}"; \
         for pg in ${PG_VERSIONS}; do \
-            [ "$pg" -gt 17 ] && continue; \
             git reset HEAD --hard; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make clean; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install; \
