@@ -177,6 +177,9 @@ timescaledb:
   2.21.3:
     pg-min: 15
     pg-max: 17
+  2.21.4:
+    pg-min: 15
+    pg-max: 17
   # TODO/NOTE: 2.22.0 is unstable and has some issues on cloud. Skip that version. Remove this comment
   # and enable 2.22.1 once it is available.
   # 2.22.1:
