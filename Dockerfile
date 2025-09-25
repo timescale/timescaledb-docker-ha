@@ -176,8 +176,12 @@ RUN packages=""; \
             postgresql-plpython3-${pg}=${FULL_VERSION} postgresql-plperl-${pg}=${FULL_VERSION} postgresql-${pg}-pgextwlist \
             postgresql-${pg}-repack postgresql-${pg}-unit postgresql-${pg}-pgpcre postgresql-${pg}-wal2json \
             postgresql-${pg}-pgq3 postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-semver \
-            postgresql-${pg}-orafce postgresql-${pg}-hypopg  postgresql-${pg}-cron \
-            "; \
+            postgresql-${pg}-hypopg \
+            postgresql-${pg}-h3 \
+            postgresql-${pg}-pgvector \
+            postgresql-${pg}-pgrouting \
+            postgresql-${pg}-cron \
+            postgresql-${pg}-orafce"; \
         if [ "$pg" -lt 18 ]; then \
             packages="$packages \
                 postgresql-${pg}-pg-qualstats \
@@ -373,7 +377,6 @@ RUN if [ -n "${PG_LOGERRORS}" ]; then \
         cd /build/logerrors; \
         git checkout "${PG_LOGERRORS}"; \
         for pg in ${PG_VERSIONS}; do \
-            [ "$pg" -gt 17 ] && continue; \
             git reset HEAD --hard; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make clean; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install; \

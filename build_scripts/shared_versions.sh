@@ -29,7 +29,6 @@ PG_WANTED_EXTENSIONS=(
 # These aren't available yet in pg18. This should be modified as time gets closer to the full release, and then
 # eventually updated for pg19
 SKIP_FOR_PG18=(
-    logerrors
     pg-qualstats
     pg-stat-kcache
     pglogical
