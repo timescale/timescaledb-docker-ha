@@ -27,7 +27,7 @@ default-arch: both
 ## Please notice that pg 12 is EOL now and has no more updates, which is why it was removed:
 ## from https://www.postgresql.org/about/news/postgresql-174-168-1512-1417-and-1320-released-3018/
 postgres_versions:
-  18: 18~rc1
+  18: 18.0
   17: 17.6
   16: 16.10
   15: 15.14
