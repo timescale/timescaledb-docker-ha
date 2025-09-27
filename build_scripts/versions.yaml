@@ -232,3 +232,8 @@ pgvectorscale:
   0.8.0:
     pg-min: 13
     pg-max: 17
+
+tapir:
+  v0.0a:
+    pg: [17]
+    arch: both

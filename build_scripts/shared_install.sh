@@ -245,3 +245,46 @@ install_pgvectorscale() {
         )
     done
 }
+
+install_tapir() {
+    local version="$1" pg pkg=tapir unsupported_reason arch_deb="$ARCH"
+
+    # Skip installation if OSS_ONLY is true since Tapir is not yet OSS
+    if [ "$OSS_ONLY" = true ]; then
+        log "$pkg-$version: skipping (not OSS)"
+        return
+    fi
+
+    if [ "$arch_deb" = aarch64 ]; then
+        arch_deb=arm64
+    fi
+
+    for pg in $(available_pg_versions); do
+        unsupported_reason="$(supported_tapir "$pg" "$version")"
+        if [ -n "$unsupported_reason" ]; then
+            log "$pkg-$version: $unsupported_reason"
+            continue
+        fi
+
+        log "building $pkg-$version for pg$pg"
+
+        [[ "$DRYRUN" = true ]] && continue
+
+        (
+            set -ex
+
+            rm -rf /build/tapir
+            mkdir /build/tapir
+            cd /build/tapir
+
+            curl --silent \
+                 --fail \
+                 --location \
+                 --output artifact.zip \
+                 "https://github.com/timescale/tapir/releases/download/$version/tapir-$version-pg${pg}-${arch_deb}.zip"
+
+            unzip artifact.zip
+            dpkg --install --log=/build/tapir/dpkg.log --admindir=/build/tapir/ --force-depends --force-not-root --force-overwrite tapir*${arch_deb}.deb
+        )
+    done
+}

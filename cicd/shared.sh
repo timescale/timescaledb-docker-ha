@@ -61,6 +61,7 @@ check_base_components() {
 
     check_timescaledb "$pg" "$lib"
     check_pgvectorscale "$pg" "$lib"
+    check_tapir "$pg" "$lib"
     check_toolkit "$pg" "$lib"
     check_oss_extensions "$pg" "$lib"
     check_others "$pg" "$lib"
@@ -188,6 +189,34 @@ check_pgvectorscale() {
     done
 
     if [[ "$found" = false && "$pg" -ge 13 && "$pg" -le 17 ]]; then error "no pgvectorscale versions found for pg$pg"; fi
+}
+
+check_tapir() {
+    if [ -z "$TAPIR_VERSION" ]; then return; fi
+    local pg="$1" lib="$2" found=false
+
+    # Skip check if OSS_ONLY is true since Tapir is not OSS
+    if [ "$OSS_ONLY" = true ]; then
+        log "skipping tapir check (not OSS)"
+        return
+    fi
+
+    # record an empty version so we'll get an empty table row if we don't have any versions
+    record_ext_version tapir "$pg" ""
+
+    if [ -s "$lib/tapir.so" ]; then
+        found=true
+        record_ext_version tapir "$pg" "$TAPIR_VERSION"
+    else
+        unsupported_reason="$(supported_tapir "$pg" "$TAPIR_VERSION")"
+        if [ -n "$unsupported_reason" ]; then
+            log "skipped: tapir-$TAPIR_VERSION: $unsupported_reason"
+        else
+            error "tapir-$TAPIR_VERSION not found for pg$pg"
+        fi
+    fi
+
+    if [[ "$found" = false && "$pg" -eq 17 ]]; then error "tapir not found for pg$pg"; fi
 }
 
 # this checks for other extensions that should always exist

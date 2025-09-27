@@ -232,6 +232,17 @@ supported_pgvectorscale() {
     version_is_supported pgvectorscale "$pg" "$ver"
 }
 
+supported_tapir() {
+    local pg="$1" ver="$2"
+
+    # just attempt the build for main/master/or other branch build
+    if [[ "$ver" = main || "$ver" = master || "$ver" =~ [a-z_-]*/[A-Za-z0-9_-]* ]]; then
+        return
+    fi
+
+    version_is_supported tapir "$pg" "$ver"
+}
+
 require_supported_arch() {
     if [[ "$ARCH" != amd64 && "$ARCH" != aarch64 ]]; then
         echo "unsupported architecture: $ARCH" >&2

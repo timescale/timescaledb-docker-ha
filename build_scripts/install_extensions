@@ -18,8 +18,8 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 
 what="$1"
 [ -z "$what" ] && what=all
-if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit$ ]]; then
-    echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit]" >&2
+if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit|tapir$ ]]; then
+    echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit|tapir]" >&2
     exit 1
 fi
 
@@ -29,6 +29,7 @@ versions)
     echo "TIMESCALEDB_VERSIONS=\"$TIMESCALEDB_VERSIONS\""
     echo "TOOLKIT_VERSIONS=\"$TOOLKIT_VERSIONS\""
     echo "PGVECTORSCALE_VERSIONS=\"$PGVECTORSCALE_VERSIONS\""
+    echo "TAPIR_VERSION=\"$TAPIR_VERSION\""
     ;;
 
 timescaledb | all)
@@ -42,6 +43,12 @@ pgvectorscale | all)
     for ver in $PGVECTORSCALE_VERSIONS; do
         install_pgvectorscale "$ver"
     done
+    ;;& # fallthrough to get rust as well if we're called with 'all'
+
+tapir | all)
+    if [ -n "$TAPIR_VERSION" ]; then
+        install_tapir "$TAPIR_VERSION"
+    fi
     ;;& # fallthrough to get rust as well if we're called with 'all'
 
 rust | all) install_rust_extensions;;

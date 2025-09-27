@@ -411,6 +411,11 @@ RUN OSS_ONLY="${OSS_ONLY}" \
     PGVECTORSCALE_VERSIONS="${PGVECTORSCALE_VERSIONS}" \
     /build/scripts/install_extensions pgvectorscale
 
+ARG TAPIR_VERSION
+RUN OSS_ONLY="${OSS_ONLY}" \
+    TAPIR_VERSION="${TAPIR_VERSION}" \
+    /build/scripts/install_extensions tapir
+
 USER root
 
 # All the tools that were built in the previous steps have their ownership set to postgres
