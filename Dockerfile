@@ -181,13 +181,13 @@ RUN packages=""; \
             postgresql-${pg}-pgvector \
             postgresql-${pg}-pgrouting \
             postgresql-${pg}-cron \
+            postgresql-${pg}-pgaudit \  
+            postgresql-${pg}-pg-qualstats \
             postgresql-${pg}-orafce"; \
         if [ "$pg" -lt 18 ]; then \
             packages="$packages \
-                postgresql-${pg}-pg-qualstats \
                 postgresql-${pg}-pg-stat-kcache \
                 postgresql-${pg}-pglogical \
-                postgresql-${pg}-pgaudit \
                 postgresql-${pg}-hll \
                 postgresql-${pg}-pldebugger \
                 postgresql-${pg}-rum \
