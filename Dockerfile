@@ -200,6 +200,7 @@ RUN packages=""; \
 # create the default clusters for each version on /usr/share/postgresql/$version/initdb_data
 RUN \
     mkdir -p /usr/share/postgresql/ && \
+    chown postgres:postgres /usr/share/postgresql/ && \
     install --directory /usr/share/postgresql/ --group postgres --mode 1775; \
     for pg in ${PG_VERSIONS}; do \
         su postgres -c "/usr/lib/postgresql/${pg}/bin/initdb \
