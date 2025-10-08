@@ -196,17 +196,18 @@ RUN packages=""; \
     done; \
     apt-get install -y $packages
 
+
 # create the default clusters for each version on /usr/share/postgresql/$version/initdb_data
 RUN \
     mkdir -p /usr/share/postgresql/ && \
     install --directory /usr/share/postgresql/ --group postgres --mode 1775; \
     for pg in ${PG_VERSIONS}; do \
-        /usr/lib/postgresql/${pg}/bin/initdb \
+        su postgres -c "/usr/lib/postgresql/${pg}/bin/initdb \
             --auth-local=peer \
             --auth-host=md5 \
             --pgdata=/usr/share/postgresql/${pg}/initdb_data \
             --no-instructions \
-            --data-checksums ; \
+            --data-checksums" ; \
     done
 
 ARG POSTGIS_VERSIONS="3"
