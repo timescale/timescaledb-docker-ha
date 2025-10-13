@@ -183,13 +183,13 @@ RUN packages=""; \
             postgresql-${pg}-cron \
             postgresql-${pg}-pgaudit \  
             postgresql-${pg}-pg-qualstats \
+            postgresql-${pg}-pg-stat-kcache \
+            postgresql-${pg}-pglogical \
+            postgresql-${pg}-hll \
+            postgresql-${pg}-pldebugger \
             postgresql-${pg}-orafce"; \
         if [ "$pg" -lt 18 ]; then \
             packages="$packages \
-                postgresql-${pg}-pg-stat-kcache \
-                postgresql-${pg}-pglogical \
-                postgresql-${pg}-hll \
-                postgresql-${pg}-pldebugger \
                 postgresql-${pg}-rum \
                 "; \
         fi; \
@@ -240,7 +240,7 @@ RUN set -ex; \
     if [ -n "${VECTORCHORD}" ]; then \
         for pg in ${PG_VERSIONS}; do \
             # VectorChord only support PostgreSQL 13+
-            if [[ $pg -ge 13  && $pg -lt 18 ]]; then \
+            if [[ $pg -ge 13 ]]; then \
                 curl --silent \
                     --location \
                     --output /tmp/vectorchord.deb \

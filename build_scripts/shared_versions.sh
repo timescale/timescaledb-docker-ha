@@ -30,10 +30,6 @@ PG_WANTED_EXTENSIONS=(
 # eventually updated for pg19
 SKIP_FOR_PG18=(
     pg_stat_monitor
-    pg-stat-kcache
-    pglogical
-    hll
-    pldebugger
     rum
     ai
     timescaledb
