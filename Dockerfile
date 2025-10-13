@@ -240,7 +240,7 @@ RUN set -ex; \
     if [ -n "${VECTORCHORD}" ]; then \
         for pg in ${PG_VERSIONS}; do \
             # VectorChord only support PostgreSQL 13+
-            if [[ $pg -ge 13  && $pg -lt 18 ]]; then \
+            if [[ $pg -ge 13 ]]; then \
                 curl --silent \
                     --location \
                     --output /tmp/vectorchord.deb \
