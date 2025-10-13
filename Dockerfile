@@ -347,6 +347,7 @@ RUN if [ -n "${PG_STAT_MONITOR}"  ]; then \
         git checkout "${PG_STAT_MONITOR}"; \
         git reset HEAD --hard; \
         for pg in ${PG_VERSIONS}; do \
+            [ "$pg" -gt 17 ] && continue; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make USE_PGXS=1 clean; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make USE_PGXS=1 all; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make USE_PGXS=1 install; \
