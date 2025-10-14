@@ -11,7 +11,7 @@ PG_MAJOR?=17
 PG_VERSIONS?=
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
-PGAI_VERSION?=extension-0.11.1
+PGAI_VERSION?=extension-0.11.2
 PGVECTORSCALE_VERSIONS?=all
 POSTGIS_VERSIONS?=3
 PG_AUTH_MON?=v3.0
