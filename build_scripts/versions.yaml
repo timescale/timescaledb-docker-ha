@@ -32,34 +32,6 @@ postgres_versions:
   15: 15.15
 
 timescaledb:
-  2.9.0:
-    pg-max: 15
-  2.9.1:
-    pg-max: 15
-  2.9.2:
-    pg-max: 15
-  2.9.3:
-    pg-max: 15
-  2.10.0:
-    pg-max: 15
-  2.10.1:
-    pg-max: 15
-  2.10.2:
-    pg-max: 15
-  2.10.3:
-    pg-max: 15
-  2.11.0:
-    pg-max: 15
-  2.11.1:
-    pg-max: 15
-  2.11.2:
-    pg-max: 15
-  2.12.0:
-    pg-max: 15
-  2.12.1:
-    pg-max: 15
-  2.12.2:
-    pg-max: 15
   2.13.0:
     pg-max: 16
   2.13.1:

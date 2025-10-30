@@ -381,13 +381,18 @@ ARG OSS_ONLY
 # RUST_RELEASE for some packages passes this to --profile
 ARG RUST_RELEASE=release
 
+USER root
+
 # split the extension builds into two steps to allow caching of successful steps
+ARG ALLOW_ADDING_EXTENSIONS=true
 ARG GITHUB_REPO=timescale/timescaledb
 ARG TIMESCALEDB_VERSIONS
 RUN OSS_ONLY="${OSS_ONLY}" \
         GITHUB_REPO="${GITHUB_REPO}" \
         TIMESCALEDB_VERSIONS="${TIMESCALEDB_VERSIONS}" \
         /build/scripts/install_extensions timescaledb
+
+USER postgres
 
 # install all rust packages in the same step to allow it to optimize for cargo-pgx installs
 ARG TOOLKIT_VERSIONS
