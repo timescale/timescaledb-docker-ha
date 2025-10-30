@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# TODO: remove/update this a timescaledb and toolkit start getting included in the pg18 image
 . /.image_config
-if [ "${PG_MAJOR}" -ge 18 ]; then
-    exit 0
-fi
 
 create_sql=`mktemp`
 

@@ -77,8 +77,7 @@ check_timescaledb() {
     # record an empty version so we'll get an empty table row if we don't have any versions
     record_ext_version timescaledb "$pg" ""
 
-    # TODO: fix after pg18 is released
-    if [[ "$pg" -lt 18 && ! -s "$lib/timescaledb.so" ]]; then
+    if [[ ! -s "$lib/timescaledb.so" ]]; then
         error "no timescaledb loader found for pg$pg"
     fi
 
@@ -112,8 +111,7 @@ check_timescaledb() {
         fi
     done
 
-    # TODO: fix after pg18 is released
-    if [[ "$found" = false && "$pg" -lt 18 ]]; then error "failed to find any timescaledb extensions for pg$pg"; fi
+    if [[ "$found" = false ]]; then error "failed to find any timescaledb extensions for pg$pg"; fi
 }
 
 check_oss_extensions() {
@@ -157,10 +155,11 @@ check_toolkit() {
         fi
     done
 
-    # TODO: fix after pg18 is released
-    if [[ "$found" = false && "$pg" -lt 18 ]]; then error "no toolkit versions found for pg$pg"; fi
+    if [[ "$found" = false ]]; then error "no toolkit versions found for pg$pg"; fi
 }
 
+
+# TODO: fix after v0.8.0 is released
 check_pgvectorscale() {
     if [ -z "$PGVECTORSCALE_VERSIONS" ]; then return; fi
     local pg="$1" lib="$2" found=false

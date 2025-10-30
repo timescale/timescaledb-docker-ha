@@ -30,9 +30,7 @@ PG_WANTED_EXTENSIONS=(
 # eventually updated for pg19
 SKIP_FOR_PG18=(
     pg_stat_monitor
-    rum
     ai
-    timescaledb
 )
 
 should_skip_for_pg18() {
