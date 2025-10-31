@@ -30,9 +30,7 @@ PG_WANTED_EXTENSIONS=(
 # eventually updated for pg19
 SKIP_FOR_PG18=(
     pg_stat_monitor
-    rum
     ai
-    timescaledb
 )
 
 should_skip_for_pg18() {
@@ -196,8 +194,10 @@ major_version_only() {
 supported_timescaledb() {
     local pg="$1" ver="$2"
 
-    # just attempt the build for main/master/or other branch build
-    if [[ "$ver" = main || "$ver" = master || "$ver" =~ [a-z_-]*/[A-Za-z0-9_-]* ]]; then
+    # just attempt the build for feature/user branch builds
+    # (e.g., feature/new-feature, fix/bug-123, user/experiment)
+    # main is now defined in versions.yaml with proper pg-min/pg-max constraints
+    if [[ "$ver" =~ [a-z_-]*/[A-Za-z0-9_-]* ]]; then
         return
     fi
 

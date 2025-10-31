@@ -186,12 +186,14 @@ timescaledb:
   2.22.1:
     pg-min: 15
     pg-max: 17
+  2.23.0:
+    pg-min: 15
+    pg-max: 18
 
-  # TODO: once timescaledb main has initial pg18 support, this can be enabled:
   # main is the tip of timescaledb
-  #main:
-  #  pg-min: 15
-  #  pg-max: 18
+  main:
+    pg-min: 15
+    pg-max: 18
 
 toolkit:
   1.18.0:
@@ -204,6 +206,10 @@ toolkit:
     cargo-pgrx: 0.12.9
     pg-min: 15
     pg-max: 17
+  1.22.0:
+    cargo-pgrx: 0.16.1
+    pg-min: 15
+    pg-max: 18
 
 pgvectorscale:
   0.2.0:

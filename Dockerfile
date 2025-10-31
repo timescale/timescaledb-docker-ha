@@ -187,12 +187,8 @@ RUN packages=""; \
             postgresql-${pg}-pglogical \
             postgresql-${pg}-hll \
             postgresql-${pg}-pldebugger \
+            postgresql-${pg}-rum \
             postgresql-${pg}-orafce"; \
-        if [ "$pg" -lt 18 ]; then \
-            packages="$packages \
-                postgresql-${pg}-rum \
-                "; \
-        fi; \
     done; \
     apt-get install -y $packages
 
@@ -304,8 +300,6 @@ RUN for pg in ${PG_VERSIONS}; do \
     done
 
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
-        # TODO: remove this once timescaledb is included for pg18
-        [[ "$file" =~ /18/ ]] && continue; \
         # We want timescaledb to be loaded in this image by every created cluster
         sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" $file \
         # We need to listen on all interfaces, otherwise PostgreSQL is not accessible
