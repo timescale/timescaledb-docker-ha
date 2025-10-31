@@ -191,9 +191,9 @@ timescaledb:
     pg-max: 18
 
   # main is the tip of timescaledb
-  main:
-    pg-min: 15
-    pg-max: 18
+  #main:
+  #  pg-min: 15
+  #  pg-max: 18
 
 toolkit:
   1.18.0:
