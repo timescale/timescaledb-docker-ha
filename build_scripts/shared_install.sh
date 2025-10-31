@@ -35,10 +35,10 @@ install_timescaledb() {
             fi
 
             ./bootstrap \
-                -DTAP_CHECKS=OFF \
+                -DTAP_CHECKS=ON \
                 -DWARNINGS_AS_ERRORS=off \
                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-                -DREGRESS_CHECKS=OFF \
+                -DREGRESS_CHECKS=ON \
                 -DGENERATE_DOWNGRADE_SCRIPT=ON \
                 -DPROJECT_INSTALL_METHOD="${INSTALL_METHOD}" \
                 -DUSE_UMASH=1 \
@@ -53,6 +53,20 @@ install_timescaledb() {
             [ "$version" = "2.5.2" ] && sed -i 's/pg_temp./_timescaledb_internal./g' sql/**/*.sql
 
             make install
+
+            # Run regression tests
+            log "running regression tests for $pkg-$version pg$pg"
+            make installcheck || {
+                log "regression tests failed for $pkg-$version pg$pg - continuing anyway"
+            }
+
+            # Run TAP tests if available
+            if make -n regresscheck >/dev/null 2>&1; then
+                log "running TAP tests for $pkg-$version pg$pg"
+                make regresscheck || {
+                    log "TAP tests failed for $pkg-$version pg$pg - continuing anyway"
+                }
+            fi
 
             if [ "$OSS_ONLY" = true ]; then
                 log "removing timescaledb-tsl due to OSS_ONLY"
