@@ -15,7 +15,7 @@ concurrency:
 env:
   DOCKER_REPOSITORY: timescale/timescaledb-ha
   DOCKER_REGISTRY: docker.io
-  PG_MAJOR: 17
+  PG_MAJOR: 18
   ALL_VERSIONS: "true"
   OSS_ONLY: "false"
 
