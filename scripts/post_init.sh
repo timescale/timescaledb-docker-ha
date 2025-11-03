@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function log {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - post_init - $1"
+	echo "$(date '+%Y-%m-%d %H:%M:%S') - post_init - $1"
 }
 
 log "Adding timescaledb extension to template1 and postgres databases"
@@ -22,11 +22,11 @@ __SQL__
 
 log "Waiting for pgBackRest API to become responsive"
 while sleep 1; do
-    if [ $SECONDS -gt 30 ]; then
-        log "pgBackRest API did not respond within $SECONDS seconds, will not trigger a backup"
-        exit 0
-    fi
-    timeout 1 bash -c "echo > /dev/tcp/localhost/8081" 2>/dev/null && break
+	if [ $SECONDS -gt 30 ]; then
+		log "pgBackRest API did not respond within $SECONDS seconds, will not trigger a backup"
+		exit 0
+	fi
+	timeout 1 bash -c "echo > /dev/tcp/localhost/8081" 2>/dev/null && break
 done
 
 log "Triggering backup"

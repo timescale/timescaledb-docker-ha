@@ -1,0 +1,17 @@
+name: Shell Script Tests
+on:
+  push
+
+jobs:
+  tests:
+    name: Test System Services
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+
+      - name: Shellcheck and shfmt
+        run: ./cicd/lint-sh "SC2148,SC2034,SC1091,SC2153,SC1090,SC2097,SC2098,SC2043" # exclude checks

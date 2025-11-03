@@ -236,7 +236,7 @@ install_pgvectorscale() {
                  "https://github.com/timescale/pgvectorscale/releases/download/$version/pgvectorscale-$version-pg${pg}-${arch_deb}.zip"
 
             unzip artifact.zip
-            dpkg --install --log=/build/pgvectorscale/dpkg.log --admindir=/build/pgvectorscale/ --force-depends --force-not-root --force-overwrite pgvectorscale*${arch_deb}.deb
+            dpkg --install --log=/build/pgvectorscale/dpkg.log --admindir=/build/pgvectorscale/ --force-depends --force-not-root --force-overwrite pgvectorscale*"${arch_deb}".deb
         )
     done
 }

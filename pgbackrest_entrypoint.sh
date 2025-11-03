@@ -1,12 +1,12 @@
 #!/bin/bash
 
 function log {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - bootstrap - $1"
+	echo "$(date '+%Y-%m-%d %H:%M:%S') - bootstrap - $1"
 }
 
 [ -z "${PGB_REPO1_S3_KEY_SECRET}" ] && {
-    log "Environment variable PGB_REPO1_S3_KEY_SECRET is not set, you should fully configure this container"
-    exit 1
+	log "Environment variable PGB_REPO1_S3_KEY_SECRET is not set, you should fully configure this container"
+	exit 1
 }
 
 # The pgBackRest configuration needs to be shared by all containers in the pod
@@ -14,7 +14,7 @@ function log {
 # however, for now we store the file in a mounted volume that is accessible to all pods.
 umask 0077
 mkdir -p "$(dirname "${PGBACKREST_CONFIG}")"
-cat > "${PGBACKREST_CONFIG}" <<__EOT__
+cat >"${PGBACKREST_CONFIG}" <<__EOT__
 [global]
 process-max=4
 
@@ -47,13 +47,13 @@ compress-level=3
 __EOT__
 
 while ! pg_isready -h "${PGSOCKET}" -q; do
-    log "Waiting for PostgreSQL to become available"
-    sleep 3
+	log "Waiting for PostgreSQL to become available"
+	sleep 3
 done
 
 pgbackrest check || {
-    log "Creating pgBackrest stanza"
-    pgbackrest stanza-create --log-level-stderr=info || exit 1
+	log "Creating pgBackrest stanza"
+	pgbackrest stanza-create --log-level-stderr=info || exit 1
 }
 
 log "Starting pgBackrest api to listen for backup requests"
