@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#set -euo pipefail
+
+rc=0
+quiet=0
+
+[[ "${1-}" =~ -q|--quiet ]] && quiet=1
+
+declare -a scripts=()
+while IFS= read -r -d $'\0'; do
+    scripts+=("$REPLY")
+done < <(find . -name '*.sh' -print0)
+
+for script in "${scripts[@]}"; do
+    ((quiet == 0)) && echo "Running checks on ${script}"
+    if [ -n "$1" ]; then
+         /bin/shellcheck -e "$1" "${script}" || rc=$?
+    else
+         /bin/shellcheck "${script}" || rc=$?
+    fi
+done
+
+exit "${rc}"
