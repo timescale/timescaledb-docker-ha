@@ -239,3 +239,7 @@ pgvectorscale:
   0.8.0:
     pg-min: 13
     pg-max: 17
+  0.9.0:
+    pg-min: 14
+    pg-max: 18
+    cargo-pgrx: 0.16.1
