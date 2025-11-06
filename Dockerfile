@@ -34,7 +34,7 @@ SHELL ["/bin/bash", "-exu", "-o", "pipefail", "-c"]
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
 # pg_upgrade from one major version to another,
 # so we need all the postgres & timescale libraries for all versions
-ARG PG_VERSIONS="18 17 16 15 14 13"
+ARG PG_VERSIONS="18 17 16 15"
 ARG PG_MAJOR=17
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -235,17 +235,14 @@ ARG VECTORCHORD
 RUN set -ex; \
     if [ -n "${VECTORCHORD}" ]; then \
         for pg in ${PG_VERSIONS}; do \
-            # VectorChord only support PostgreSQL 13+
-            if [[ $pg -ge 13 ]]; then \
-                curl --silent \
-                    --location \
-                    --output /tmp/vectorchord.deb \
-                    "https://github.com/tensorchord/VectorChord/releases/download/${VECTORCHORD}/postgresql-${pg}-vchord_${VECTORCHORD}-1_$(dpkg --print-architecture).deb" && \
-                dpkg -i /tmp/vectorchord.deb && \
-                rm -rfv /tmp/vectorchord.deb && \
-                # 93MB before stripping, 3.5MB after
-                strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vchord.so"; \
-            fi \
+            curl --silent \
+                --location \
+                --output /tmp/vectorchord.deb \
+                "https://github.com/tensorchord/VectorChord/releases/download/${VECTORCHORD}/postgresql-${pg}-vchord_${VECTORCHORD}-1_$(dpkg --print-architecture).deb" && \
+            dpkg -i /tmp/vectorchord.deb && \
+            rm -rfv /tmp/vectorchord.deb && \
+            # 93MB before stripping, 3.5MB after
+            strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vchord.so"; \
         done; \
     fi
 

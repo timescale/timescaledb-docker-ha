@@ -43,19 +43,19 @@ endif
 ifeq ($(ALL_VERSIONS),true)
   DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-all
   ifeq ($(PG_MAJOR),18)
-    PG_VERSIONS := 18 17 16 15 14 13
+    PG_VERSIONS := 18 17 16 15
   else ifeq ($(PG_MAJOR),17)
-    PG_VERSIONS := 17 16 15 14 13
+    PG_VERSIONS := 17 16 15
   else ifeq ($(PG_MAJOR),16)
-    PG_VERSIONS := 16 15 14 13
+    PG_VERSIONS := 16 15
   else ifeq ($(PG_MAJOR),15)
-    PG_VERSIONS := 15 14 13
+    PG_VERSIONS := 15
   else ifeq ($(PG_MAJOR),14)
-    PG_VERSIONS := 14 13
+    $(error pg14 is no longer supported)
   else ifeq ($(PG_MAJOR),13)
-    PG_VERSIONS := 13
+    $(error pg13 is no longer supported)
   else ifeq ($(PG_MAJOR),12)
-  	$(error pg12 is no longer supported)
+    $(error pg12 is no longer supported)
   endif
 else
   PG_VERSIONS := $(PG_MAJOR)
