@@ -38,11 +38,60 @@ jobs:
       # The github runners have a lot of space in /mnt, but apparently not enough in /. This step removes about 13G.
       - name: remove unneeded runner software
         run: |
+          echo "Before cleanup:"
           df -h
-          du -chs     /usr/share/dotnet /usr/local/lib/android /opt/microsoft || true
-          sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft || true
-          sudo docker image prune --all --force || true
-          df -h
+          
+          echo "Disk usage by major directories:"
+          sudo du -sh /usr/share/dotnet /usr/local/lib/android /opt/microsoft /usr/lib/jvm /usr/share/swift /usr/local/.ghcup /opt/hostedtoolcache /opt/ghc 2>/dev/null || true
+          
+          # Remove .NET runtime
+          sudo rm -rf /usr/share/dotnet
+          
+          # Remove Android SDK
+          sudo rm -rf /usr/local/lib/android
+          
+          # Remove Microsoft tools
+          sudo rm -rf /opt/microsoft
+          
+          # Remove Java JDKs
+          sudo rm -rf /usr/lib/jvm
+          
+          # Remove Swift toolchain
+          sudo rm -rf /usr/share/swift
+          
+          # Remove Haskell/GHC
+          sudo rm -rf /usr/local/.ghcup
+          sudo rm -rf /opt/ghc
+          
+          # Remove cached tools
+          # Only do this if you don't need these pre-cached versions
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          
+          # Remove Julia
+          sudo rm -rf /usr/local/julia*
+          
+          # Remove Azure CLI and other cloud tools
+          sudo rm -rf /opt/az
+          sudo rm -rf /usr/share/az_*
+          
+          # Remove Google Cloud SDK
+          sudo rm -rf /usr/lib/google-cloud-sdk
+          
+          # Remove PowerShell
+          sudo rm -rf /usr/local/share/powershell
+          
+          # Remove CodeQL
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          
+          # Remove browsers if not needed for testing
+          # Uncomment these if you don't need browsers
+          # sudo apt-get remove -y '^google-chrome-.*' '^firefox.*' '^chromium-.*' 2>/dev/null || true
+          
+          # Remove package manager caches
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          
+          echo "After cleanup:"
 
       - name: Checkout code
         uses: actions/checkout@v4
