@@ -24,13 +24,12 @@ default-cargo-pgx: 0.6.1
 default-arch: both
 
 ## This session contains the specific pg versions that will be installed.
-## Please notice that pg 12 is EOL now and has no more updates, which is why it was removed:
-## from https://www.postgresql.org/about/news/postgresql-174-168-1512-1417-and-1320-released-3018/
+## from https://www.postgresql.org/about/news/postgresql-177-1611-1515-and-181-released-3051/
 postgres_versions:
-  18: 18.0
-  17: 17.6
-  16: 16.10
-  15: 15.14
+  18: 18.1
+  17: 17.7
+  16: 16.11
+  15: 15.15
 
 timescaledb:
   2.9.0:
