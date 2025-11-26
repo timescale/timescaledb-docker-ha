@@ -240,3 +240,53 @@ install_pgvectorscale() {
         )
     done
 }
+
+install_pg_lake() {
+    local version="$1" pg pkg=pg_lake unsupported_reason
+
+    for pg in $(available_pg_versions); do
+        unsupported_reason="$(supported_pg_lake "$pg" "$version")"
+        if [ -n "$unsupported_reason" ]; then
+            log "$pkg-$version: $unsupported_reason"
+            continue
+        fi
+
+        log "building $pkg-$version for pg$pg"
+
+        [[ "$DRYRUN" = true ]] && continue
+
+        (
+            set -ex
+
+            # Clone or update pg_lake repository
+            if [ ! -d /build/pg_lake ]; then
+                cd /build
+                git clone https://github.com/Snowflake-Labs/pg_lake
+            fi
+
+            cd /build/pg_lake
+
+            # Checkout the requested version (tag, branch, or commit)
+            git fetch --all --tags
+            if [[ "$version" = main || "$version" = master ]]; then
+                git checkout "$version"
+                git pull
+            else
+                git checkout "$version"
+            fi
+
+            # Build and install pg_lake components for the current PostgreSQL version
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make clean || true
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install-pg_extension_base
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install-pg_map
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install-pg_extension_updater
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install-pg_lake_engine
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install-avro
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install-pg_lake_iceberg
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install-pg_lake_table
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install-pg_lake_spatial
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install-pg_lake_copy
+            PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install-pg_lake
+        )
+    done
+}

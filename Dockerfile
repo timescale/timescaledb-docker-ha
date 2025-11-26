@@ -150,7 +150,7 @@ RUN python3 -m pip install uv
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev ninja-build libgeos-dev libproj-dev libgdal-dev openjdk-21-jdk"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
@@ -402,6 +402,11 @@ RUN OSS_ONLY="${OSS_ONLY}" \
     PGVECTORSCALE_VERSIONS="${PGVECTORSCALE_VERSIONS}" \
     /build/scripts/install_extensions pgvectorscale
 
+ARG PG_LAKE_VERSIONS
+RUN OSS_ONLY="${OSS_ONLY}" \
+    PG_LAKE_VERSIONS="${PG_LAKE_VERSIONS}" \
+    /build/scripts/install_extensions pg_lake
+
 USER root
 
 # All the tools that were built in the previous steps have their ownership set to postgres
@@ -492,6 +497,7 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "PGBACKREST_EXPORTER_VERSION=\"${PGBACKREST_EXPORTER_VERSION}\"" >> /.image_config; \
     echo "PGAI_VERSION=\"${PGAI_VERSION}\"" >> /.image_config; \
     echo "PGVECTORSCALE_VERSIONS=\"${PGVECTORSCALE_VERSIONS}\"" >> /.image_config; \
+    echo "PG_LAKE_VERSIONS=\"${PG_LAKE_VERSIONS}\"" >> /.image_config; \
     echo "PG_MAJOR=\"${PG_MAJOR}\"" >> /.image_config; \
     echo "PG_VERSIONS=\"${PG_VERSIONS}\"" >> /.image_config; \
     echo "FROM=\"${DOCKER_FROM}\"" >> /.image_config; \
@@ -515,7 +521,7 @@ FROM builder AS trimmed
 
 USER root
 
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev ninja-build libgeos-dev libproj-dev libgdal-dev openjdk-21-jdk"
 
 RUN set -ex; \
     apt-get purge -y ${BUILD_PACKAGES}; \

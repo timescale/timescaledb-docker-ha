@@ -226,6 +226,17 @@ supported_pgvectorscale() {
     version_is_supported pgvectorscale "$pg" "$ver"
 }
 
+supported_pg_lake() {
+    local pg="$1" ver="$2"
+
+    # just attempt the build for main/master/or other branch build
+    if [[ "$ver" = main || "$ver" = master || "$ver" =~ [a-z_-]*/[A-Za-z0-9_-]* ]]; then
+        return
+    fi
+
+    version_is_supported pg_lake "$pg" "$ver"
+}
+
 require_supported_arch() {
     if [[ "$ARCH" != amd64 && "$ARCH" != aarch64 ]]; then
         echo "unsupported architecture: $ARCH" >&2
@@ -236,3 +247,4 @@ require_supported_arch() {
 TIMESCALEDB_VERSIONS="$(requested_pkg_versions timescaledb "$TIMESCALEDB_VERSIONS")"
 TOOLKIT_VERSIONS="$(requested_pkg_versions toolkit "$TOOLKIT_VERSIONS")"
 PGVECTORSCALE_VERSIONS="$(requested_pkg_versions pgvectorscale "$PGVECTORSCALE_VERSIONS")"
+PG_LAKE_VERSIONS="$(requested_pkg_versions pg_lake "$PG_LAKE_VERSIONS")"
