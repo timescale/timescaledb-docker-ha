@@ -229,6 +229,12 @@ supported_pgvectorscale() {
 supported_pg_lake() {
     local pg="$1" ver="$2"
 
+    # pg_lake requires PostgreSQL 16+ (uses APIs introduced in PG16)
+    if [ "$pg" -lt 16 ]; then
+        echo "pg_lake requires PostgreSQL 16 or later (PG$pg not supported)"
+        return
+    fi
+
     # just attempt the build for main/master/or other branch build
     if [[ "$ver" = main || "$ver" = master || "$ver" =~ [a-z_-]*/[A-Za-z0-9_-]* ]]; then
         return
