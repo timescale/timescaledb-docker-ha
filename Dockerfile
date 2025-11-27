@@ -150,7 +150,7 @@ RUN python3 -m pip install uv
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev ninja-build libgeos-dev libproj-dev libgdal-dev openjdk-21-jdk"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev ninja-build libgeos-dev libproj-dev libgdal-dev openjdk-21-jdk libjansson-dev"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
@@ -521,7 +521,7 @@ FROM builder AS trimmed
 
 USER root
 
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev ninja-build libgeos-dev libproj-dev libgdal-dev openjdk-21-jdk"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev ninja-build libgeos-dev libproj-dev libgdal-dev openjdk-21-jdk libjansson-dev"
 
 RUN set -ex; \
     apt-get purge -y ${BUILD_PACKAGES}; \
