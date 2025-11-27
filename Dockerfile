@@ -310,6 +310,15 @@ RUN mkdir -p /usr/lib/debug; \
     chgrp -R postgres /usr/lib/debug; \
     chmod -R g+w /usr/lib/debug
 
+# required for pg_lake to install Avro libraries
+RUN set -ex; \
+    for libdir in /usr/lib/x86_64-linux-gnu /usr/lib/aarch64-linux-gnu; do \
+        if [ -d "$libdir" ]; then \
+            chgrp -R postgres "$libdir"; \
+            chmod -R g+w "$libdir"; \
+        fi; \
+    done
+
 ## Prepare pgai, needs a separate directory
 RUN install -o postgres -g postgres -m 0750 -d /usr/local/lib/pgai
 
