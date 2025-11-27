@@ -275,6 +275,12 @@ install_pg_lake() {
                 git checkout "$version"
             fi
 
+            # Fix incorrect include path in pg_lake_table (upstream bug)
+            # PostgreSQL headers should be included without "server/" prefix
+            if [ -f pg_lake_table/src/planner/query_pushdown.c ]; then
+                sed -i 's|#include "server/rewrite/rewriteManip.h"|#include "rewrite/rewriteManip.h"|g' pg_lake_table/src/planner/query_pushdown.c
+            fi
+
             # Build and install pg_lake components for the current PostgreSQL version
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make clean || true
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make install-pg_extension_base
