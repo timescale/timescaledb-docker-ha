@@ -197,8 +197,19 @@ check_pg_lake() {
 	record_ext_version pg_lake "$pg" ""
 
 	for ver in $PG_LAKE_VERSIONS; do
+		# For main/master branches, check if installed but don't verify specific version
 		if [[ "$ver" = master || "$ver" = main ]]; then
-			log "skipping looking for pg_lake-$ver"
+			if [ -s "$lib/pg_lake.so" ]; then
+				found=true
+				record_ext_version pg_lake "$pg" "$ver"
+			else
+				unsupported_reason="$(supported_pg_lake "$pg" "$ver")"
+				if [ -n "$unsupported_reason" ]; then
+					log "skipped: pg_lake-$ver: $unsupported_reason"
+				else
+					log "pg_lake-$ver not built for pg$pg (skipping version check for main/master)"
+				fi
+			fi
 			continue
 		fi
 
