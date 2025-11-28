@@ -299,6 +299,8 @@ RUN for pg in ${PG_VERSIONS}; do \
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
         # We want timescaledb to be loaded in this image by every created cluster
         sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" $file \
+        # Add pg_extension_base for pg_lake support
+        && sed -r -i "s/(shared_preload_libraries\s*=\s*'[^']*)/\1,pg_extension_base/" $file \
         # We need to listen on all interfaces, otherwise PostgreSQL is not accessible
         && echo "listen_addresses = '*'" >> $file; \
     done
