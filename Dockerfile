@@ -207,6 +207,9 @@ RUN apt-get install -y pgxnclient
 ## Add pgsodium extension depedencies
 RUN apt-get install -y libsodium23
 
+## Add pg_lake runtime dependencies
+RUN apt-get install -y libjansson4
+
 RUN for pg in ${PG_VERSIONS}; do \
         for pkg in pg_uuidv7 pgsodium; do \
             PATH="/usr/lib/postgresql/${pg}/bin:$PATH" pgxnclient install --pg_config "/usr/lib/postgresql/${pg}/bin/pg_config" "$pkg"; \
