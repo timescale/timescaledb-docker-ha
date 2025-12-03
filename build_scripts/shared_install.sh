@@ -24,11 +24,11 @@ construct_package_name() {
     local arch="${ARCH:-}"
     
     if [ "${oss_only}" = true ]; then
-        # example: timescaledb-2-oss-postgresql-18=2.23.0~ubuntu24.04
-        echo "timescaledb-2-oss-postgresql-${pg_version}=${ts_version}${package_suffix}-*"
+        # example: timescaledb-2-oss-postgresql-18=2.23.0~ubuntu24.04-1801
+        echo "timescaledb-2-oss-postgresql-${pg_version}=${ts_version}${package_suffix}"
     else
-        # example: timescaledb-2-2.23.0-postgresql-18=2.23.0~ubuntu24.04
-        echo "timescaledb-2-${ts_version}-postgresql-${pg_version}=${ts_version}${package_suffix}-*"
+        # example: timescaledb-2-2.23.0-postgresql-18=2.23.0~ubuntu24.04-1801
+        echo "timescaledb-2-${ts_version}-postgresql-${pg_version}=${ts_version}${package_suffix}"
     fi
 }
 
@@ -37,8 +37,8 @@ construct_loader_package_name() {
     local ts_version=$2
     local package_suffix=$3
 
-    # example: timescaledb-2-loader-postgresql-18=2.23.0~ubuntu24.04
-    echo "timescaledb-2-loader-postgresql-${pg_version}=${ts_version}${package_suffix}-*"
+    # example: timescaledb-2-loader-postgresql-18=2.23.0~ubuntu24.04-1801
+    echo "timescaledb-2-loader-postgresql-${pg_version}=${ts_version}${package_suffix}"
 }
 
 ensure_packagecloud_repo() {
@@ -59,11 +59,12 @@ ensure_packagecloud_repo() {
 install_timescaledb_for_pg_version() {
     local pg_version=$1
     local ts_version=$2
+    local pg_full_suffix=$3
     local package_suffix
     local loader_package
     local main_package
 
-    package_suffix=$(get_package_suffix "${ts_version}")
+    package_suffix="$(get_package_suffix "${ts_version}")-${pg_full_suffix}"
     log "package suffix: ${package_suffix}"
     
     # construct package names
@@ -86,6 +87,15 @@ install_timescaledb_for_pg_version() {
     fi
     
     log "successfully installed TimescaleDB ${ts_version} for PostgreSQL ${pg_version}"
+}
+
+# 18.1 -> 1801
+# 18.10 -> 1810
+format_pg_major_minor_version() {
+    local pg_version=$1
+    local major="${pg_version%%.*}"
+    local minor="${pg_version#*.}"
+    echo $((major * 100 + minor))
 }
 
 install_timescaledb() {
@@ -122,6 +132,9 @@ install_timescaledb() {
             continue
         fi
 
+        pg_full_version=$("$SCRIPT_DIR/pg_version.sh" "${pg}")
+        pg_full_suffix=$(format_pg_major_minor_version "${pg_full_version}")
+
         log "installing $pkg-$version for pg$pg"
 
         [[ "$DRYRUN" = true ]] && continue
@@ -131,7 +144,7 @@ install_timescaledb() {
         if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]] && [ "$(printf '%s\n' "$version" "2.24.0" | sort -V | tail -n1)" = "$version" ]; then
             log "installing deb package for $pkg-$version for pg$pg"
             
-            install_timescaledb_for_pg_version "${pg}" "${version}"
+            install_timescaledb_for_pg_version "${pg}" "${version}" "${pg_full_suffix}"
             err=$?
 
             if [ $err -eq 0 ]; then
