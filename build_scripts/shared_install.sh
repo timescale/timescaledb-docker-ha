@@ -25,10 +25,10 @@ construct_package_name() {
     
     if [ "${oss_only}" = true ]; then
         # example: timescaledb-2-oss-postgresql-18=2.23.0~ubuntu24.04
-        echo "timescaledb-2-oss-postgresql-${pg_version}=${ts_version}${package_suffix}"
+        echo "timescaledb-2-oss-postgresql-${pg_version}=${ts_version}${package_suffix}-*"
     else
         # example: timescaledb-2-2.23.0-postgresql-18=2.23.0~ubuntu24.04
-        echo "timescaledb-2-${ts_version}-postgresql-${pg_version}=${ts_version}${package_suffix}"
+        echo "timescaledb-2-${ts_version}-postgresql-${pg_version}=${ts_version}${package_suffix}-*"
     fi
 }
 
@@ -38,7 +38,7 @@ construct_loader_package_name() {
     local package_suffix=$3
 
     # example: timescaledb-2-loader-postgresql-18=2.23.0~ubuntu24.04
-    echo "timescaledb-2-loader-postgresql-${pg_version}=${ts_version}${package_suffix}"
+    echo "timescaledb-2-loader-postgresql-${pg_version}=${ts_version}${package_suffix}-*"
 }
 
 ensure_packagecloud_repo() {
