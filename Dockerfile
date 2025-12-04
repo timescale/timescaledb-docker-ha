@@ -67,7 +67,7 @@ RUN curl -Ls https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor 
 RUN for t in deb deb-src; do \
         echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] https://apt.postgresql.org/pub/repos/apt/ $(lsb_release -s -c)-pgdg main 18" >> /etc/apt/sources.list.d/pgdg.list; \
         echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] https://apt-archive.postgresql.org/pub/repos/apt $(lsb_release -s -c)-pgdg-archive main" >> /etc/apt/sources.list.d/pgdg.list; \
-    done 
+    done
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
 RUN curl -Ls https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor --output /usr/share/keyrings/timescaledb.keyring
@@ -181,7 +181,7 @@ RUN packages=""; \
             postgresql-${pg}-pgvector \
             postgresql-${pg}-pgrouting \
             postgresql-${pg}-cron \
-            postgresql-${pg}-pgaudit \  
+            postgresql-${pg}-pgaudit \
             postgresql-${pg}-pg-qualstats \
             postgresql-${pg}-pg-stat-kcache \
             postgresql-${pg}-pglogical \
@@ -323,7 +323,7 @@ RUN if [ -n "${PGAI_VERSION}" ]; then \
         git clone --branch "${PGAI_VERSION}" https://github.com/timescale/pgai.git /build/pgai; \
         cd /build/pgai; \
         for pg in ${PG_VERSIONS}; do \
-            [[ "$pg" -lt 16 || "$pg" -gt 17 ]] && continue; \
+            [[ "$pg" -lt 16 ]] && continue; \
             PG_BIN=$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir) PG_MAJOR=${pg} ./projects/extension/build.py install all; \
         done; \
     fi
