@@ -159,3 +159,8 @@ pgvectorscale:
     pg-max: 17
   0.8.0:
     pg-max: 17
+
+pg_lake:
+  main:
+    pg-min: 16
+    pg-max: 18

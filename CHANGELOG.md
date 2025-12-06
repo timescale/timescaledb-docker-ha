@@ -11,6 +11,7 @@ These are changes that will probably be included in the next release.
 
 * Include pgvectorscale
 * Include pgai
+* Include pg_lake
 
 ## [v1.7.1] - 2023-04-27
 

@@ -61,6 +61,7 @@ check_base_components() {
 
 	check_timescaledb "$pg" "$lib"
 	check_pgvectorscale "$pg" "$lib"
+	check_pg_lake "$pg" "$lib"
 	check_toolkit "$pg" "$lib"
 	check_oss_extensions "$pg" "$lib"
 	check_others "$pg" "$lib"
@@ -186,6 +187,47 @@ check_pgvectorscale() {
 	done
 
 	if [[ "$found" = false && "$pg" -le 17 ]]; then error "no pgvectorscale versions found for pg$pg"; fi
+}
+
+check_pg_lake() {
+	if [ -z "$PG_LAKE_VERSIONS" ]; then return; fi
+	local pg="$1" lib="$2" found=false
+
+	# record an empty version so we'll get an empty table row if we don't have any versions
+	record_ext_version pg_lake "$pg" ""
+
+	for ver in $PG_LAKE_VERSIONS; do
+		# For main/master branches, check if installed but don't verify specific version
+		if [[ "$ver" = master || "$ver" = main ]]; then
+			if [ -s "$lib/pg_lake.so" ]; then
+				found=true
+				record_ext_version pg_lake "$pg" "$ver"
+			else
+				unsupported_reason="$(supported_pg_lake "$pg" "$ver")"
+				if [ -n "$unsupported_reason" ]; then
+					log "skipped: pg_lake-$ver: $unsupported_reason"
+				else
+					log "pg_lake-$ver not built for pg$pg (skipping version check for main/master)"
+				fi
+			fi
+			continue
+		fi
+
+		# Check for one of the main pg_lake .so files
+		if [ -s "$lib/pg_lake.so" ]; then
+			found=true
+			record_ext_version pg_lake "$pg" "$ver"
+		else
+			unsupported_reason="$(supported_pg_lake "$pg" "$ver")"
+			if [ -n "$unsupported_reason" ]; then
+				log "skipped: pg_lake-$ver: $unsupported_reason"
+			else
+				error "pg_lake-$ver not found for pg$pg"
+			fi
+		fi
+	done
+
+	if [[ "$found" = false && "$pg" -ge 16 && "$pg" -le 18 ]]; then error "no pg_lake versions found for pg$pg"; fi
 }
 
 # this checks for other extensions that should always exist

@@ -150,7 +150,7 @@ RUN python3 -m pip install uv
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev ninja-build libgeos-dev libproj-dev libgdal-dev openjdk-21-jdk libjansson-dev"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
@@ -206,6 +206,9 @@ RUN apt-get install -y pgxnclient
 
 ## Add pgsodium extension depedencies
 RUN apt-get install -y libsodium23
+
+## Add pg_lake runtime dependencies
+RUN apt-get install -y libjansson4
 
 RUN for pg in ${PG_VERSIONS}; do \
         for pkg in pg_uuidv7 pgsodium; do \
@@ -299,6 +302,8 @@ RUN for pg in ${PG_VERSIONS}; do \
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
         # We want timescaledb to be loaded in this image by every created cluster
         sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" $file \
+        # Add pg_extension_base for pg_lake support
+        && sed -r -i "s/(shared_preload_libraries\s*=\s*'[^']*)/\1,pg_extension_base/" $file \
         # We need to listen on all interfaces, otherwise PostgreSQL is not accessible
         && echo "listen_addresses = '*'" >> $file; \
     done
@@ -309,6 +314,15 @@ RUN chown -R postgres:postgres /usr/local/cargo
 RUN mkdir -p /usr/lib/debug; \
     chgrp -R postgres /usr/lib/debug; \
     chmod -R g+w /usr/lib/debug
+
+# required for pg_lake to install Avro libraries
+RUN set -ex; \
+    for libdir in /usr/lib/x86_64-linux-gnu /usr/lib/aarch64-linux-gnu; do \
+        if [ -d "$libdir" ]; then \
+            chgrp -R postgres "$libdir"; \
+            chmod -R g+w "$libdir"; \
+        fi; \
+    done
 
 ## Prepare pgai, needs a separate directory
 RUN install -o postgres -g postgres -m 0750 -d /usr/local/lib/pgai
@@ -407,6 +421,11 @@ RUN OSS_ONLY="${OSS_ONLY}" \
     PGVECTORSCALE_VERSIONS="${PGVECTORSCALE_VERSIONS}" \
     /build/scripts/install_extensions pgvectorscale
 
+ARG PG_LAKE_VERSIONS
+RUN OSS_ONLY="${OSS_ONLY}" \
+    PG_LAKE_VERSIONS="${PG_LAKE_VERSIONS}" \
+    /build/scripts/install_extensions pg_lake
+
 USER root
 
 # All the tools that were built in the previous steps have their ownership set to postgres
@@ -497,6 +516,7 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "PGBACKREST_EXPORTER_VERSION=\"${PGBACKREST_EXPORTER_VERSION}\"" >> /.image_config; \
     echo "PGAI_VERSION=\"${PGAI_VERSION}\"" >> /.image_config; \
     echo "PGVECTORSCALE_VERSIONS=\"${PGVECTORSCALE_VERSIONS}\"" >> /.image_config; \
+    echo "PG_LAKE_VERSIONS=\"${PG_LAKE_VERSIONS}\"" >> /.image_config; \
     echo "PG_MAJOR=\"${PG_MAJOR}\"" >> /.image_config; \
     echo "PG_VERSIONS=\"${PG_VERSIONS}\"" >> /.image_config; \
     echo "FROM=\"${DOCKER_FROM}\"" >> /.image_config; \
@@ -520,7 +540,7 @@ FROM builder AS trimmed
 
 USER root
 
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev ninja-build libgeos-dev libproj-dev libgdal-dev openjdk-21-jdk libjansson-dev"
 
 RUN set -ex; \
     apt-get purge -y ${BUILD_PACKAGES}; \

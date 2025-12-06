@@ -47,7 +47,7 @@ POSTGIS_VERSIONS="" make build
 
 For further environment variables that can be set, we point you to the [Makefile](Makefile) itself.
 
-For updating changes in versions for timescaledb, pgvectorscale, or toolkit, update `build_scripts/versions.yaml`
+For updating changes in versions for timescaledb, pgvectorscale, pg_lake, or toolkit, update `build_scripts/versions.yaml`
 
 ## Verify your work
 
