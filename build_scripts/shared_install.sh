@@ -383,3 +383,57 @@ install_pgvectorscale() {
         )
     done
 }
+
+install_pg_textsearch() {
+    local version="${PG_TEXTSEARCH_VERSION}" pg pkg="pg_textsearch" arch="$ARCH"
+
+    if [ -z "$version" ]; then
+        log "PG_TEXTSEARCH_VERSION not set, skipping"
+        return 0
+    fi
+
+    if [ "${arch}" = x86_64 ]; then
+        arch="amd64"
+    fi
+
+    if [ "${arch}" = aarch64 ]; then
+        arch="arm64"
+    fi
+
+    for pg in $(available_pg_versions); do
+        # pg_textsearch supports PostgreSQL 17 and 18
+        if [ "$pg" != "17" ] && [ "$pg" != "18" ]; then
+            log "pg_textsearch-$version: skipping pg$pg (only pg17 and pg18 supported)"
+            continue
+        fi
+
+        log "installing pg_textsearch-$version for pg$pg-$arch"
+
+        [[ "$DRYRUN" = true ]] && continue
+
+        (
+            set -ex
+
+            rm -rf /build/pg_textsearch
+            mkdir -p /build/pg_textsearch
+            cd /build/pg_textsearch
+
+            artifact="pg-textsearch-${version}-pg${pg}-${arch}.zip"
+            curl --silent \
+                 --fail \
+                 --location \
+                 --output artifact.zip \
+                 "https://github.com/timescale/pg_textsearch/releases/download/${version}/${artifact}"
+
+            unzip artifact.zip
+            dpkg --install --log=/build/pg_textsearch/dpkg.log --admindir=/build/pg_textsearch/ --force-depends --force-not-root --force-overwrite pg-textsearch*.deb
+        )
+        err=$?
+        if [ $err -eq 0 ]; then
+            log "installed pg_textsearch-$version for pg$pg-$arch"
+        else
+            error "failed installing pg_textsearch-$version for pg$pg-$arch"
+            return 1
+        fi
+    done
+}

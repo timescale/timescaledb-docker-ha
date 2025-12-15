@@ -62,6 +62,7 @@ check_base_components() {
 	check_timescaledb "$pg" "$lib"
 	check_pgvectorscale "$pg" "$lib"
 	check_toolkit "$pg" "$lib"
+	check_pg_textsearch "$pg" "$lib"
 	check_oss_extensions "$pg" "$lib"
 	check_others "$pg" "$lib"
 }
@@ -186,6 +187,24 @@ check_pgvectorscale() {
 	done
 
 	if [[ "$found" = false && "$pg" -le 17 ]]; then error "no pgvectorscale versions found for pg$pg"; fi
+}
+
+check_pg_textsearch() {
+	local pg="$1" lib="$2" ver="$PG_TEXTSEARCH_VERSION"
+	record_ext_version pg_textsearch "$pg" ""
+	if [ -z "$ver" ]; then return 0; fi
+
+	# pg_textsearch supports PostgreSQL 17 and 18
+	if [ "$pg" != "17" ] && [ "$pg" != "18" ]; then
+		log "skipped: pg_textsearch-$ver for pg$pg (only pg17 and pg18 supported)"
+		return 0
+	fi
+
+	if [ -s "$lib/pg_textsearch.so" ]; then
+		record_ext_version pg_textsearch "$pg" "$ver"
+	else
+		error "pg_textsearch-$ver not found for pg$pg"
+	fi
 }
 
 # this checks for other extensions that should always exist
