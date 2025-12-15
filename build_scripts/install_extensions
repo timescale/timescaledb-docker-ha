@@ -18,8 +18,8 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 
 what="$1"
 [ -z "$what" ] && what=all
-if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit$ ]]; then
-    echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit]" >&2
+if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch$ ]]; then
+    echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch]" >&2
     exit 1
 fi
 
@@ -47,5 +47,9 @@ pgvectorscale | all)
 rust | all) install_rust_extensions;;
 
 toolkit) install_rust_extensions;;
+
+pg_textsearch | all)
+    install_pg_textsearch
+    ;;
 
 esac

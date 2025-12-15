@@ -407,6 +407,10 @@ RUN OSS_ONLY="${OSS_ONLY}" \
     PGVECTORSCALE_VERSIONS="${PGVECTORSCALE_VERSIONS}" \
     /build/scripts/install_extensions pgvectorscale
 
+ARG PG_TEXTSEARCH_VERSION
+RUN PG_TEXTSEARCH_VERSION="${PG_TEXTSEARCH_VERSION}" \
+    /build/scripts/install_extensions pg_textsearch
+
 USER root
 
 # All the tools that were built in the previous steps have their ownership set to postgres
@@ -497,6 +501,7 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "PGBACKREST_EXPORTER_VERSION=\"${PGBACKREST_EXPORTER_VERSION}\"" >> /.image_config; \
     echo "PGAI_VERSION=\"${PGAI_VERSION}\"" >> /.image_config; \
     echo "PGVECTORSCALE_VERSIONS=\"${PGVECTORSCALE_VERSIONS}\"" >> /.image_config; \
+    echo "PG_TEXTSEARCH_VERSION=\"${PG_TEXTSEARCH_VERSION}\"" >> /.image_config; \
     echo "PG_MAJOR=\"${PG_MAJOR}\"" >> /.image_config; \
     echo "PG_VERSIONS=\"${PG_VERSIONS}\"" >> /.image_config; \
     echo "FROM=\"${DOCKER_FROM}\"" >> /.image_config; \
