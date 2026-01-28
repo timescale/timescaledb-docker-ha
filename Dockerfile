@@ -204,22 +204,6 @@ RUN for pg in ${PG_VERSIONS}; do \
         done; \
     done
 
-# the strip command is due to the vectors.so size: 450mb before stripping, 12mb after
-ARG PGVECTO_RS
-RUN if [ -n "${PGVECTO_RS}" ]; then \
-        for pg in ${PG_VERSIONS}; do \
-            # Vecto.rs only support PostgreSQL 14..17
-            if [[ $pg -ge 14 && $pg -lt 18 ]]; then \
-                curl --silent \
-                    --location \
-                    --output /tmp/vectors.deb \
-                    "https://github.com/tensorchord/pgvecto.rs/releases/download/v${PGVECTO_RS}/vectors-pg${pg}_${PGVECTO_RS}_$(dpkg --print-architecture).deb" && \
-                dpkg -i /tmp/vectors.deb && \
-                rm -rfv /tmp/vectors.deb && \
-                strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vectors.so"; \
-            fi \
-        done; \
-    fi
 
 
 # Some Patroni prerequisites
@@ -469,7 +453,6 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "OSS_ONLY=\"$OSS_ONLY\"" >> /.image_config; \
     echo "PG_LOGERRORS=\"${PG_LOGERRORS}\"" >> /.image_config; \
     echo "PG_STAT_MONITOR=\"${PG_STAT_MONITOR}\"" >> /.image_config; \
-    echo "PGVECTO_RS=\"${PGVECTO_RS}\"" >> /.image_config; \
     echo "PG_AUTH_MON=\"${PG_AUTH_MON}\"" >> /.image_config; \
     echo "PGBOUNCER_EXPORTER_VERSION=\"${PGBOUNCER_EXPORTER_VERSION}\"" >> /.image_config; \
     echo "PGBACKREST_EXPORTER_VERSION=\"${PGBACKREST_EXPORTER_VERSION}\"" >> /.image_config; \
