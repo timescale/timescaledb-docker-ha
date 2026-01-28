@@ -13,12 +13,10 @@ PG_VERSIONS?=
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 PGAI_VERSION?=extension-0.11.2
 PGVECTORSCALE_VERSIONS?=all
-POSTGIS_VERSIONS?=3
 PG_AUTH_MON?=v3.0
 PG_STAT_MONITOR?=2.2.0
 PG_LOGERRORS?=v2.1.5
 PGVECTO_RS?=0.4.0
-VECTORCHORD?=0.5.3
 TIMESCALEDB_VERSIONS?=all
 TOOLKIT_VERSIONS?=all
 PG_TEXTSEARCH_VERSION?=v0.4.0
@@ -106,7 +104,7 @@ VAR_TSMAJOR="$$(awk -F '[.=]' '/timescaledb.version=/ {print $$3 "." $$4}' $(VER
 
 # In these steps we do some introspection to find out some details of the versions
 # that are inside the Docker image. As we use the Ubuntu packages, we do not know until
-# after we have built the image, what patch version of PostgreSQL, or PostGIS is installed.
+# after we have built the image, what patch version of PostgreSQL is installed.
 #
 # We will then attach this information as OCI labels to the final Docker image
 # docker buildx build does a push to export it, so it doesn't exist in the regular local registry yet
@@ -158,13 +156,11 @@ DOCKER_BUILD_COMMAND=docker build \
 					 --build-arg PG_MAJOR=$(PG_MAJOR) \
 					 --build-arg PG_STAT_MONITOR="$(PG_STAT_MONITOR)" \
 					 --build-arg PG_VERSIONS="$(PG_VERSIONS)" \
-					 --build-arg POSTGIS_VERSIONS=$(POSTGIS_VERSIONS) \
 					 --build-arg OSS_ONLY="$(OSS_ONLY)" \
 					 --build-arg TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" \
 					 --build-arg TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" \
 					 --build-arg PG_TEXTSEARCH_VERSION="$(PG_TEXTSEARCH_VERSION)" \
 					 --build-arg PGVECTO_RS="$(PGVECTO_RS)" \
-					 --build-arg VECTORCHORD="$(VECTORCHORD)" \
 					 --build-arg RELEASE_URL="$(DOCKER_RELEASE_URL)" \
 					 --build-arg BUILDER_URL="$(DOCKER_BUILDER_URL)" \
 					 --build-arg PGBOUNCER_EXPORTER_VERSION=$(PGBOUNCER_EXPORTER_VERSION) \
@@ -187,7 +183,6 @@ fast: PG_AUTH_MON=
 fast: PG_LOGERRORS=
 fast: PGAI_VERSION=
 fast: PG_VERSIONS=17
-fast: POSTGIS_VERSIONS=
 fast: TOOLKIT_VERSIONS=
 fast: PGVECTORSCALE_VERSIONS=
 fast: build

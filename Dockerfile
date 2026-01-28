@@ -174,12 +174,11 @@ RUN packages=""; \
         export FULL_VERSION="$(/build/scripts/pg_version.sh ${pg})*" ; \
         packages="$packages postgresql-client-${pg}=${FULL_VERSION} postgresql-${pg}=${FULL_VERSION} postgresql-server-dev-${pg}=${FULL_VERSION} postgresql-${pg}-dbgsym=${FULL_VERSION} \
             postgresql-plpython3-${pg}=${FULL_VERSION} postgresql-plperl-${pg}=${FULL_VERSION} postgresql-${pg}-pgextwlist \
-            postgresql-${pg}-repack postgresql-${pg}-unit postgresql-${pg}-pgpcre postgresql-${pg}-wal2json \
+            postgresql-${pg}-repack postgresql-${pg}-pgpcre postgresql-${pg}-wal2json \
             postgresql-${pg}-pgq3 postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-semver \
             postgresql-${pg}-hypopg \
             postgresql-${pg}-h3 \
             postgresql-${pg}-pgvector \
-            postgresql-${pg}-pgrouting \
             postgresql-${pg}-cron \
             postgresql-${pg}-pgaudit \
             postgresql-${pg}-pg-qualstats \
@@ -192,14 +191,6 @@ RUN packages=""; \
     done; \
     apt-get install -y $packages
 
-ARG POSTGIS_VERSIONS="3"
-RUN if [ -n "${POSTGIS_VERSIONS}" ]; then \
-        for postgisv in ${POSTGIS_VERSIONS}; do \
-            for pg in ${PG_VERSIONS}; do \
-                apt-get install -y postgresql-${pg}-postgis-${postgisv}; \
-            done; \
-        done; \
-    fi
 
 # Add a couple 3rd party extension managers to make extension additions easier
 RUN apt-get install -y pgxnclient
@@ -230,21 +221,6 @@ RUN if [ -n "${PGVECTO_RS}" ]; then \
         done; \
     fi
 
-# VectorChord (vchord) is a PostgreSQL extension designed for scalable, high-performance, and disk-efficient vector similarity search. It's the successor of pgvecto.rs
-ARG VECTORCHORD
-RUN set -ex; \
-    if [ -n "${VECTORCHORD}" ]; then \
-        for pg in ${PG_VERSIONS}; do \
-            curl --silent \
-                --location \
-                --output /tmp/vectorchord.deb \
-                "https://github.com/tensorchord/VectorChord/releases/download/${VECTORCHORD}/postgresql-${pg}-vchord_${VECTORCHORD}-1_$(dpkg --print-architecture).deb" && \
-            dpkg -i /tmp/vectorchord.deb && \
-            rm -rfv /tmp/vectorchord.deb && \
-            # 93MB before stripping, 3.5MB after
-            strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vchord.so"; \
-        done; \
-    fi
 
 # Some Patroni prerequisites
 # This need to be done after the PostgreSQL packages have been installed,
@@ -494,8 +470,6 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "PG_LOGERRORS=\"${PG_LOGERRORS}\"" >> /.image_config; \
     echo "PG_STAT_MONITOR=\"${PG_STAT_MONITOR}\"" >> /.image_config; \
     echo "PGVECTO_RS=\"${PGVECTO_RS}\"" >> /.image_config; \
-    echo "VECTORCHORD=\"${VECTORCHORD}\"" >> /.image_config; \
-    echo "POSTGIS_VERSIONS=\"${POSTGIS_VERSIONS}\"" >> /.image_config; \
     echo "PG_AUTH_MON=\"${PG_AUTH_MON}\"" >> /.image_config; \
     echo "PGBOUNCER_EXPORTER_VERSION=\"${PGBOUNCER_EXPORTER_VERSION}\"" >> /.image_config; \
     echo "PGBACKREST_EXPORTER_VERSION=\"${PGBACKREST_EXPORTER_VERSION}\"" >> /.image_config; \

@@ -36,7 +36,7 @@ SELECT
 FROM
     pg_catalog.pg_available_extensions
 WHERE
-    name IN ('timescaledb_toolkit', 'postgis')
+    name IN ('timescaledb_toolkit')
 ORDER BY
     name
 \gexec

@@ -3,7 +3,7 @@
 This directory contains everything that allows us to create a Docker image with the following pieces of software:
 
 - PostgreSQL
-- Some PostgreSQL extensions, most notably PostGIS
+- Many PostgreSQL extensions
 - TimescaleDB, multiple versions
 - pgBackRest
 - scripts to make it all work in a Kubernetes Context
@@ -37,14 +37,8 @@ make build-oss
 
 > For more information about licensing, please read our [blog post](https://blog.timescale.com/blog/how-we-are-building-an-open-source-business-a7701516a480/) about the subject.
 
-By default, the Docker image contains many extensions, including [TimescaleDB](https://github.com/timescale/timescaledb) and [PostGIS](https://postgis.net/).
-You can override which version of the extensions are built by setting environment variables, some examples:
-
-```console
-# Build without any PostGIS
-POSTGIS_VERSIONS="" make build
-```
-
+By default, the Docker image contains many extensions, including [TimescaleDB](https://github.com/timescale/timescaledb).
+You can override which version of the extensions are built by setting environment variables.
 For further environment variables that can be set, we point you to the [Makefile](Makefile) itself.
 
 For updating changes in versions for timescaledb, pgvectorscale, or toolkit, update `build_scripts/versions.yaml`

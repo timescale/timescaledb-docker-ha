@@ -268,19 +268,6 @@ check_others() {
 		fi
 	fi
 
-	record_ext_version postgis "$pg" ""
-	if [ -n "$POSTGIS_VERSIONS" ]; then
-		for ver in $POSTGIS_VERSIONS; do
-			IFS=\| read -rs version status <<<"$(dpkg-query -W -f '${version}|${status}' "postgresql-$pg-postgis-$ver" 2>/dev/null)" || true
-			if [ "$status" = "install ok installed" ]; then
-				record_ext_version postgis "$pg" "$version"
-			else
-				should_skip_for_pg18 "$pg" "postgis-$ver" && continue
-				error "pg$pg extension postgis-$ver not found: $status"
-			fi
-		done
-	fi
-
 	for extname in "${PG_WANTED_EXTENSIONS[@]}"; do
 		record_ext_version "$extname" "$pg" ""
 		IFS=\| read -rs version status <<<"$(dpkg-query -W -f '${version}|${status}' "postgresql-$pg-$extname" 2>/dev/null)" || true

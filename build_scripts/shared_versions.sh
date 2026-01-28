@@ -4,7 +4,6 @@
 PG_WANTED_EXTENSIONS=(
     cron
     h3
-    h3_postgis
     hll
     hypopg
     ip4r
@@ -16,13 +15,11 @@ PG_WANTED_EXTENSIONS=(
     pgextwlist
     pglogical
     pgpcre
-    pgrouting
     pgsodium
     pgvector
     pldebugger
     repack
     rum
-    unit
     wal2json
 )
 
