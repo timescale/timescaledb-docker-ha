@@ -173,22 +173,30 @@ RUN packages=""; \
     for pg in ${PG_VERSIONS}; do \
         export FULL_VERSION="$(/build/scripts/pg_version.sh ${pg})*" ; \
         packages="$packages postgresql-client-${pg}=${FULL_VERSION} postgresql-${pg}=${FULL_VERSION} postgresql-server-dev-${pg}=${FULL_VERSION} postgresql-${pg}-dbgsym=${FULL_VERSION} \
-            postgresql-plpython3-${pg}=${FULL_VERSION} postgresql-plperl-${pg}=${FULL_VERSION} postgresql-${pg}-pgextwlist \
-            postgresql-${pg}-repack postgresql-${pg}-unit postgresql-${pg}-pgpcre postgresql-${pg}-wal2json \
-            postgresql-${pg}-pgq3 postgresql-${pg}-ip4r postgresql-${pg}-pgtap postgresql-${pg}-semver \
-            postgresql-${pg}-hypopg \
-            postgresql-${pg}-h3 \
-            postgresql-${pg}-pgvector \
-            postgresql-${pg}-pgrouting \
-            postgresql-${pg}-cron \
-            postgresql-${pg}-pgaudit \
-            postgresql-${pg}-pg-qualstats \
-            postgresql-${pg}-pg-stat-kcache \
-            postgresql-${pg}-pglogical \
-            postgresql-${pg}-hll \
-            postgresql-${pg}-pldebugger \
-            postgresql-${pg}-rum \
-            postgresql-${pg}-orafce"; \
+            postgresql-plpython3-${pg}=${FULL_VERSION} postgresql-plpython3-${pg}-dbgsym=${FULL_VERSION} \
+            postgresql-plperl-${pg}=${FULL_VERSION} postgresql-plperl-${pg}-dbgsym=${FULL_VERSION} \
+            postgresql-${pg}-pgextwlist postgresql-${pg}-pgextwlist-dbgsym \
+            postgresql-${pg}-repack postgresql-${pg}-repack-dbgsym \
+            postgresql-${pg}-unit postgresql-${pg}-unit-dbgsym \
+            postgresql-${pg}-pgpcre postgresql-${pg}-pgpcre-dbgsym \
+            postgresql-${pg}-wal2json postgresql-${pg}-wal2json-dbgsym \
+            postgresql-${pg}-pgq3 postgresql-${pg}-pgq3-dbgsym \
+            postgresql-${pg}-ip4r postgresql-${pg}-ip4r-dbgsym \
+            postgresql-${pg}-pgtap \
+            postgresql-${pg}-semver postgresql-${pg}-semver-dbgsym \
+            postgresql-${pg}-hypopg postgresql-${pg}-hypopg-dbgsym \
+            postgresql-${pg}-h3 postgresql-${pg}-h3-dbgsym \
+            postgresql-${pg}-pgvector postgresql-${pg}-pgvector-dbgsym \
+            postgresql-${pg}-pgrouting postgresql-${pg}-pgrouting-dbgsym \
+            postgresql-${pg}-cron postgresql-${pg}-cron-dbgsym \
+            postgresql-${pg}-pgaudit postgresql-${pg}-pgaudit-dbgsym \
+            postgresql-${pg}-pg-qualstats postgresql-${pg}-pg-qualstats-dbgsym \
+            postgresql-${pg}-pg-stat-kcache postgresql-${pg}-pg-stat-kcache-dbgsym \
+            postgresql-${pg}-pglogical postgresql-${pg}-pglogical-dbgsym \
+            postgresql-${pg}-hll postgresql-${pg}-hll-dbgsym \
+            postgresql-${pg}-pldebugger postgresql-${pg}-pldebugger-dbgsym \
+            postgresql-${pg}-rum postgresql-${pg}-rum-dbgsym \
+            postgresql-${pg}-orafce postgresql-${pg}-orafce-dbgsym"; \
     done; \
     apt-get install -y $packages
 
@@ -196,7 +204,7 @@ ARG POSTGIS_VERSIONS="3"
 RUN if [ -n "${POSTGIS_VERSIONS}" ]; then \
         for postgisv in ${POSTGIS_VERSIONS}; do \
             for pg in ${PG_VERSIONS}; do \
-                apt-get install -y postgresql-${pg}-postgis-${postgisv}; \
+                apt-get install -y postgresql-${pg}-postgis-${postgisv} postgresql-${pg}-postgis-${postgisv}-dbgsym; \
             done; \
         done; \
     fi
