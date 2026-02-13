@@ -142,6 +142,7 @@ export DOCKER_BUILDKIT = 1
 # Dockerfile
 DOCKER_BUILD_COMMAND=docker build \
 					 $(DOCKER_CACHE) \
+					 --provenance=false \
 					 --platform "linux/$(PLATFORM)" \
 					 --pull \
 					 --progress=plain \
