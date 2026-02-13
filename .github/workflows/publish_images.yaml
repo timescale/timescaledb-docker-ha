@@ -46,12 +46,13 @@ jobs:
     runs-on: "${{ matrix.runs_on }}"
 
     steps:
-      # The github runners have a lot of space in /mnt, but apparently not enough in /. This step removes about 13G.
+      # Free up disk space on the runner. The pg18-all builds in particular need
+      # a lot of space due to 4 PG versions worth of extensions and debug symbols.
       - name: remove unneeded runner software
         run: |
           df -h
-          du -chs     /usr/share/dotnet /usr/local/lib/android /opt/microsoft || true
-          sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft || true
+          sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft \
+                      /opt/hostedtoolcache /usr/local/.ghcup /usr/local/share/boost || true
           sudo docker image prune --all --force || true
           df -h
 
