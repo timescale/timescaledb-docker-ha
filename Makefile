@@ -68,6 +68,8 @@ endif
 
 DOCKER_FROM?=ubuntu:22.04
 DOCKER_EXTRA_BUILDARGS?=
+DOCKER_OUTPUT?=--load
+DOCKER_METADATA_FILE=/tmp/docker-metadata.json
 DOCKER_REGISTRY?=localhost:5000
 DOCKER_REPOSITORY?=timescale/timescaledb-ha
 DOCKER_PUBLISH_URL?=$(DOCKER_REGISTRY)/$(DOCKER_REPOSITORY)
@@ -140,7 +142,9 @@ export DOCKER_BUILDKIT = 1
 # We label all the Docker Images with the versions of PostgreSQL, TimescaleDB and some other extensions
 # afterwards, by using introspection, as minor versions may differ even when using the same
 # Dockerfile
-DOCKER_BUILD_COMMAND=docker build \
+DOCKER_BUILD_COMMAND=docker buildx build \
+					 $(DOCKER_OUTPUT) \
+					 --metadata-file "$(DOCKER_METADATA_FILE)" \
 					 $(DOCKER_CACHE) \
 					 --provenance=false \
 					 --platform "linux/$(PLATFORM)" \
@@ -219,9 +223,9 @@ builder:
 
 .PHONY: publish-builder
 publish-builder: # build and publish the `builder` target image
+publish-builder: DOCKER_OUTPUT=--push
 publish-builder: builder $(VERSION_INFO)
-	docker push "$(DOCKER_BUILDER_ARCH_URL)"
-	echo "builder_id=$$(docker inspect "$(DOCKER_BUILDER_ARCH_URL)" | jq -r '.[].RepoDigests[0]')" | tee -a "$(GITHUB_OUTPUT)"
+	echo "builder_id=$(DOCKER_REPOSITORY)@$$(jq -r '.["containerimage.digest"]' $(DOCKER_METADATA_FILE))" | tee -a "$(GITHUB_OUTPUT)"
 
 # The prepare step does not build the final image, as we need to use introspection
 # to find out what versions of software are installed in this image
@@ -233,9 +237,9 @@ release: $(VERSION_INFO)
 		$$(awk -F '=' '{printf "--label com.timescaledb.image."$$1"="$$2" "}' $(VERSION_INFO))
 
 publish-release: # build and publish the `release` target image
+publish-release: DOCKER_OUTPUT=--push
 publish-release: release
-	docker push "$(DOCKER_RELEASE_ARCH_URL)"
-	echo "release_id=$$(docker inspect "$(DOCKER_RELEASE_ARCH_URL)" | jq -r '.[].RepoDigests[0]')" | tee -a "$(GITHUB_OUTPUT)"
+	echo "release_id=$(DOCKER_REPOSITORY)@$$(jq -r '.["containerimage.digest"]' $(DOCKER_METADATA_FILE))" | tee -a "$(GITHUB_OUTPUT)"
 
 .PHONY: build-sha
 build-sha: # build a specific git commit

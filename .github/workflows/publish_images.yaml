@@ -72,6 +72,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           endpoint: ha-builder
+          buildkitd-config-inline: |
+            [worker.oci]
+              maxParallelism = 2
 
       - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
         id: build
@@ -81,7 +84,9 @@ jobs:
           ALL_VERSIONS: ${{ matrix.all_versions }}
           OSS_ONLY: ${{ matrix.oss_only }}
         run: |
-          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder publish-release
+          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder
+          docker builder prune --force || true
+          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-release
 
       - name: export outputs
         run: |
