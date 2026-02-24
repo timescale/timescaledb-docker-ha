@@ -48,6 +48,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           endpoint: ha-builder
+          buildkitd-config-inline: |
+            [worker.oci]
+              maxParallelism = 2
 
       - name: Build and push
         id: build
@@ -57,7 +60,10 @@ jobs:
           ALL_VERSIONS: "true"
           OSS_ONLY: "false"
           DOCKER_TAG_POSTFIX: "-cicheck"
-        run: make publish-builder publish-release
+        run: |
+          make publish-builder
+          docker builder prune --force || true
+          make publish-release
 
       - name: Validate digests for manifest compatibility
         run: |
