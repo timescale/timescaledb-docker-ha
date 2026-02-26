@@ -204,11 +204,8 @@ RUN if [ -n "${POSTGIS_VERSIONS}" ]; then \
 # Add a couple 3rd party extension managers to make extension additions easier
 RUN apt-get install -y pgxnclient
 
-## Add pgsodium extension depedencies
-RUN apt-get install -y libsodium23
-
 RUN for pg in ${PG_VERSIONS}; do \
-        for pkg in pg_uuidv7 pgsodium; do \
+        for pkg in pg_uuidv7; do \
             PATH="/usr/lib/postgresql/${pg}/bin:$PATH" pgxnclient install --pg_config "/usr/lib/postgresql/${pg}/bin/pg_config" "$pkg"; \
         done; \
     done
