@@ -17,7 +17,6 @@ PG_WANTED_EXTENSIONS=(
     pglogical
     pgpcre
     pgrouting
-    pgsodium
     pgvector
     pldebugger
     repack
