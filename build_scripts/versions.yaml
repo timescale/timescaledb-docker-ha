@@ -19,17 +19,17 @@
 # arch: <amd64|aarch64|both>
 
 default-pg-min: 15
-default-pg-max: 17
+default-pg-max: 18
 default-cargo-pgx: 0.6.1
 default-arch: both
 
 ## This session contains the specific pg versions that will be installed.
 ## from https://www.postgresql.org/about/news/postgresql-177-1611-1515-and-181-released-3051/
 postgres_versions:
-  18: 18.1
-  17: 17.7
-  16: 16.11
-  15: 15.15
+  18: 18.3
+  17: 17.9
+  16: 16.13
+  15: 15.17
 
 timescaledb:
   2.13.0:
