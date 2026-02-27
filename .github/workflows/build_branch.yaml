@@ -56,6 +56,10 @@ jobs:
 
       - name: Setup | Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-config-inline: |
+            [worker.oci]
+              maxParallelism = 2
 
       - name: Build
         env:
@@ -66,6 +70,9 @@ jobs:
         env:
           PLATFORM: ${{ matrix.platform }}
         run: make check-sha
+
+      - name: Prune build cache
+        run: docker builder prune --force || true
 
       - name: Publish
         env:
