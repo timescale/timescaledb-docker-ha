@@ -14,6 +14,9 @@ echo
 initdb
 
 SHARED_PRELOAD_LIBRARIES="timescaledb"
+if [ "${PG_MAJOR}" -ge 17 ] 2>/dev/null; then
+    SHARED_PRELOAD_LIBRARIES="${SHARED_PRELOAD_LIBRARIES},pg_textsearch"
+fi
 EXTENSION_DIR="$(pg_config --sharedir)/extension"
 
 echo "shared_preload_libraries='${SHARED_PRELOAD_LIBRARIES}'" >>"${PGDATA}/postgresql.conf"
