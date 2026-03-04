@@ -308,6 +308,14 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
         && echo "listen_addresses = '*'" >> $file; \
     done
 
+# pg_textsearch requires shared_preload_libraries (pg17+ only)
+RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
+        pgver="$(basename "$(dirname "$file")")"; \
+        if [ "$pgver" -ge 17 ] 2>/dev/null; then \
+            sed -r -i "s/(shared_preload_libraries\s*=\s*'[^']*)/\1,pg_textsearch/" "$file"; \
+        fi; \
+    done
+
 RUN chown -R postgres:postgres /usr/local/cargo
 
 # required to install dbgsym packages
