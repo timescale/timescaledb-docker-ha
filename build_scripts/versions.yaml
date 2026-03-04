@@ -118,8 +118,11 @@ timescaledb:
     pg-max: 18
   2.25.0:
     pg-min: 15
-    pg-max: 18    
+    pg-max: 18
   2.25.1:
+    pg-min: 15
+    pg-max: 18
+  2.25.2:
     pg-min: 15
     pg-max: 18
 
@@ -169,4 +172,3 @@ pgvectorscale:
     pg-min: 14
     pg-max: 18
     cargo-pgrx: 0.16.1
-
