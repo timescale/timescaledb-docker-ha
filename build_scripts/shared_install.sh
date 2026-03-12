@@ -418,15 +418,16 @@ install_pg_textsearch() {
             mkdir -p /build/pg_textsearch
             cd /build/pg_textsearch
 
-            artifact="pg-textsearch-${version}-pg${pg}-${arch}.zip"
+            artifact="pg_textsearch-pg${pg}-${version}.tar.gz"
             curl --silent \
                  --fail \
                  --location \
-                 --output artifact.zip \
+                 --output artifact.tar.gz \
                  "https://github.com/timescale/pg_textsearch/releases/download/${version}/${artifact}"
 
-            unzip artifact.zip
-            dpkg --install --log=/build/pg_textsearch/dpkg.log --admindir=/build/pg_textsearch/ --force-depends --force-not-root --force-overwrite pg-textsearch*.deb
+            tar xzf artifact.tar.gz
+            cp "pg${pg}/"*.so "/usr/lib/postgresql/${pg}/lib/"
+            cp "pg${pg}/"*.sql "pg${pg}/"*.control "/usr/share/postgresql/${pg}/extension/"
         )
         err=$?
         if [ $err -eq 0 ]; then
