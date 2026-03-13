@@ -271,12 +271,12 @@ DECLARE
     alter_sql text;
 BEGIN
 
-    SET local search_path to 'pg_catalog';
+    SET local search_path to pg_catalog, pg_temp;
 
     FOR alter_sql IN
         SELECT
             format(
-                $$ALTER FUNCTION %I.%I(%s) SET search_path = 'pg_catalog'$$,
+                $$ALTER FUNCTION %I.%I(%s) SET search_path = pg_catalog, pg_temp$$,
                 nspname,
                 proname,
                 pg_catalog.pg_get_function_identity_arguments(pp.oid)

@@ -43,7 +43,7 @@ CREATE OR REPLACE FUNCTION tsdbadmin.assert_admin(
 )
  RETURNS void
  LANGUAGE plpgsql
- SET search_path TO 'pg_catalog'
+ SET search_path TO pg_catalog, pg_temp
 AS $function$
 DECLARE
     -- We need to ensure we get the correct role. As we may be called from Security Definer functions, we should
@@ -139,7 +139,7 @@ CREATE OR REPLACE FUNCTION tsdbadmin.assert_password_requirements(
 )
  RETURNS void
  LANGUAGE plpgsql
- SET search_path TO 'pg_catalog'
+ SET search_path TO pg_catalog, pg_temp
  SET log_statement TO 'none' -- We do not want any function handling passwords to be logged
 AS $function$
 DECLARE
@@ -174,7 +174,7 @@ CREATE OR REPLACE FUNCTION tsdbadmin.reset_password(
  RETURNS record
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'pg_catalog'
+ SET search_path TO pg_catalog, pg_temp
  SET log_statement TO 'none' -- We do not want any function handling passwords to be logged
  SET log_min_duration_statement TO '-1'
  SET pg_stat_statements.track_utility TO 'off'
@@ -225,7 +225,7 @@ $$
 DECLARE
     pgcrypto_namespace oid := (SELECT extnamespace FROM pg_extension WHERE extname='pgcrypto');
 BEGIN
-    EXECUTE format('ALTER FUNCTION tsdbadmin.reset_password SET search_path TO pg_catalog, %s;', pgcrypto_namespace::regnamespace);
+    EXECUTE format('ALTER FUNCTION tsdbadmin.reset_password SET search_path TO pg_catalog, %s, pg_temp;', pgcrypto_namespace::regnamespace);
 
     /* We ensure the dependency we created on pgcrypto.gen_random_bytes is part of the catalogs
 
@@ -239,7 +239,7 @@ BEGIN
         'tsdbadmin.reset_password'::regproc,
         0,
         'pg_catalog.pg_proc'::regclass,
-        format('%s.gen_random_bytes', pgcrypto_namespace::regnamespace)::regproc,
+        pg_catalog.format('%s.gen_random_bytes', pgcrypto_namespace::regnamespace)::regproc,
         0,
         'n'
     ;
@@ -260,7 +260,7 @@ CREATE OR REPLACE FUNCTION tsdbadmin.alter_user(
  RETURNS name
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'pg_catalog'
+ SET search_path TO pg_catalog, pg_temp
  SET log_statement TO 'none' -- We do not want any function handling passwords to be logged
 AS $function$
 DECLARE
@@ -328,7 +328,7 @@ CREATE OR REPLACE FUNCTION tsdbadmin.create_user(
  RETURNS record
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'pg_catalog'
+ SET search_path TO pg_catalog, pg_temp
  SET log_statement TO 'none' -- We do not want any function handling passwords to be logged
 AS $function$
 DECLARE
@@ -379,7 +379,7 @@ CREATE OR REPLACE FUNCTION tsdbadmin.drop_user(
  RETURNS name
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path to 'pg_catalog'
+ SET search_path to pg_catalog, pg_temp
 AS $function$
 BEGIN
     IF if_exists AND to_regrole(username) IS NULL
