@@ -167,8 +167,6 @@ install_timescaledb() {
                 set -e
                 cd /build/$pkg
 
-                [ "$version" = "2.2.0" ] && sed -i 's/RelWithDebugInfo/RelWithDebInfo/g' CMakeLists.txt
-
                 # Set architecture-specific flags
                 local cmake_c_flags=""
                 # this part could use a more precise check, but most modern ARM CPUs already support
@@ -191,9 +189,6 @@ install_timescaledb() {
                 cd build
 
                 make
-
-                # https://github.com/timescale/timescaledb/commit/531f7ed8b16e4d1a99021d3d2b843bbc939798e3
-                [ "$version" = "2.5.2" ] && sed -i 's/pg_temp./_timescaledb_internal./g' sql/**/*.sql
 
                 make install
 
@@ -258,94 +253,6 @@ install_toolkit() {
         fi
     done
     PATH="$ORIGINAL_PATH"
-}
-
-timescaledb_post_install() {
-    local pg
-    # https://github.com/timescale/timescaledb/commit/6dddfaa54e8f29e3ea41dab2fe7d9f3e37cd3aae
-    for pg in $(available_pg_versions); do
-        for file in "/usr/share/postgresql/$pg/extension/timescaledb--"*.sql; do
-            cat >>"${file}" <<"__SQL__"
-DO $dynsql$
-DECLARE
-    alter_sql text;
-BEGIN
-
-    SET local search_path to pg_catalog, pg_temp;
-
-    FOR alter_sql IN
-        SELECT
-            format(
-                $$ALTER FUNCTION %I.%I(%s) SET search_path = pg_catalog, pg_temp$$,
-                nspname,
-                proname,
-                pg_catalog.pg_get_function_identity_arguments(pp.oid)
-            )
-        FROM
-            pg_depend
-        JOIN
-            pg_extension ON (oid=refobjid)
-        JOIN
-            pg_proc pp ON (objid=pp.oid)
-        JOIN
-            pg_namespace pn ON (pronamespace=pn.oid)
-        JOIN
-            pg_language pl ON (prolang=pl.oid)
-        LEFT JOIN LATERAL (
-                SELECT * FROM unnest(proconfig) WHERE unnest LIKE 'search_path=%'
-            ) sp(search_path) ON (true)
-        WHERE
-            deptype='e'
-            AND extname='timescaledb'
-            AND extversion < '2.5.2'
-            AND lanname NOT IN ('c', 'internal')
-            AND prokind = 'f'
-            -- Only those functions/procedures that do not yet have their search_path fixed
-            AND search_path IS NULL
-            AND proname != 'time_bucket'
-        ORDER BY
-            search_path
-    LOOP
-        EXECUTE alter_sql;
-    END LOOP;
-
-    -- And for the sql time_bucket functions we prefer to *not* set the search_path to
-    -- allow inlining of these functions
-    WITH sql_time_bucket_fn AS (
-        SELECT
-            pp.oid
-        FROM
-            pg_depend
-        JOIN
-            pg_extension ON (oid=refobjid)
-        JOIN
-            pg_proc pp ON (objid=pp.oid)
-        JOIN
-            pg_namespace pn ON (pronamespace=pn.oid)
-        JOIN
-            pg_language pl ON (prolang=pl.oid)
-        WHERE
-            deptype = 'e'
-            AND extname='timescaledb'
-            AND extversion < '2.5.2'
-            AND lanname = 'sql'
-            AND proname = 'time_bucket'
-            AND prokind = 'f'
-            AND prosrc NOT LIKE '%OPERATOR(pg_catalog.%'
-    )
-    UPDATE
-        pg_proc
-    SET
-        prosrc = regexp_replace(prosrc, '([-+]{1})', ' OPERATOR(pg_catalog.\1) ', 'g')
-    FROM
-        sql_time_bucket_fn AS s
-    WHERE
-        s.oid = pg_proc.oid;
-END;
-$dynsql$;
-__SQL__
-        done # for file
-    done     # for pg
 }
 
 install_pgvectorscale() {
