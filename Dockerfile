@@ -405,6 +405,17 @@ RUN OSS_ONLY="${OSS_ONLY}" \
         TIMESCALEDB_VERSIONS="${TIMESCALEDB_VERSIONS}" \
         /build/scripts/install_extensions timescaledb
 
+# The extension directories use a sticky bit (1775), which prevents the postgres user from
+# removing or renaming files owned by root — even when the directory itself is group-writable.
+# hot-forge replaces files by first removing them and then creating a symlink; for that to
+# work the file must be owned by postgres. The timescaledb loader package installs
+# timescaledb.control as root-owned, so we transfer ownership here. This allows hot-forge
+# to update default_version by replacing the file with a symlink to its live directory.
+RUN for pg in ${PG_VERSIONS}; do \
+        find "$(/usr/lib/postgresql/${pg}/bin/pg_config --sharedir)/extension" \
+            -name 'timescaledb*.control' -exec chown postgres:postgres {} \;; \
+    done
+
 USER postgres
 
 # install all rust packages in the same step to allow it to optimize for cargo-pgx installs
