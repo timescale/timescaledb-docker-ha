@@ -218,39 +218,6 @@ RUN for pg in ${PG_VERSIONS}; do \
         done; \
     done
 
-# the strip command is due to the vectors.so size: 450mb before stripping, 12mb after
-ARG PGVECTO_RS
-RUN if [ -n "${PGVECTO_RS}" ]; then \
-        for pg in ${PG_VERSIONS}; do \
-            # Vecto.rs only support PostgreSQL 14..17
-            if [[ $pg -ge 14 && $pg -lt 18 ]]; then \
-                curl --silent \
-                    --location \
-                    --output /tmp/vectors.deb \
-                    "https://github.com/tensorchord/pgvecto.rs/releases/download/v${PGVECTO_RS}/vectors-pg${pg}_${PGVECTO_RS}_$(dpkg --print-architecture).deb" && \
-                dpkg -i /tmp/vectors.deb && \
-                rm -rfv /tmp/vectors.deb && \
-                strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vectors.so"; \
-            fi \
-        done; \
-    fi
-
-# VectorChord (vchord) is a PostgreSQL extension designed for scalable, high-performance, and disk-efficient vector similarity search. It's the successor of pgvecto.rs
-ARG VECTORCHORD
-RUN set -ex; \
-    if [ -n "${VECTORCHORD}" ]; then \
-        for pg in ${PG_VERSIONS}; do \
-            curl --silent \
-                --location \
-                --output /tmp/vectorchord.deb \
-                "https://github.com/tensorchord/VectorChord/releases/download/${VECTORCHORD}/postgresql-${pg}-vchord_${VECTORCHORD}-1_$(dpkg --print-architecture).deb" && \
-            dpkg -i /tmp/vectorchord.deb && \
-            rm -rfv /tmp/vectorchord.deb && \
-            # 93MB before stripping, 3.5MB after
-            strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vchord.so"; \
-        done; \
-    fi
-
 # Some Patroni prerequisites
 # This need to be done after the PostgreSQL packages have been installed,
 # to ensure we have the preferred libpq installations etc.
@@ -506,8 +473,6 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "OSS_ONLY=\"$OSS_ONLY\"" >> /.image_config; \
     echo "PG_LOGERRORS=\"${PG_LOGERRORS}\"" >> /.image_config; \
     echo "PG_STAT_MONITOR=\"${PG_STAT_MONITOR}\"" >> /.image_config; \
-    echo "PGVECTO_RS=\"${PGVECTO_RS}\"" >> /.image_config; \
-    echo "VECTORCHORD=\"${VECTORCHORD}\"" >> /.image_config; \
     echo "POSTGIS_VERSIONS=\"${POSTGIS_VERSIONS}\"" >> /.image_config; \
     echo "PG_AUTH_MON=\"${PG_AUTH_MON}\"" >> /.image_config; \
     echo "PGBOUNCER_EXPORTER_VERSION=\"${PGBOUNCER_EXPORTER_VERSION}\"" >> /.image_config; \

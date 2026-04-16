@@ -36,14 +36,12 @@ This directory contains everything that allows us to create a Docker image with 
 | [pgrouting](https://pgrouting.org/) | Geospatial routing |
 | [pgtap](https://pgtap.org/) | Unit testing framework |
 | [pgvector](https://github.com/pgvector/pgvector) | Vector similarity search |
-| [pgvecto.rs](https://github.com/tensorchord/pgvecto.rs) | Vector similarity search (Rust) |
 | [pgvectorscale](https://github.com/timescale/pgvectorscale) | Vector indexing and search at scale |
 | [pldebugger](https://github.com/EnterpriseDB/pldebugger) | PL/pgSQL debugger |
 | [PostGIS](https://postgis.net/) | Geospatial objects and functions |
 | [rum](https://github.com/postgrespro/rum) | Inverted index with additional info |
 | [semver](https://github.com/theory/pg-semver) | Semantic versioning data type |
 | [unit](https://github.com/df7cb/postgresql-unit) | SI units |
-| [VectorChord](https://github.com/tensorchord/VectorChord) | Disk-efficient vector search |
 | [wal2json](https://github.com/eulerto/wal2json) | JSON WAL output plugin |
 
 Currently, our base image is Ubuntu, as we require glibc 2.33+.
