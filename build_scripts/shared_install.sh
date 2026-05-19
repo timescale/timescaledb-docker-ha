@@ -60,33 +60,33 @@ install_timescaledb_for_pg_version() {
     local pg_version=$1
     local ts_version=$2
     local pg_full_suffix=$3
+    local os_suffix
+    local suffix
     local package_suffix
     local loader_package
     local main_package
 
-    package_suffix="$(get_package_suffix "${ts_version}")-${pg_full_suffix}"
-    log "package suffix: ${package_suffix}"
-    
-    # construct package names
-    loader_package=$(construct_loader_package_name "${pg_version}" "${ts_version}" "${package_suffix}")
-    main_package=$(construct_package_name "${pg_version}" "${ts_version}" "${package_suffix}")
-    
-    log "loader package: ${loader_package}"
-    log "main package: ${main_package}"
-    
-    # install loader
-    if ! apt-get install "${loader_package}" "${main_package}" -y; then
-        apt-get update -f -y  # fix dependencies
-        error "failed to install loader package"
-    fi
-    
-    # Install extension
-    if ! apt-get install "${main_package}" -y; then
-        apt-get update -f -y
-        error "failed to install main package"
-    fi
-    
-    log "successfully installed TimescaleDB ${ts_version} for PostgreSQL ${pg_version}"
+    os_suffix="$(get_package_suffix)"
+
+    # Try the current PG minor suffix first; fall back to the previous minor if
+    # packages haven't been published for the new PG minor yet.
+    for suffix in "${pg_full_suffix}" "$((pg_full_suffix - 1))"; do
+        package_suffix="${os_suffix}-${suffix}"
+        loader_package=$(construct_loader_package_name "${pg_version}" "${ts_version}" "${package_suffix}")
+        main_package=$(construct_package_name "${pg_version}" "${ts_version}" "${package_suffix}")
+
+        log "loader package: ${loader_package}"
+        log "main package: ${main_package}"
+
+        if apt-get install "${loader_package}" "${main_package}" -y 2>/dev/null; then
+            log "successfully installed TimescaleDB ${ts_version} for PostgreSQL ${pg_version}"
+            return 0
+        fi
+
+        log "packages with suffix ${suffix} unavailable, trying previous minor..."
+    done
+
+    error "failed to install TimescaleDB ${ts_version} for PostgreSQL ${pg_version}"
 }
 
 # 18.1 -> 1801
