@@ -143,6 +143,10 @@ timescaledb:
   2.27.0:
     pg-min: 15
     pg-max: 18
+  2.27.1:
+    pg-min: 15
+    pg-max: 18
+
 
   # main is the tip of timescaledb
   #main:
