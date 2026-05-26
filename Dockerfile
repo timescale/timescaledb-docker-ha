@@ -181,7 +181,6 @@ RUN packages=""; \
             postgresql-${pg}-pgpcre postgresql-${pg}-pgpcre-dbgsym \
             postgresql-${pg}-wal2json postgresql-${pg}-wal2json-dbgsym \
             postgresql-${pg}-pgq3 postgresql-${pg}-pgq3-dbgsym \
-            postgresql-${pg}-ip4r postgresql-${pg}-ip4r-dbgsym \
             postgresql-${pg}-pgtap \
             postgresql-${pg}-semver postgresql-${pg}-semver-dbgsym \
             postgresql-${pg}-hypopg postgresql-${pg}-hypopg-dbgsym \
