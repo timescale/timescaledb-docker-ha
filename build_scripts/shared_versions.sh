@@ -7,7 +7,6 @@ PG_WANTED_EXTENSIONS=(
     h3_postgis
     hll
     hypopg
-    ip4r
     orafce
     pg-qualstats
     pg-stat-kcache
