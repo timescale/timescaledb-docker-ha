@@ -168,6 +168,10 @@ toolkit:
     cargo-pgrx: 0.16.1
     pg-min: 15
     pg-max: 18
+  1.23.0:
+    cargo-pgrx: 0.18.0
+    pg-min: 15
+    pg-max: 18
 
 pgvectorscale:
   0.2.0:
