@@ -307,14 +307,6 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
         && echo "listen_addresses = '*'" >> $file; \
     done
 
-# pg_textsearch requires shared_preload_libraries (pg17+ only)
-RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
-        pgver="$(basename "$(dirname "$file")")"; \
-        if [ "$pgver" -ge 17 ] 2>/dev/null; then \
-            sed -r -i "s/(shared_preload_libraries\s*=\s*'[^']*)/\1,pg_textsearch/" "$file"; \
-        fi; \
-    done
-
 RUN chown -R postgres:postgres /usr/local/cargo
 
 # required to install dbgsym packages
@@ -424,6 +416,17 @@ RUN PG_TEXTSEARCH_VERSION="${PG_TEXTSEARCH_VERSION}" \
     /build/scripts/install_extensions pg_textsearch
 
 USER root
+
+# pg_textsearch requires shared_preload_libraries (pg17+ only). This must run
+# AFTER pg_textsearch is installed: cargo-pgrx >= 0.18 runs initdb during
+# `cargo pgrx init` while building the toolkit, and a cluster that preloads a
+# not-yet-installed library fails to bootstrap (toolkit-1.23.0 build for pg17/18).
+RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
+        pgver="$(basename "$(dirname "$file")")"; \
+        if [ "$pgver" -ge 17 ] 2>/dev/null; then \
+            sed -r -i "s/(shared_preload_libraries\s*=\s*'[^']*)/\1,pg_textsearch/" "$file"; \
+        fi; \
+    done
 
 # All the tools that were built in the previous steps have their ownership set to postgres
 # to allow mutability. To allow one to build this image with the default privileges (owned by root)
