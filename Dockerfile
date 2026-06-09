@@ -550,6 +550,7 @@ RUN set -ex; \
             /usr/share/locale/?? \
             /usr/share/locale/??_?? \
             /home/postgres/.pgx \
+            /home/postgres/.cache \
             /build/ \
             /usr/local/rustup \
             /usr/local/cargo \
