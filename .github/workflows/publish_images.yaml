@@ -176,6 +176,17 @@ jobs:
         docker_tag_postfix: ["", "-all", "-oss", "-all-oss" ]
 
     steps:
+      # Free up disk space on the runner. The check pulls both the amd64 and
+      # arm64 variants of the image, and the pg*-all images in particular are
+      # large enough that a stock runner's ~14GB free on / overflows otherwise.
+      - name: remove unneeded runner software
+        run: |
+          df -h
+          sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft \
+                      /opt/hostedtoolcache /usr/local/.ghcup /usr/local/share/boost || true
+          sudo docker image prune --all --force || true
+          df -h
+
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 

@@ -347,6 +347,9 @@ check: # check images to see if they have all the requested content
 		docker exec -e GITHUB_STEP_SUMMARY="/tmp/step_summary-$$key" -e CI="$(CI)" "$$check_name" /cicd/install_checks -v || { docker logs -n100 "$$check_name"; exit 1; }
 		docker exec "$$check_name" cat "/tmp/step_summary-$$key" >> "$(GITHUB_STEP_SUMMARY)" 2>&1
 		docker rm --force "$$check_name" >&/dev/null || true
+		# Drop the image before pulling the next arch; the pg*-all images are
+		# large enough that holding both amd64 and arm64 at once fills the disk.
+		docker rmi --force "$(DOCKER_RELEASE_URL)" >&/dev/null || true
 	done
 
 .PHONY: check-sha
