@@ -211,8 +211,10 @@ RUN if [ -n "${POSTGIS_VERSIONS}" ]; then \
 # Add a couple 3rd party extension managers to make extension additions easier
 RUN apt-get install -y pgxnclient
 
+# pg_uuidv7 is pinned for reproducible builds: pgxnclient otherwise installs the latest PGXN
+# release at build time, which can break unexpectedly. Bump deliberately.
 RUN for pg in ${PG_VERSIONS}; do \
-        for pkg in pg_uuidv7; do \
+        for pkg in "pg_uuidv7=1.7.0"; do \
             PATH="/usr/lib/postgresql/${pg}/bin:$PATH" pgxnclient install --pg_config "/usr/lib/postgresql/${pg}/bin/pg_config" "$pkg"; \
         done; \
     done
@@ -550,6 +552,7 @@ RUN set -ex; \
             /usr/share/locale/?? \
             /usr/share/locale/??_?? \
             /home/postgres/.pgx \
+            /home/postgres/.cache \
             /build/ \
             /usr/local/rustup \
             /usr/local/cargo \
