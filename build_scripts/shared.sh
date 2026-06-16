@@ -180,8 +180,15 @@ cargo_pgrx_cmd() {
 }
 
 cargo_pgrx_init() {
-	local pgrx_version="$1" pg_ver="$2" pg_versions pgrx_cmd
+	local pgrx_version="$1" pg_ver="$2" pg_versions pgrx_cmd pg
 	pgrx_cmd="$(cargo_pgrx_cmd "$pgrx_version")"
+
+	# Matches only the old cargo-pgx 0.0-0.5 series, which predates pg15 support.
+	# Must be a quoted variable so the backslashes survive as regex (an inline
+	# pattern has them stripped, turning "\." into any-char) and so the minor
+	# component is bounded by a dot/end-of-string -- otherwise 0.18 etc. is
+	# mistaken for the 0.1 series.
+	local old_pgx_series='^0\.[0-5]([.]|$)'
 
 	if [ "$pgrx_cmd" = pgx ]; then
 		if ! require_cargo_pgx_version "$pgrx_version"; then
@@ -195,7 +202,7 @@ cargo_pgrx_init() {
 		fi
 	fi
 
-	if [[ -z "$pg_ver" || "$pg" -ge 15 && "$pgrx_version" =~ ^0\.[0-5]\.* ]]; then
+	if [[ -z "$pg_ver" || "$pg" -ge 15 && "$pgrx_version" =~ $old_pgx_series ]]; then
 		pg_versions="$(available_pg_versions)"
 	else
 		pg_versions="$pg_ver"
@@ -203,7 +210,7 @@ cargo_pgrx_init() {
 	args=()
 	for pg in $pg_versions; do
 		# pgrx only got the pg15 feature in 0.6.0
-		[[ "$pgrx_version" =~ ^0\.[0-5]\.* && $pg -ge 15 ]] && continue
+		[[ "$pgrx_version" =~ $old_pgx_series && $pg -ge 15 ]] && continue
 
 		args+=("--pg${pg}" "/usr/lib/postgresql/${pg}/bin/pg_config")
 	done
