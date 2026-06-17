@@ -10,7 +10,7 @@ EOT
 # role is always the second-to-last argument regardless of any leading args.
 set -euo pipefail
 
-role="${@: -2:1}"
+role="${*: -2:1}"
 
 case "$role" in
   master|primary)
