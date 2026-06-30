@@ -2,11 +2,47 @@
 
 This directory contains everything that allows us to create a Docker image with the following pieces of software:
 
-- PostgreSQL
-- Some PostgreSQL extensions, most notably PostGIS
-- TimescaleDB, multiple versions
+- PostgreSQL (with PL/Python and PL/Perl)
+- [TimescaleDB](https://github.com/timescale/timescaledb) (multiple versions)
+- [Timescale Toolkit](https://github.com/timescale/timescaledb-toolkit)
 - pgBackRest
+- Patroni
 - scripts to make it all work in a Kubernetes Context
+
+### Included Extensions
+
+| Extension | Description |
+|-----------|-------------|
+| [h3](https://github.com/zachasme/h3-pg) / h3_postgis | Hexagonal hierarchical geospatial indexing |
+| [hll](https://github.com/citusdata/postgresql-hll) | HyperLogLog data structure |
+| [hypopg](https://github.com/HypoPG/hypopg) | Hypothetical indexes |
+| [ip4r](https://github.com/RhodiumToad/ip4r) | IPv4/IPv6 range type |
+| [logerrors](https://github.com/munakoiso/logerrors) | Error counts grouped by error code |
+| [orafce](https://github.com/orafce/orafce) | Oracle compatibility functions |
+| [pg_auth_mon](https://github.com/RafiaSabih/pg_auth_mon) | Authentication attempt monitoring |
+| [pg_cron](https://github.com/citusdata/pg_cron) | Job scheduler |
+| [pg_qualstats](https://github.com/powa-team/pg_qualstats) | Query predicate statistics |
+| [pg_repack](https://github.com/reorg/pg_repack) | Online table reorganization |
+| [pg_stat_kcache](https://github.com/powa-team/pg_stat_kcache) | Kernel cache statistics |
+| [pg_stat_monitor](https://github.com/percona/pg_stat_monitor) | Query performance monitoring |
+| [pg_textsearch](https://github.com/timescale/pg_textsearch) | BM25 full-text search |
+| [pg_uuidv7](https://github.com/fboulnois/pg_uuidv7) | UUIDv7 generation |
+| [pgai](https://github.com/timescale/pgai) | AI workloads |
+| [pgaudit](https://github.com/pgaudit/pgaudit) | Audit logging |
+| [pgextwlist](https://github.com/dimitri/pgextwlist) | Extension allow-listing |
+| [pglogical](https://github.com/2ndQuadrant/pglogical) | Logical replication |
+| [pgpcre](https://github.com/petere/pgpcre) | Perl-compatible regular expressions |
+| [pgq](https://github.com/pgq/pgq) | Queue engine (Skytools) |
+| [pgrouting](https://pgrouting.org/) | Geospatial routing |
+| [pgtap](https://pgtap.org/) | Unit testing framework |
+| [pgvector](https://github.com/pgvector/pgvector) | Vector similarity search |
+| [pgvectorscale](https://github.com/timescale/pgvectorscale) | Vector indexing and search at scale |
+| [pldebugger](https://github.com/EnterpriseDB/pldebugger) | PL/pgSQL debugger |
+| [PostGIS](https://postgis.net/) | Geospatial objects and functions |
+| [rum](https://github.com/postgrespro/rum) | Inverted index with additional info |
+| [semver](https://github.com/theory/pg-semver) | Semantic versioning data type |
+| [unit](https://github.com/df7cb/postgresql-unit) | SI units |
+| [wal2json](https://github.com/eulerto/wal2json) | JSON WAL output plugin |
 
 Currently, our base image is Ubuntu, as we require glibc 2.33+.
 
@@ -37,7 +73,6 @@ make build-oss
 
 > For more information about licensing, please read our [blog post](https://blog.timescale.com/blog/how-we-are-building-an-open-source-business-a7701516a480/) about the subject.
 
-By default, the Docker image contains many extensions, including [TimescaleDB](https://github.com/timescale/timescaledb) and [PostGIS](https://postgis.net/).
 You can override which version of the extensions are built by setting environment variables, some examples:
 
 ```console
