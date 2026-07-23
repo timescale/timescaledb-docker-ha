@@ -145,9 +145,6 @@ RUN find /usr/share/i18n/charmaps/ -type f ! -name UTF-8.gz -delete; \
 # We install pip3, as we need it for some of the extensions. This will install a lot of dependencies, all marked as auto to help with cleanup later
 RUN apt-get install -y python3 python3-pip
 
-# using uv with pgai reduces size of dependencies
-RUN python3 -m pip install uv
-
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
 ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
@@ -316,24 +313,9 @@ RUN mkdir -p /usr/lib/debug; \
     chgrp -R postgres /usr/lib/debug; \
     chmod -R g+w /usr/lib/debug
 
-## Prepare pgai, needs a separate directory
-RUN install -o postgres -g postgres -m 0750 -d /usr/local/lib/pgai
-
 USER postgres
 
 ENV MAKEFLAGS=-j4
-
-# pgai is an extension for artificial intelligence workloads
-ARG PGAI_VERSION
-RUN if [ -n "${PGAI_VERSION}" ]; then \
-        git clone --branch "${PGAI_VERSION}" https://github.com/timescale/pgai.git /build/pgai; \
-        cd /build/pgai; \
-        for pg in ${PG_VERSIONS}; do \
-            [[ "$pg" -lt 16 ]] && continue; \
-            PG_BIN=$(/usr/lib/postgresql/${pg}/bin/pg_config --bindir) PG_MAJOR=${pg} ./projects/extension/build.py install all; \
-        done; \
-    fi
-
 
 # pg_stat_monitor is a Query Performance Monitoring tool for PostgreSQL
 # https://github.com/percona/pg_stat_monitor
@@ -516,7 +498,6 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "PG_AUTH_MON=\"${PG_AUTH_MON}\"" >> /.image_config; \
     echo "PGBOUNCER_EXPORTER_VERSION=\"${PGBOUNCER_EXPORTER_VERSION}\"" >> /.image_config; \
     echo "PGBACKREST_EXPORTER_VERSION=\"${PGBACKREST_EXPORTER_VERSION}\"" >> /.image_config; \
-    echo "PGAI_VERSION=\"${PGAI_VERSION}\"" >> /.image_config; \
     echo "PGVECTORSCALE_VERSIONS=\"${PGVECTORSCALE_VERSIONS}\"" >> /.image_config; \
     echo "PG_TEXTSEARCH_VERSION=\"${PG_TEXTSEARCH_VERSION}\"" >> /.image_config; \
     echo "PG_MAJOR=\"${PG_MAJOR}\"" >> /.image_config; \

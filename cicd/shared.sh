@@ -238,17 +238,6 @@ check_others() {
 		fi
 	fi
 
-	record_ext_version ai "$pg" ""
-	if [[ -n "$PGAI_VERSION" && "$pg" -gt 15 ]]; then
-		# pgai has no .so file
-		pgai_control="$(/usr/lib/postgresql/"${pg}"/bin/pg_config --sharedir)/extension/ai.control"
-		if [ -f "$pgai_control" ]; then
-			record_ext_version ai "$pg" "$PGAI_VERSION"
-		else
-			should_skip_for_pg18 "$pg" ai || error "ai not found for pg$pg"
-		fi
-	fi
-
     record_ext_version pgvecto.rs "$pg" ""
     # TODO: pgvecto.rs hasn't released a pg17 compatible version yet, check https://github.com/tensorchord/pgvecto.rs/releases
     if [[ -n "$PGVECTO_RS" && "$pg" -lt 17 ]]; then
