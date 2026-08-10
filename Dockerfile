@@ -192,7 +192,8 @@ RUN packages=""; \
             postgresql-${pg}-hll postgresql-${pg}-hll-dbgsym \
             postgresql-${pg}-pldebugger postgresql-${pg}-pldebugger-dbgsym \
             postgresql-${pg}-rum postgresql-${pg}-rum-dbgsym \
-            postgresql-${pg}-orafce postgresql-${pg}-orafce-dbgsym"; \
+            postgresql-${pg}-orafce postgresql-${pg}-orafce-dbgsym \
+            postgresql-${pg}-roaringbitmap postgresql-${pg}-roaringbitmap-dbgsym"; \
     done; \
     apt-get install -y $packages
 

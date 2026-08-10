@@ -19,6 +19,7 @@ PG_WANTED_EXTENSIONS=(
     pgvector
     pldebugger
     repack
+    roaringbitmap
     rum
     unit
     wal2json
