@@ -9,8 +9,8 @@
 # regardless of the major PostgreSQL Version. It also allow us to support (eventually)
 # pg_upgrade from one major version to another,
 # so we need all the postgres & timescale libraries for all versions
-ARG PG_VERSIONS="15 14 13"
-ARG PG_MAJOR=15
+ARG PG_VERSIONS="14 13"
+ARG PG_MAJOR=13
 
 ## We have many base images to choose from, (alpine, bitnami) but as we're adding a lot
 ## of tools to the image anyway, the end result is that we would only
@@ -43,7 +43,7 @@ RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 
 # Make sure we're as up-to-date as possible, and install the highlest level dependencies
 RUN apt-get update && apt-get upgrade -y \
-    && apt-get install -y apt-utils ca-certificates curl gnupg1 gpg gpg-agent locales lsb-release wget vim-tiny
+    && apt-get install -y ca-certificates curl gnupg1 gpg gpg-agent locales lsb-release wget unzip
 
 RUN mkdir -p /build/scripts
 RUN chmod 777 /build
@@ -67,22 +67,22 @@ RUN apt-get install -y less jq strace procps awscli
 # containers using this image
 RUN apt-get install -y gdb gdbserver
 
-# The next 2 instructions (ENV + RUN) are directly copied from https://github.com/rust-lang/docker-rust/blob/aa8bed3870cb14ecf49f127bae0a212adebc2384/1.60.0/buster/Dockerfile
+# The next 2 instructions (ENV + RUN) are directly copied from https://github.com/rust-lang/docker-rust/blob/76e3311a6326bc93a1e96ad7ae06c05763b62b18/1.65.0/bullseye/Dockerfile
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
-    RUST_VERSION=1.60.0
+    RUST_VERSION=1.65.0
 
 RUN set -eux; \
     dpkgArch="$(dpkg --print-architecture)"; \
     case "${dpkgArch##*-}" in \
-        amd64) rustArch='x86_64-unknown-linux-gnu'; rustupSha256='3dc5ef50861ee18657f9db2eeb7392f9c2a6c95c90ab41e45ab4ca71476b4338' ;; \
-        armhf) rustArch='armv7-unknown-linux-gnueabihf'; rustupSha256='67777ac3bc17277102f2ed73fd5f14c51f4ca5963adadf7f174adf4ebc38747b' ;; \
-        arm64) rustArch='aarch64-unknown-linux-gnu'; rustupSha256='32a1532f7cef072a667bac53f1a5542c99666c4071af0c9549795bbdb2069ec1' ;; \
-        i386) rustArch='i686-unknown-linux-gnu'; rustupSha256='e50d1deb99048bc5782a0200aa33e4eea70747d49dffdc9d06812fd22a372515' ;; \
+        amd64) rustArch='x86_64-unknown-linux-gnu'; rustupSha256='5cc9ffd1026e82e7fb2eec2121ad71f4b0f044e88bca39207b3f6b769aaa799c' ;; \
+        armhf) rustArch='armv7-unknown-linux-gnueabihf'; rustupSha256='48c5ecfd1409da93164af20cf4ac2c6f00688b15eb6ba65047f654060c844d85' ;; \
+        arm64) rustArch='aarch64-unknown-linux-gnu'; rustupSha256='e189948e396d47254103a49c987e7fb0e5dd8e34b200aa4481ecc4b8e41fb929' ;; \
+        i386) rustArch='i686-unknown-linux-gnu'; rustupSha256='0e0be29c560ad958ba52fcf06b3ea04435cb3cd674fbe11ce7d954093b9504fd' ;; \
         *) echo >&2 "unsupported architecture: ${dpkgArch}"; exit 1 ;; \
     esac; \
-    url="https://static.rust-lang.org/rustup/archive/1.24.3/${rustArch}/rustup-init"; \
+    url="https://static.rust-lang.org/rustup/archive/1.25.1/${rustArch}/rustup-init"; \
     wget "$url"; \
     echo "${rustupSha256} *rustup-init" | sha256sum -c -; \
     chmod +x rustup-init; \
@@ -131,9 +131,7 @@ FROM compiler as builder
 
 RUN for pg in ${PG_VERSIONS}; do \
         apt-get install -y postgresql-${pg}-dbgsym postgresql-plpython3-${pg} postgresql-plperl-${pg} \
-            postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack \
-            postgresql-${pg}-hypopg postgresql-${pg}-powa postgresql-${pg}-pg-wait-sampling \
-            postgresql-${pg}-extra-window-functions postgresql-${pg}-pg-track-settings postgresql-${pg}-pglogical \
+            postgresql-${pg}-pgextwlist postgresql-${pg}-hll postgresql-${pg}-pgrouting postgresql-${pg}-repack postgresql-${pg}-hypopg postgresql-${pg}-unit \
             postgresql-${pg}-pg-stat-kcache postgresql-${pg}-cron postgresql-${pg}-pldebugger || exit 1; \
     done
 
@@ -151,16 +149,23 @@ RUN for postgisv in ${POSTGIS_VERSIONS}; do \
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj
 RUN echo 'deb http://cz.archive.ubuntu.com/ubuntu kinetic main universe' >> /etc/apt/sources.list && \
     apt-get update && \
-    apt-get install -y patroni && \
+    apt-get install -y patroni=2.1.4-\* && \
     head -n -1 /etc/apt/sources.list > /etc/apt/sources.list.tmp; mv /etc/apt/sources.list.tmp /etc/apt/sources.list; \
     apt-get update
 # Patch Patroni code with changes from https://github.com/zalando/patroni/pull/2318.
 # NOTE: This is a temporary solution until changes land upstream.
 ARG TIMESCALE_STATIC_PRIMARY
 RUN if [ "${TIMESCALE_STATIC_PRIMARY}" != "" ]; then \
-    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.4/patroni/ha.py > /usr/lib/python3/dist-packages/patroni/ha.py && \
-    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.4/patroni/config.py > /usr/lib/python3/dist-packages/patroni/config.py && \
-    wget -qO- https://raw.githubusercontent.com/timescale/patroni/v2.2.0-beta.4/patroni/validator.py > /usr/lib/python3/dist-packages/patroni/validator.py; \
+    mkdir /tmp/patroni && cd /tmp/patroni && \
+    git init && git remote add -f origin https://github.com/timescale/patroni.git && \
+    git config core.sparseCheckout true && echo 'patroni' > .git/info/sparse-checkout && \
+    git pull origin feature-static-primaries; \
+    fi
+
+# Update Patroni package dir with new code.
+RUN if [ "${TIMESCALE_STATIC_PRIMARY}" != "" ]; then \
+    rm -rf /usr/lib/python3/dist-packages/patroni && \
+    mv /tmp/patroni/patroni /usr/lib/python3/dist-packages; \
     fi
 
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
@@ -275,8 +280,7 @@ COPY build_scripts /build/scripts
 
 # If a specific GITHUB_TAG is provided, we will build that tag only. Otherwise
 # we build all the public (recent) releases
-#RUN TS_VERSIONS="1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0 2.5.1 2.5.2 2.6.0 2.6.1 2.7.0 2.7.1 2.7.2 2.8.0 2.8.1" \
-RUN TS_VERSIONS="2.9.1" \
+RUN TS_VERSIONS="1.7.5 2.1.0 2.1.1 2.2.0 2.2.1 2.3.0 2.3.1 2.4.0 2.4.1 2.4.2 2.5.0 2.5.1 2.5.2 2.6.0 2.6.1 2.7.0 2.7.1 2.7.2 2.8.0 2.8.1 2.9.0 2.9.1" \
     && if [ "${GITHUB_TAG}" != "" ]; then TS_VERSIONS="${GITHUB_TAG}"; fi \
     && cd /build/timescaledb && git pull \
     && set -e \
@@ -303,8 +307,26 @@ RUN if [ ! -z "${TIMESCALE_PROMSCALE_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
         done; \
     fi
 
+ARG TIMESCALE_OSM_EXTENSION=
+ARG OSM_PGX_VERSION=0.4.5
+# build and install the timescale_osm extension
+RUN --mount=type=secret,uid=1000,id=private_repo_token \
+    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_OSM_EXTENSION}" ]; then \
+        set -e \
+        && mkdir /build/osm_extension \
+        && cd /build/osm_extension \ 
+        && for pg in ${PG_VERSIONS}; do \
+            if [ ${pg} -ge "14" ]; then \
+                # install all OSM versions for each PG version. 
+                for osm_version in ${TIMESCALE_OSM_EXTENSION}; do \
+                    /build/scripts/install_timescaledb-osm.sh ${osm_version} ${pg} ${OSM_PGX_VERSION} $(cat "${REPO_SECRET_FILE}") || exit 1 ; \
+                done; \
+            fi; \
+        done; \
+    fi
+
 # Make sure to override this when upgrading to new PGX version
-ARG PGX_VERSION=0.2.6
+ARG PGX_VERSION=0.6.1
 ARG TIMESCALE_CLOUDUTILS=
 # build and install the cloudutils libarary and extension
 RUN --mount=type=secret,uid=1000,id=private_repo_token --mount=type=secret,uid=1000,id=AWS_ACCESS_KEY_ID --mount=type=secret,uid=1000,id=AWS_SECRET_ACCESS_KEY \
@@ -313,7 +335,7 @@ RUN --mount=type=secret,uid=1000,id=private_repo_token --mount=type=secret,uid=1
         [ -f "/run/secrets/AWS_SECRET_ACCESS_KEY" ] && export AWS_SECRET_ACCESS_KEY="$(cat /run/secrets/AWS_SECRET_ACCESS_KEY)" ; \
         set -e \
         && cd /build \
-        && cargo install cargo-pgx --git https://github.com/nikkhils/pgx.git --rev 4cc6a13; \
+        && cargo install --version ${PGX_VERSION} cargo-pgx; \
         for pg in ${PG_VERSIONS}; do \
             if [ ${pg} -ge "13" ]; then \
                 [ -d "/build/timescaledb_cloudutils/.git" ] || git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/timescaledb_cloudutils || exit 1 ; \
@@ -392,6 +414,21 @@ RUN if [ ! -z "${TIMESCALEDB_TOOLKIT_EXTENSIONS}" -a -z "${OSS_ONLY}" ]; then \
 
 # We can remove this at some point, useful for debugging builds for now
 RUN /build/bin/sccache --show-stats
+
+# ts_stat_statements is a query monitoring extension.
+# It is a private timescale project and is therefore not included/built by default
+ARG TIMESCALE_TS_STAT_STATEMENTS=
+RUN --mount=type=secret,uid=1000,id=private_repo_token \
+    if [ -f "${REPO_SECRET_FILE}" -a -z "${OSS_ONLY}" -a ! -z "${TIMESCALE_TS_STAT_STATEMENTS}" ]; then \
+      cd /build \
+              && git clone https://github-actions:$(cat "${REPO_SECRET_FILE}")@github.com/timescale/ts_stat_statements \
+              && for pg in ${PG_VERSIONS}; do \
+                    if [ ${pg} -ge "14" ]; then \
+                      cd /build/ts_stat_statements && git reset HEAD --hard && git checkout ${TIMESCALE_TS_STAT_STATEMENTS} \
+                      && make clean && PG_CONFIG=/usr/lib/postgresql/${pg}/bin/pg_config make install || exit 1 ; \
+                    fi; \
+                done; \
+    fi
 
 USER root
 

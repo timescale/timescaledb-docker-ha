@@ -1,21 +1,23 @@
-PG_MAJOR?=15
+PG_MAJOR?=14
 # All PG_VERSIONS binaries/libraries will be included in the Dockerfile
 # specifying multiple versions will allow things like pg_upgrade etc to work.
-PG_VERSIONS?=15
+PG_VERSIONS?=14 13 12
 
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 POSTGIS_VERSIONS?="3"
 PG_AUTH_MON?=v1.0
-PG_STAT_MONITOR?=1.1.0
+PG_STAT_MONITOR?=1.0.0-rc.1
 PG_LOGERRORS?=3c55887b
-TIMESCALE_PROMSCALE_EXTENSIONS?=0.8.0
-TIMESCALEDB_TOOLKIT_EXTENSIONS?=1.13.1
+TIMESCALE_PROMSCALE_EXTENSIONS?=0.5.0 0.5.1 0.5.2 0.5.4 0.6.0 0.7.0 0.8.0
+TIMESCALEDB_TOOLKIT_EXTENSIONS?=1.6.0 1.7.0 1.8.0 1.10.1 1.11.0 1.12.0 1.12.1 1.13.0
 TIMESCALE_TSDB_ADMIN?=
 TIMESCALE_HOT_FORGE?=
 TIMESCALE_PATRONI_K8S_SYNC?=
 TIMESCALE_OOM_GUARD?=
+TIMESCALE_OSM_EXTENSION?=0.0.2 0.0.3
 TIMESCALE_CLOUDUTILS?=
 TIMESCALE_STATIC_PRIMARY?=
+TIMESCALE_TS_STAT_STATEMENTS?=
 
 DOCKER_EXTRA_BUILDARGS?=
 DOCKER_REGISTRY?=localhost:5000
@@ -77,8 +79,10 @@ DOCKER_BUILD_COMMAND=docker build --progress=plain \
 					 --build-arg TIMESCALE_HOT_FORGE="$(TIMESCALE_HOT_FORGE)" \
 					 --build-arg TIMESCALE_PATRONI_K8S_SYNC="$(TIMESCALE_PATRONI_K8S_SYNC)" \
 					 --build-arg TIMESCALE_OOM_GUARD="$(TIMESCALE_OOM_GUARD)" \
+					 --build-arg TIMESCALE_OSM_EXTENSION="$(TIMESCALE_OSM_EXTENSION)" \
 					 --build-arg TIMESCALE_PROMSCALE_EXTENSIONS="$(TIMESCALE_PROMSCALE_EXTENSIONS)" \
 					 --build-arg TIMESCALE_TSDB_ADMIN="$(TIMESCALE_TSDB_ADMIN)" \
+					 --build-arg TIMESCALE_TS_STAT_STATEMENTS="$(TIMESCALE_TS_STAT_STATEMENTS)" \
 					 --build-arg TIMESCALEDB_TOOLKIT_EXTENSIONS="$(TIMESCALEDB_TOOLKIT_EXTENSIONS)" \
 					 --build-arg TIMESCALE_STATIC_PRIMARY="$(TIMESCALE_STATIC_PRIMARY)" \
 					 --cache-from "$(DOCKER_CACHE_FROM)" \
@@ -98,13 +102,14 @@ DOCKER_EXEC_COMMAND=docker exec -i $(DOCKER_TAG_PREPARE) timeout 90
 # We provide the fast target as the first (=default) target, as it will skip installing
 # many optional extensions, and it will only install a single timescaledb (master) version.
 # This is basically useful for developers of this repository, to allow fast feedback cycles.
-fast: DOCKER_EXTRA_BUILDARGS= --build-arg GITHUB_TAG=2.9.1
+fast: DOCKER_EXTRA_BUILDARGS= --build-arg GITHUB_TAG=master
 fast: PG_AUTH_MON=
 fast: PG_LOGERRORS=
-fast: PG_VERSIONS=15
+fast: PG_VERSIONS=14
 fast: POSTGIS_VERSIONS=
 fast: TIMESCALEDB_TOOLKIT_EXTENSIONS=
 fast: TIMESCALE_PROMSCALE_EXTENSION=
+fast: TIMESCALE_OSM_EXTENSION=
 fast: ALLOW_ADDING_EXTENSIONS=true
 fast: prepare
 
