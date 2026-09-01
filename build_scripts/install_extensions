@@ -35,6 +35,8 @@ timescaledb | all)
     for ver in $TIMESCALEDB_VERSIONS; do
         install_timescaledb "$ver"
     done
+    # the source tree and build directory are not needed after install
+    rm -rf /build/timescaledb
     ;;& # fallthrough to get rust as well if we're called with 'all'
 
 pgvectorscale | all)

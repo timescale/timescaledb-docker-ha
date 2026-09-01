@@ -144,6 +144,8 @@ install_rust_extensions() {
             esac
         done
     done
+    # the source tree and cargo target directory are not needed after install
+    rm -rf /build/toolkit
 }
 
 version_is_supported() {

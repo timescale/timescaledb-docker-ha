@@ -26,7 +26,12 @@
 ## tools we use will be the same across the board, as most of our tools our
 ## installed using external repositories.
 ARG DOCKER_FROM=ubuntu:22.04
-FROM ${DOCKER_FROM} AS builder
+ARG RUST_VERSION=1.96.0
+ARG BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
+
+## The build-stage does all the work. The published `builder` target below
+## copies its filesystem into a single layer.
+FROM ${DOCKER_FROM} AS build-stage
 
 SHELL ["/bin/bash", "-exu", "-o", "pipefail", "-c"]
 
@@ -112,10 +117,11 @@ RUN pkg="pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-$(dpkg --print-a
 RUN sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf
 
 # The next 2 instructions (ENV + RUN) are directly copied from https://github.com/rust-lang/docker-rust/blob/master/stable/bullseye/Dockerfile
+ARG RUST_VERSION
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
-    RUST_VERSION=1.96.0
+    RUST_VERSION=${RUST_VERSION}
 
 RUN dpkgArch="$(dpkg --print-architecture)"; \
     case "${dpkgArch##*-}" in \
@@ -147,7 +153,8 @@ RUN apt-get install -y python3 python3-pip
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
+ARG BUILD_PACKAGES
+ENV BUILD_PACKAGES="${BUILD_PACKAGES}"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
@@ -425,7 +432,10 @@ RUN if [ "${ALLOW_ADDING_EXTENSIONS}" != "true" ]; then \
         done; \
     fi
 
-RUN apt-get clean
+# Cargo recreates the unpacked crate sources from registry/cache when it
+# needs them.
+RUN apt-get clean; \
+    rm -rf /usr/local/cargo/registry/src
 
 ARG PG_MAJOR
 ENTRYPOINT ["/docker-entrypoint.sh"]
@@ -520,7 +530,42 @@ USER postgres
 COPY --chown=postgres:postgres cicd /cicd/
 RUN /cicd/install_checks -v
 
-FROM builder AS trimmed
+## The published builder image is one layer. A chown or chmod on a file from
+## an earlier layer copies that file into a new layer; one layer avoids the
+## duplicates. The image config below must match what build-stage sets.
+FROM scratch AS builder
+COPY --from=build-stage / /
+
+SHELL ["/bin/bash", "-exu", "-o", "pipefail", "-c"]
+
+ARG PG_MAJOR
+ARG RUST_VERSION
+ARG BUILD_PACKAGES
+ENV DEBIAN_FRONTEND=noninteractive \
+    RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    RUST_VERSION=${RUST_VERSION} \
+    BUILD_PACKAGES="${BUILD_PACKAGES}" \
+    MAKEFLAGS=-j4 \
+    PGROOT=/home/postgres \
+    PGDATA=/home/postgres/pgdata/data \
+    PGLOG=/home/postgres/pg_log \
+    PGSOCKET=/home/postgres/pgdata \
+    BACKUPROOT=/home/postgres/pgdata/backup \
+    PGBACKREST_CONFIG=/home/postgres/pgdata/backup/pgbackrest.conf \
+    PGBACKREST_STANZA=poddb \
+    PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    PAGER=""
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["postgres"]
+WORKDIR /home/postgres
+EXPOSE 5432 8008 8081
+USER postgres
+
+FROM build-stage AS trimmed
 
 USER root
 
