@@ -25,7 +25,7 @@
 ## the changes required are not that big for this Docker Image. Most of the
 ## tools we use will be the same across the board, as most of our tools our
 ## installed using external repositories.
-ARG DOCKER_FROM=ubuntu:22.04
+ARG DOCKER_FROM=ubuntu:24.04
 FROM ${DOCKER_FROM} AS builder
 
 SHELL ["/bin/bash", "-exu", "-o", "pipefail", "-c"]
@@ -39,10 +39,6 @@ ARG PG_MAJOR=17
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# We need full control over the running user, including the UID, therefore we
-# create the postgres user as the first thing on our list
-RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" postgres
-
 RUN echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/01norecommend
 RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 
@@ -50,14 +46,22 @@ RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 # building in AWS, use their mirrors. arm64 and amd64 use different sources though
 COPY sources /tmp/sources
 RUN source="/tmp/sources/sources.list.$(dpkg --print-architecture)"; \
-    mv /etc/apt/sources.list /etc/apt/sources.list.dist; \
+    if [ -f /etc/apt/sources.list ]; then mv /etc/apt/sources.list /etc/apt/sources.list.dist; fi; \
+    if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then mv /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources.dist; fi; \
     cp "$source" /etc/apt/sources.list; \
     rm -fr /tmp/sources
 
 # Make sure we're as up-to-date as possible, and install the highlest level dependencies
 RUN apt-get update; \
     apt-get upgrade -y; \
-    apt-get install -y ca-certificates curl gnupg1 gpg gpg-agent locales lsb-release wget unzip
+    apt-get install -y adduser ca-certificates curl gnupg1 gpg gpg-agent locales lsb-release wget unzip
+
+# We need full control over the running user, including the UID.
+RUN existing_user="$(getent passwd 1000 | cut -d: -f1 || true)"; \
+    if [ -n "$existing_user" ]; then userdel "$existing_user"; fi; \
+    existing_group="$(getent group 1000 | cut -d: -f1 || true)"; \
+    if [ -n "$existing_group" ]; then groupdel "$existing_group"; fi; \
+    adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" postgres
 
 RUN mkdir -p /build/scripts
 RUN chmod 777 /build
@@ -79,11 +83,17 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/t
 RUN apt-get update; \
     apt-get upgrade -y; \
     apt-get install -y \
-        less jq strace procps awscli vim-tiny gdb gdbserver dumb-init daemontools \
+        less jq strace procps vim-tiny gdb gdbserver dumb-init daemontools \
         postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop libnss-wrapper gosu \
         pg-activity lsof htop; \
     curl -Lso /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_"$(dpkg --print-architecture)"; \
     chmod 755 /usr/local/bin/yq
+
+# awscli is no longer packaged by Ubuntu 24.04, so install the official AWS CLI v2 bundle.
+RUN curl -Lso /tmp/awscliv2.zip "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip"; \
+    unzip -q /tmp/awscliv2.zip -d /tmp; \
+    /tmp/aws/install; \
+    rm -rf /tmp/aws /tmp/awscliv2.zip
 
 # pgbackrest-exporter
 ARG PGBACKREST_EXPORTER_VERSION="0.18.0"
@@ -143,28 +153,21 @@ RUN find /usr/share/i18n/charmaps/ -type f ! -name UTF-8.gz -delete; \
     localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 
 # We install pip3, as we need it for some of the extensions. This will install a lot of dependencies, all marked as auto to help with cleanup later
-RUN apt-get install -y python3 python3-pip
+RUN apt-get install -y python3 python3-pip python3-venv
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python3-dev wget libsodium-dev"
 RUN apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
-# https://salsa.debian.org/postgresql/postgresql/-/commit/b995beb3cd1c2b8834605007227b3cedab6462e4
-# This looks like a build-/test-only dependency, and they expect us to use the real tzdata when actually running.
-# TODO: keep watching this to see if they remove the limitation. If the old tzdata becomes unavailable, we'll have to
-# do something more drastic.
-RUN apt-get install -y --allow-downgrades tzdata="2022a-*"
+RUN apt-get install -y tzdata
 
 COPY --chown=postgres:postgres build_scripts /build/scripts/
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
 RUN for pg in ${PG_VERSIONS}; do \
         mk-build-deps "postgresql-${pg}" && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
     done
-
-# TODO: There's currently a build-dependency problem related to tzdata, remove this when it's resolved
-RUN apt-get install -y tzdata
 
 RUN packages=""; \
     for pg in ${PG_VERSIONS}; do \
@@ -257,7 +260,9 @@ RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-ku
 
 # Barman cloud
 # Required for CloudNativePG compatibility
-RUN pip3 install --no-cache-dir 'barman[cloud,azure,snappy,google]'
+RUN python3 -m venv /opt/barman; \
+    /opt/barman/bin/pip install --no-cache-dir 'barman[cloud,azure,snappy,google]'
+ENV PATH="/opt/barman/bin:${PATH}"
 
 RUN apt-get install -y timescaledb-tools
 
@@ -451,7 +456,7 @@ ENV PGROOT=/home/postgres \
     BACKUPROOT=/home/postgres/pgdata/backup \
     PGBACKREST_CONFIG=/home/postgres/pgdata/backup/pgbackrest.conf \
     PGBACKREST_STANZA=poddb \
-    PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:${PATH} \
+    PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:/opt/barman/bin:${PATH} \
     LC_ALL=C.UTF-8 \
     LANG=C.UTF-8 \
     PAGER=""
@@ -483,7 +488,8 @@ RUN set -e; \
 # return /etc/apt/sources.list back to a non-AWS version for anybody that wants to use this image elsewhere
 RUN set -eux; \
     mv -f /etc/apt/sources.list /etc/apt/sources.list.aws; \
-    mv -f /etc/apt/sources.list.dist /etc/apt/sources.list
+    if [ -f /etc/apt/sources.list.dist ]; then mv -f /etc/apt/sources.list.dist /etc/apt/sources.list; fi; \
+    if [ -f /etc/apt/sources.list.d/ubuntu.sources.dist ]; then mv -f /etc/apt/sources.list.d/ubuntu.sources.dist /etc/apt/sources.list.d/ubuntu.sources; fi
 
 # DOCKER_FROM needs re-importing as any args from before FROM only apply to FROM
 ARG DOCKER_FROM
@@ -524,7 +530,7 @@ FROM builder AS trimmed
 
 USER root
 
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python3-dev wget libsodium-dev"
 
 RUN set -ex; \
     apt-get purge -y ${BUILD_PACKAGES}; \
@@ -560,7 +566,7 @@ ENV PGROOT=/home/postgres \
     BACKUPROOT=/home/postgres/pgdata/backup \
     PGBACKREST_CONFIG=/home/postgres/pgdata/backup/pgbackrest.conf \
     PGBACKREST_STANZA=poddb \
-    PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:${PATH} \
+    PATH=/usr/lib/postgresql/${PG_MAJOR}/bin:/opt/barman/bin:${PATH} \
     LC_ALL=C.UTF-8 \
     LANG=C.UTF-8 \
     PAGER=""

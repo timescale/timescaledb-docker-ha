@@ -1,2 +1,5 @@
 .build*
 .idea/
+.cursor
+.codegraph
+.DS_Store

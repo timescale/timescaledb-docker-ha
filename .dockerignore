@@ -1,3 +1,6 @@
 .idea/
 .git/
 .github/
+.cursor
+.codegraph
+.DS_Store
