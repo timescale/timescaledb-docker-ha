@@ -5,11 +5,9 @@ on:
 jobs:
   tests:
     name: Test System Services
-    runs-on: runs-on/fleet=linux-2cpu-x64/env=ue1
+    runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
-
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
