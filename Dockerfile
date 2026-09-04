@@ -132,6 +132,7 @@ RUN dpkgArch="$(dpkg --print-architecture)"; \
     ./rustup-init -y --no-modify-path --profile minimal --default-toolchain $RUST_VERSION --default-host ${rustArch}; \
     rm rustup-init; \
     chmod -R a+w $RUSTUP_HOME $CARGO_HOME; \
+    chown -R postgres:postgres $CARGO_HOME; \
     rustup --version; \
     cargo --version; \
     rustc --version
@@ -307,12 +308,10 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
         && echo "listen_addresses = '*'" >> $file; \
     done
 
-RUN chown -R postgres:postgres /usr/local/cargo
-
-# required to install dbgsym packages
+# required to install dbgsym packages. Only the directories change: a chgrp
+# or chmod on a file from an earlier layer copies the whole file into this layer.
 RUN mkdir -p /usr/lib/debug; \
-    chgrp -R postgres /usr/lib/debug; \
-    chmod -R g+w /usr/lib/debug
+    find /usr/lib/debug -type d -exec chgrp postgres {} + -exec chmod g+w {} +
 
 USER postgres
 
