@@ -144,8 +144,9 @@ install_rust_extensions() {
             esac
         done
     done
-    # the source tree and cargo target directory are not needed after install
-    rm -rf /build/toolkit
+    # the source tree and cargo target directory are not needed after install.
+    # cargo recreates registry/src from registry/cache when it needs it.
+    rm -rf /build/toolkit /usr/local/cargo/registry/src
 }
 
 version_is_supported() {

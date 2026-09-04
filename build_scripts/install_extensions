@@ -54,3 +54,10 @@ pg_textsearch | all)
     ;;
 
 esac
+
+# An install sets mode 755 on the .so files. Fix the mode in this image layer.
+# A chmod in a later layer copies every changed file into that layer. Only the
+# owner can chmod a file, so limit the find to files of the current user.
+if [ "$what" != versions ] && [ "$DRYRUN" != true ]; then
+    find /usr/lib/postgresql/*/lib -name '*.so' -perm /111 -user "$(id -un)" -exec chmod -x {} +
+fi
