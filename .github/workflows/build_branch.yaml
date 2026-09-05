@@ -30,11 +30,13 @@ jobs:
         platform: [ amd64, arm64 ]
         include:
           - platform: amd64
-            runs_on: ubuntu-22.04
+            runs_on: runs-on/fleet=linux-16cpu-x64-ondemand/env=ue1
           - platform: arm64
-            runs_on: cloud-image-runner-arm64
+            runs_on: runs-on/fleet=linux-16cpu-ondemand/env=ue1
 
     steps:
+      - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
+
       # Free up disk space on the runner. The pg18-all builds in particular need
       # a lot of space due to 4 PG versions worth of extensions and debug symbols.
       - name: remove unneeded runner software
@@ -64,6 +66,7 @@ jobs:
       - name: Build
         env:
           PLATFORM: ${{ matrix.platform }}
+          DOCKER_CACHE_SCOPE: pg${{ env.PG_MAJOR }}-all-${{ matrix.platform }}
         run: make build-sha
 
       - name: Check

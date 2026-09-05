@@ -21,9 +21,11 @@ jobs:
   # disk space, build, and manifest issues before they hit the publish workflow.
   publish-check:
     name: Dry run pg18-all amd64
-    runs-on: ubuntu-22.04
+    runs-on: runs-on/fleet=linux-16cpu-x64-ondemand/env=ue1
 
     steps:
+      - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
+
       - name: remove unneeded runner software
         run: |
           df -h
@@ -60,6 +62,7 @@ jobs:
           ALL_VERSIONS: "true"
           OSS_ONLY: "false"
           DOCKER_TAG_POSTFIX: "-cicheck"
+          DOCKER_CACHE_SCOPE: pg18-all-amd64
         run: |
           make publish-builder
           docker builder prune --force || true
