@@ -81,6 +81,9 @@ jobs:
             [worker.oci]
               maxParallelism = 2
 
+      # A publish from a push to master reads the layer cache, so it ships the
+      # layers the PR build tested. The weekly scheduled publish does not read
+      # it: that is where upstream package updates enter.
       - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
         id: build
         env:
@@ -88,6 +91,8 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           ALL_VERSIONS: ${{ matrix.all_versions }}
           OSS_ONLY: ${{ matrix.oss_only }}
+          DOCKER_CACHE_SCOPE: pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }}-${{ matrix.platform }}
+          DOCKER_CACHE_FROM: ${{ github.event_name == 'schedule' && 'false' || 'true' }}
         run: |
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder
           docker builder prune --force || true

@@ -72,6 +72,7 @@ jobs:
           ALL_VERSIONS: "true"
           OSS_ONLY: "false"
           DOCKER_TAG_POSTFIX: "-cicheck"
+          DOCKER_CACHE_SCOPE: pg18-all-amd64
         run: |
           make publish-builder
           docker builder prune --force || true

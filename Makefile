@@ -39,6 +39,18 @@ ifeq ($(strip $(USE_DOCKER_CACHE)),true)
 else
   DOCKER_CACHE := --no-cache
 endif
+# BuildKit layer cache in the runs-on S3 bucket. The runs-on/action step
+# exports the RUNS_ON_* variables. DOCKER_CACHE_SCOPE (one per image variant
+# and platform) turns the cache on. DOCKER_CACHE_FROM=false writes the cache
+# without reading it.
+DOCKER_CACHE_FROM?=true
+ifneq ($(strip $(DOCKER_CACHE_SCOPE)),)
+  DOCKER_CACHE_S3=type=s3,region=$(RUNS_ON_AWS_REGION),bucket=$(RUNS_ON_S3_BUCKET_CACHE),blobs_prefix=$(RUNS_ON_S3_CACHE_REPO_PREFIX)/buildkit/blobs/,manifests_prefix=$(RUNS_ON_S3_CACHE_REPO_PREFIX)/buildkit/manifests/,name=$(DOCKER_CACHE_SCOPE)
+  DOCKER_CACHE += --cache-to $(DOCKER_CACHE_S3),mode=max
+  ifneq ($(DOCKER_CACHE_FROM),false)
+    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_S3)
+  endif
+endif
 
 ifeq ($(ALL_VERSIONS),true)
   DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-all

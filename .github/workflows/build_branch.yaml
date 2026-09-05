@@ -66,6 +66,7 @@ jobs:
       - name: Build
         env:
           PLATFORM: ${{ matrix.platform }}
+          DOCKER_CACHE_SCOPE: pg${{ env.PG_MAJOR }}-all-${{ matrix.platform }}
         run: make build-sha
 
       - name: Check
