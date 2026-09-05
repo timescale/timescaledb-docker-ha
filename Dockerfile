@@ -158,11 +158,15 @@ RUN apt-mark auto ${BUILD_PACKAGES}
 # do something more drastic.
 RUN apt-get install -y --allow-downgrades tzdata="2022a-*"
 
-# versions.yaml is copied in later, after the per-version install layers.
+# A later COPY adds versions.yaml, after the per-version install layers.
 # A change to it then only rebuilds the layers of the changed versions.
 COPY --chown=postgres:postgres build_scripts/*.sh build_scripts/install_extensions build_scripts/postgres_versions.yaml /build/scripts/
-# We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
-RUN for pg in ${PG_VERSIONS}; do \
+# We install the PostgreSQL build dependencies and mark the installed packages as auto-installed.
+# The apt-get update runs here, after the COPY of postgres_versions.yaml: with the
+# layer cache, the earlier apt-get update layer can be days old, and a new
+# pinned PostgreSQL minor is not in that index.
+RUN apt-get update; \
+    for pg in ${PG_VERSIONS}; do \
         mk-build-deps "postgresql-${pg}" && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
     done
 
@@ -376,7 +380,6 @@ USER root
 ARG ALLOW_ADDING_EXTENSIONS=true
 ARG GITHUB_REPO=timescale/timescaledb
 ARG TIMESCALEDB_VERSIONS
-ARG TOOLKIT_VERSIONS
 
 # Every timescaledb minor version and every toolkit version gets its own layer.
 # A new version only adds or changes its own layer; the other layers stay in
@@ -474,6 +477,9 @@ EOF
 
 USER postgres
 
+# ARG values are part of the cache key of every later RUN, so declare this one
+# after the timescaledb layers.
+ARG TOOLKIT_VERSIONS
 # BEGIN GENERATED toolkit
 RUN /build/scripts/install_extensions toolkit 1.18.0 "15 16" 0.10.2
 RUN /build/scripts/install_extensions toolkit 1.19.0 "15 16 17" 0.12.8

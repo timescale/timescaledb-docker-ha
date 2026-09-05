@@ -3,14 +3,15 @@
 SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 . "$SCRIPT_DIR"/shared.sh
 
-# This takes the requested toolkit and other extensions, figures out what versions of cargo-pgx/pgrx those
-# versions want, and then build from the oldest pgx/pgrx to the newest so that `cargo install cargo-pgx/pgrx --version`
-# commands are only ran once. Once cargo-pgrx has been installed, run the installation for the extensions,
-# and then continue through the next cargo-pgrx version. At the end, we're left with the latest version of
-# cargo-pgrx so that the builder image can be used to test master/main branches.
-
-# we use the following variables to decide on if/what to install:
-# - TOOLKIT_VERSIONS
+# Two modes:
+# - `install_extensions <timescaledb|toolkit> <version> "<pg majors>" [cargo-pgrx]`
+#   installs one release version. The generated Dockerfile layers call this
+#   (see gen_dockerfile_versions). versions.yaml is not in the image yet.
+# - `install_extensions <timescaledb|rust|pgvectorscale|...>` installs the
+#   versions from TIMESCALEDB_VERSIONS, TOOLKIT_VERSIONS and
+#   PGVECTORSCALE_VERSIONS that have no generated layer, such as branch builds.
+#   The rust mode installs from the oldest cargo-pgrx to the newest, so the
+#   builder image ends with the latest cargo-pgrx for main/master test builds.
 
 usage() {
     echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch]" >&2
@@ -104,9 +105,9 @@ if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_texts
     usage
 fi
 
-# The steps below run after versions.yaml is in the image. Release versions
-# from versions.yaml are installed by their own layers (install_one_version),
-# so timescaledb and rust only build the versions that have no layer: branch
+# The steps below run after versions.yaml is in the image. The generated
+# layers (install_one_version) install the release versions, so timescaledb
+# and rust skip the versions that are installed and build the rest: branch
 # builds such as main or feature/x.
 case "$what" in
 versions)
@@ -119,7 +120,7 @@ versions)
 
 timescaledb | all)
     for ver in $TIMESCALEDB_VERSIONS; do
-        has_own_layer timescaledb "$ver" && continue
+        is_installed timescaledb "$ver" && continue
         install_timescaledb "$ver"
     done
     # the source tree and build directory are not needed after install

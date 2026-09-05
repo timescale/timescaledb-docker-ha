@@ -213,8 +213,8 @@ fast: build
 .PHONY: latest
 latest: ALL_VERSIONS=false
 # the per-version install layers do not read versions.yaml, so resolve latest here
-latest: TIMESCALEDB_VERSIONS=$(shell yq '.timescaledb | keys | .[-1]' build_scripts/versions.yaml)
-latest: TOOLKIT_VERSIONS=$(shell yq '.toolkit | keys | .[-1]' build_scripts/versions.yaml)
+latest: TIMESCALEDB_VERSIONS=$(or $(shell yq '.timescaledb | keys | .[-1]' build_scripts/versions.yaml),$(error make latest needs yq to read build_scripts/versions.yaml))
+latest: TOOLKIT_VERSIONS=$(or $(shell yq '.toolkit | keys | .[-1]' build_scripts/versions.yaml),$(error make latest needs yq to read build_scripts/versions.yaml))
 latest: PGVECTORSCALE_VERSIONS=latest
 latest: build
 
