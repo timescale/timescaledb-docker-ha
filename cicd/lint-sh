@@ -14,9 +14,9 @@ done < <(find . -name '*.sh' -print0)
 for script in "${scripts[@]}"; do
     ((quiet == 0)) && echo "Running checks on ${script}"
     if [ -n "$1" ]; then
-         /bin/shellcheck -e "$1" "${script}" || rc=$?
+         shellcheck -e "$1" "${script}" || rc=$?
     else
-         /bin/shellcheck "${script}" || rc=$?
+         shellcheck "${script}" || rc=$?
     fi
 done
 
