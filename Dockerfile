@@ -310,13 +310,6 @@ RUN for pg in ${PG_VERSIONS}; do \
         done; \
     done
 
-RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
-        # We want timescaledb to be loaded in this image by every created cluster
-        sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" $file \
-        # We need to listen on all interfaces, otherwise PostgreSQL is not accessible
-        && echo "listen_addresses = '*'" >> $file; \
-    done
-
 # required to install dbgsym packages. Only the directories change: a chgrp
 # or chmod on a file from an earlier layer copies the whole file into this layer.
 RUN mkdir -p /usr/lib/debug; \
@@ -378,16 +371,34 @@ ARG OSS_ONLY
 # RUST_RELEASE for some packages passes this to --profile
 ARG RUST_RELEASE=release
 
+# Every toolkit version and every timescaledb minor version gets its own layer.
+# A new version only adds or changes its own layer; the other layers stay in
+# the build cache. The blocks below are generated from build_scripts/versions.yaml
+# by `make dockerfile`. Do not edit them by hand.
+#
+# Toolkit comes first: timescaledb releases more often, and a changed layer
+# rebuilds every later layer. An ARG value is part of the cache key of every
+# later RUN, so each block declares its ARG right before it.
+
+USER postgres
+
+ARG TOOLKIT_VERSIONS
+# BEGIN GENERATED toolkit
+RUN /build/scripts/install_extensions toolkit 1.18.0 "15 16" 0.10.2
+RUN /build/scripts/install_extensions toolkit 1.19.0 "15 16 17" 0.12.8
+RUN /build/scripts/install_extensions toolkit 1.21.0 "15 16 17" 0.12.9
+RUN /build/scripts/install_extensions toolkit 1.22.0 "15 16 17 18" 0.16.1
+RUN /build/scripts/install_extensions toolkit 1.23.0 "15 16 17 18" 0.18.0
+RUN /build/scripts/install_extensions toolkit 1.24.0 "15 16 17 18" 0.18.1
+RUN /build/scripts/install_extensions toolkit 1.25.0 "15 16 17 18" 0.18.1
+RUN /build/scripts/install_extensions toolkit 1.26.0 "15 16 17 18" 0.18.1
+# END GENERATED toolkit
+
 USER root
 
 ARG ALLOW_ADDING_EXTENSIONS=true
 ARG GITHUB_REPO=timescale/timescaledb
 ARG TIMESCALEDB_VERSIONS
-
-# Every timescaledb minor version and every toolkit version gets its own layer.
-# A new version only adds or changes its own layer; the other layers stay in
-# the build cache. The blocks below are generated from build_scripts/versions.yaml
-# by `make dockerfile`. Do not edit them by hand.
 # BEGIN GENERATED timescaledb
 # built from source, one layer for all
 RUN <<EOF
@@ -465,24 +476,6 @@ RUN <<EOF
 EOF
 # END GENERATED timescaledb
 
-USER postgres
-
-# ARG values are part of the cache key of every later RUN, so declare this one
-# after the timescaledb layers.
-ARG TOOLKIT_VERSIONS
-# BEGIN GENERATED toolkit
-RUN /build/scripts/install_extensions toolkit 1.18.0 "15 16" 0.10.2
-RUN /build/scripts/install_extensions toolkit 1.19.0 "15 16 17" 0.12.8
-RUN /build/scripts/install_extensions toolkit 1.21.0 "15 16 17" 0.12.9
-RUN /build/scripts/install_extensions toolkit 1.22.0 "15 16 17 18" 0.16.1
-RUN /build/scripts/install_extensions toolkit 1.23.0 "15 16 17 18" 0.18.0
-RUN /build/scripts/install_extensions toolkit 1.24.0 "15 16 17 18" 0.18.1
-RUN /build/scripts/install_extensions toolkit 1.25.0 "15 16 17 18" 0.18.1
-RUN /build/scripts/install_extensions toolkit 1.26.0 "15 16 17 18" 0.18.1
-# END GENERATED toolkit
-
-USER root
-
 # versions.yaml is needed from here on: for branch builds of timescaledb and
 # toolkit (main, feature/x), for pgvectorscale, and for /.image_config.
 COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
@@ -506,10 +499,19 @@ RUN PG_TEXTSEARCH_VERSION="${PG_TEXTSEARCH_VERSION}" \
 
 USER root
 
-# pg_textsearch requires shared_preload_libraries (pg17+ only). This must run
-# AFTER pg_textsearch is installed: cargo-pgrx >= 0.18 runs initdb during
-# `cargo pgrx init` while building the toolkit, and a cluster that preloads a
-# not-yet-installed library fails to bootstrap (toolkit-1.23.0 build for pg17/18).
+# The shared_preload_libraries edits run after every extension install:
+# cargo-pgrx >= 0.18 runs initdb during `cargo pgrx init` while building the
+# toolkit, and a cluster that preloads a not-yet-installed library fails to
+# bootstrap (toolkit-1.23.0 build for pg17/18).
+RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
+        # We want timescaledb to be loaded in this image by every created cluster
+        sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" $file \
+        # We need to listen on all interfaces, otherwise PostgreSQL is not accessible
+        && echo "listen_addresses = '*'" >> $file; \
+    done
+
+# pg_textsearch requires shared_preload_libraries (pg17+ only). This runs after
+# the timescaledb edit above, which uncomments the setting.
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
         pgver="$(basename "$(dirname "$file")")"; \
         if [ "$pgver" -ge 17 ] 2>/dev/null; then \
