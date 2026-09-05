@@ -595,6 +595,10 @@ RUN set -eux; \
 ARG DOCKER_FROM
 ARG BUILDER_URL
 ARG RELEASE_URL
+# The Makefile passes the build time. With the layer cache this step would
+# otherwise be reused, and BUILD_DATE would be the date of an older build.
+# Declared here so that only this step and the ones after it rebuild.
+ARG BUILD_DATE
 RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "OSS_ONLY=\"$OSS_ONLY\"" >> /.image_config; \
     echo "PG_LOGERRORS=\"${PG_LOGERRORS}\"" >> /.image_config; \
@@ -612,7 +616,7 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "FROM=\"${DOCKER_FROM}\"" >> /.image_config; \
     echo "RELEASE_URL=\"${RELEASE_URL}\"" >> /.image_config; \
     echo "BUILDER_URL=\"${BUILDER_URL}\"" >> /.image_config; \
-    echo "BUILD_DATE=\"$(date -Iseconds)\"" >> /.image_config
+    echo "BUILD_DATE=\"${BUILD_DATE:-$(date -Iseconds)}\"" >> /.image_config
 
 
 

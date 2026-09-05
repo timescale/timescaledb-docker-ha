@@ -202,6 +202,7 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 					 --build-arg BUILDER_URL="$(DOCKER_BUILDER_URL)" \
 					 --build-arg PGBOUNCER_EXPORTER_VERSION=$(PGBOUNCER_EXPORTER_VERSION) \
 					 --build-arg PGBACKREST_EXPORTER_VERSION=$(PGBACKREST_EXPORTER_VERSION) \
+					 --build-arg BUILD_DATE="$$(date -Iseconds -u)" \
 					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds -u)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
