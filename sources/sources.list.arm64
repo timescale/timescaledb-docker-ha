@@ -1,5 +1,6 @@
 # Since we're building in AWS, this should keep package fetches from getting throttled.
-# /etc/apt/mirrors.txt: AWS mirror first, official mirror as fallback.
+# /etc/apt/mirrors.txt: official mirror first, AWS mirror as fallback. The AWS
+# arm64 mirror pool answers 503 or times out often; ports.ubuntu.com is on Cloudflare.
 #
 # arm64:
 
