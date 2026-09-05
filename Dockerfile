@@ -47,9 +47,7 @@ RUN echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/01norecommend
 RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 
 # Ubuntu will throttle downloads which can slow things down so much that we can't complete. Since we're
-# building in AWS, use their mirrors. arm64 and amd64 use different sources though.
-# The AWS mirrors return 503 now and then, so the sources go through apt's
-# mirror method with the official mirror as fallback (see sources/mirrors.*.txt).
+# building in AWS, use their mirrors, with the official mirrors as fallback (sources/mirrors.*.txt).
 COPY sources /tmp/sources
 RUN arch="$(dpkg --print-architecture)"; \
     mv /etc/apt/sources.list /etc/apt/sources.list.dist; \
@@ -161,13 +159,10 @@ RUN apt-mark auto ${BUILD_PACKAGES}
 # do something more drastic.
 RUN apt-get install -y --allow-downgrades tzdata="2022a-*"
 
-# A later COPY adds versions.yaml, after the per-version install layers.
-# A change to it then only rebuilds the layers of the changed versions.
+# versions.yaml is copied in after the per-version layers, so a change to it does not rebuild them.
 COPY --chown=postgres:postgres build_scripts/*.sh build_scripts/install_extensions build_scripts/postgres_versions.yaml /build/scripts/
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed.
-# The apt-get update runs here, after the COPY of postgres_versions.yaml: with the
-# layer cache, the earlier apt-get update layer can be days old, and a new
-# pinned PostgreSQL minor is not in that index.
+# apt-get update runs after the postgres_versions.yaml copy, so a new pinned minor is in the index.
 RUN apt-get update; \
     for pg in ${PG_VERSIONS}; do \
         mk-build-deps "postgresql-${pg}" && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
@@ -371,14 +366,9 @@ ARG OSS_ONLY
 # RUST_RELEASE for some packages passes this to --profile
 ARG RUST_RELEASE=release
 
-# Every toolkit version and every timescaledb minor version gets its own layer.
-# A new version only adds or changes its own layer; the other layers stay in
-# the build cache. The blocks below are generated from build_scripts/versions.yaml
-# by `make dockerfile`. Do not edit them by hand.
-#
-# Toolkit comes first: timescaledb releases more often, and a changed layer
-# rebuilds every later layer. An ARG value is part of the cache key of every
-# later RUN, so each block declares its ARG right before it.
+# One layer per extension version, generated from build_scripts/versions.yaml by
+# `make dockerfile`. Toolkit first: timescaledb releases more often. Each block
+# declares its ARG right before it, an ARG is part of the cache key of every later RUN.
 
 USER postgres
 
@@ -476,11 +466,10 @@ RUN <<EOF
 EOF
 # END GENERATED timescaledb
 
-# versions.yaml is needed from here on: for branch builds of timescaledb and
-# toolkit (main, feature/x), for pgvectorscale, and for /.image_config.
+# versions.yaml is needed from here on.
 COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
 
-# timescaledb and toolkit versions that have no layer above: branch builds
+# branch builds (main, feature/x) have no layer above
 RUN /build/scripts/install_extensions timescaledb
 
 USER postgres
@@ -499,10 +488,8 @@ RUN PG_TEXTSEARCH_VERSION="${PG_TEXTSEARCH_VERSION}" \
 
 USER root
 
-# The shared_preload_libraries edits run after every extension install:
-# cargo-pgrx >= 0.18 runs initdb during `cargo pgrx init` while building the
-# toolkit, and a cluster that preloads a not-yet-installed library fails to
-# bootstrap (toolkit-1.23.0 build for pg17/18).
+# shared_preload_libraries is set after all installs: `cargo pgrx init` runs initdb,
+# which fails when a preloaded library is not installed yet.
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
         # We want timescaledb to be loaded in this image by every created cluster
         sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" $file \
@@ -510,8 +497,7 @@ RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do
         && echo "listen_addresses = '*'" >> $file; \
     done
 
-# pg_textsearch requires shared_preload_libraries (pg17+ only). This runs after
-# the timescaledb edit above, which uncomments the setting.
+# pg_textsearch requires shared_preload_libraries (pg17+ only)
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
         pgver="$(basename "$(dirname "$file")")"; \
         if [ "$pgver" -ge 17 ] 2>/dev/null; then \
@@ -595,9 +581,7 @@ RUN set -eux; \
 ARG DOCKER_FROM
 ARG BUILDER_URL
 ARG RELEASE_URL
-# The Makefile passes the build time. With the layer cache this step would
-# otherwise be reused, and BUILD_DATE would be the date of an older build.
-# Declared here so that only this step and the ones after it rebuild.
+# passed by the Makefile: a cached step would keep an old $(date)
 ARG BUILD_DATE
 RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "OSS_ONLY=\"$OSS_ONLY\"" >> /.image_config; \

@@ -2,13 +2,9 @@
 
 # Generate the per-version install layers in the Dockerfile from versions.yaml.
 #
-# Each toolkit version gets one RUN layer. timescaledb versions before DEB_SINCE
-# build from source (install_timescaledb in shared_install.sh) and never
-# change: they share one layer. From DEB_SINCE on, the newest SEPARATE_MINORS
-# minor versions (2.29.x, 2.28.x, ...) get one layer each and the older ones
-# share one layer. A deb install takes seconds, so the shared layer is cheap to
-# rebuild, and the layer count stays bounded. A new version only adds or
-# changes its own layer, so the build cache for every other version stays valid.
+# One layer per toolkit version. timescaledb versions before DEB_SINCE build from
+# source and share one layer. The newest SEPARATE_MINORS minor versions get one
+# layer each, older deb versions share one layer.
 #
 # usage: gen_dockerfile_versions          rewrite the blocks in the Dockerfile
 #        gen_dockerfile_versions --check  exit 1 when the Dockerfile is stale
@@ -29,7 +25,7 @@ version_lt() {
     [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ]
 }
 
-# one RUN layer with the install lines from stdin; nothing when stdin is empty
+# one RUN layer with the lines from stdin
 emit_layer() {
     local comment="$1" lines
     lines="$(cat)"
@@ -40,14 +36,12 @@ emit_layer() {
     echo "EOF"
 }
 
-# release versions of $1, oldest first. The catch-all install steps build the
-# branch names such as main, because a cached layer would never rebuild them.
+# release versions of $1, oldest first; branch names are left to the catch-all steps
 release_versions() {
     yq ".$1 | keys | .[]" "$VERSIONS" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V
 }
 
-# the pg majors that $1 version $2 supports. Same rules as version_is_supported
-# in shared_versions.sh.
+# the pg majors that $1 version $2 supports, same rules as version_is_supported
 supported_pgs() {
     local pkg="$1" ver="$2" pdata pgmin pgmax explicit pg out=""
     pdata="$(yq ".${pkg}[\"$ver\"]" "$VERSIONS")"
@@ -117,8 +111,7 @@ gen_toolkit() {
     done
 }
 
-# replace the lines between the BEGIN and END markers of block $1 in file $3
-# with the content of file $2
+# replace block $1 in file $3 with the content of file $2
 replace_block() {
     local name="$1" content="$2" file="$3" begin end begin_line end_line
     begin="# BEGIN GENERATED $name"
@@ -138,7 +131,7 @@ replace_block() {
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
-# generate everything first, so an error leaves the Dockerfile untouched
+# generate into a copy, so an error leaves the Dockerfile untouched
 gen_timescaledb > "$tmp/timescaledb"
 gen_toolkit > "$tmp/toolkit"
 

@@ -5,13 +5,9 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 
 # Two modes:
 # - `install_extensions <timescaledb|toolkit> <version> "<pg majors>" [cargo-pgrx]`
-#   installs one release version. The generated Dockerfile layers call this
-#   (see gen_dockerfile_versions). versions.yaml is not in the image yet.
-# - `install_extensions <timescaledb|rust|pgvectorscale|...>` installs the
-#   versions from TIMESCALEDB_VERSIONS, TOOLKIT_VERSIONS and
-#   PGVECTORSCALE_VERSIONS that have no generated layer, such as branch builds.
-#   The rust mode installs from the oldest cargo-pgrx to the newest, so the
-#   builder image ends with the latest cargo-pgrx for main/master test builds.
+#   installs one version. The generated Dockerfile layers call this.
+# - `install_extensions <timescaledb|rust|pgvectorscale|...>` installs the requested
+#   versions that are not installed yet, such as branch builds.
 
 usage() {
     echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch]" >&2
@@ -19,21 +15,17 @@ usage() {
     exit 1
 }
 
-# The cmake builds read MAKEFLAGS. Use every core of the build machine.
+# use every core for the cmake builds
 MAKEFLAGS="-j$(nproc)"
 export MAKEFLAGS
 
-# The .so files of an install get mode 755. Fix the mode in this image layer.
-# A chmod in a later layer copies every changed file into that layer. Only the
-# owner can chmod a file, so limit the find to files of the current user.
+# chmod in the layer that installed the files; a later chmod copies them into a new layer
 fix_so_modes() {
     [ "$DRYRUN" = true ] && return 0
     find /usr/lib/postgresql/*/lib -name '*.so' -perm /111 -user "$(id -un)" -exec chmod -x {} +
 }
 
-# $1=version $2=requested versions: a list, or "all". "latest" needs
-# versions.yaml, which the per-version layers do not have. The Makefile
-# resolves it before the build.
+# $1=version $2=requested versions, a list or "all". The Makefile resolves "latest".
 version_requested() {
     local version="$1" requested="$2" v
     case "$requested" in
@@ -48,10 +40,7 @@ version_requested() {
     return 1
 }
 
-# Install one version in its own image layer. The Dockerfile generates these
-# calls from versions.yaml (make dockerfile), so versions.yaml is not needed.
-# The pg majors are the ones this version supports; only the installed ones
-# are built.
+# install one version for the installed pg majors it supports
 install_one_version() {
     local pkg="$1" version="$2" pg_list="$3" cargopgrx="$4" requested pg pgs=""
     [[ -n "$version" && -n "$pg_list" ]] || usage
@@ -82,7 +71,7 @@ install_one_version() {
         ;;
     toolkit)
         install_toolkit "$cargopgrx" "$version" "$pgs"
-        # cargo recreates registry/src from registry/cache when it needs it.
+        # cargo recreates registry/src from registry/cache
         rm -rf /build/toolkit /usr/local/cargo/registry/src
         ;;
     esac
@@ -105,10 +94,7 @@ if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_texts
     usage
 fi
 
-# The steps below run after versions.yaml is in the image. The generated
-# layers (install_one_version) install the release versions, so timescaledb
-# and rust skip the versions that are installed and build the rest: branch
-# builds such as main or feature/x.
+# versions.yaml is in the image here. Skip what the generated layers installed.
 case "$what" in
 versions)
     # this outputs the expanded versions

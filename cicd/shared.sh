@@ -312,10 +312,8 @@ check_files() {
 	done
 }
 
-# The layout the Dockerfile guarantees: extension libraries are mode 644 (a
-# chmod in a later layer would copy them all), build trees and the unpacked
-# cargo registry are removed in the layer that created them, and the release
-# image has no rust toolchain. /build exists in the builder image only.
+# extension libraries are mode 644, build trees are removed, the release has no
+# rust toolchain. /build exists in the builder image only.
 check_layout() {
 	local path executable
 	executable="$(find /usr/lib/postgresql/*/lib -name '*.so' -type f -perm /111 2>/dev/null)"

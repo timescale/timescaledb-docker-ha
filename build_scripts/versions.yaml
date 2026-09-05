@@ -22,10 +22,8 @@ default-pg-min: 15
 default-pg-max: 18
 default-cargo-pgx: 0.6.1
 default-arch: both
-## The pinned PostgreSQL minor versions are in postgres_versions.yaml.
-##
-## After a change to this file, run `make dockerfile` to regenerate the
-## per-version install layers in the Dockerfile.
+## The pinned PostgreSQL versions are in postgres_versions.yaml.
+## `make dockerfile` regenerates the Dockerfile layers from this file.
 timescaledb:
   2.13.0:
     pg-max: 16

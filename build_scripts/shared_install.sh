@@ -98,8 +98,7 @@ format_pg_major_minor_version() {
     echo $((major * 100 + minor))
 }
 
-# $2 is an optional list of pg majors. When set, the caller has already
-# checked support (the per-version layers pass it).
+# $2: optional pg majors; the caller has checked support
 install_timescaledb() {
     local version="$1" pg_list="$2" pg pkg=timescaledb unsupported_reason oss_only=""
     [ "$OSS_ONLY" = true ] && oss_only="-DAPACHE_ONLY=1"
@@ -211,7 +210,7 @@ install_timescaledb() {
     done
 }
 
-# $3 is an optional list of pg majors, see install_timescaledb.
+# $3: optional pg majors; the caller has checked support
 install_toolkit() {
     local rust_release cargo_pgrx_version="$1" version="$2" pg_list="$3" pg pkg=toolkit dpkg deb_version unsupported_reason pgrx_cmd
     [ -n "$RUST_RELEASE" ] && rust_release=release || rust_release=debug

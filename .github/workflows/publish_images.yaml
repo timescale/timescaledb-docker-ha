@@ -78,9 +78,7 @@ jobs:
             [worker.oci]
               maxParallelism = 2
 
-      # A publish from a push to master reads the layer cache, so it ships the
-      # layers the PR build tested. The weekly scheduled publish does not read
-      # it: that is where upstream package updates enter.
+      # The scheduled publish does not read the cache, so it picks up upstream package updates.
       - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
         id: build
         env:

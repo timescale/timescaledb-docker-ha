@@ -1,6 +1,4 @@
-# Tools for the scripts that run outside the image: the Dockerfile generator
-# and `make latest` (yq), the Makefile (jq), and cicd/lint-sh (shellcheck).
-# CI installs them with jdx/mise-action. Locally: `mise install`.
+# tools for the scripts outside the image; CI uses jdx/mise-action, locally `mise install`
 [tools]
 yq = "4.53.6"
 shellcheck = "0.11.0"
