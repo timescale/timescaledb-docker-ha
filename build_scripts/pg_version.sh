@@ -8,7 +8,7 @@ if [ -z "${MAJOR}" ]; then
 	exit 2
 fi
 
-PINNED=$(yq ".postgres_versions[\"${MAJOR}\"]" "$SCRIPT_DIR/versions.yaml")
+PINNED=$(yq ".postgres_versions[\"${MAJOR}\"]" "$SCRIPT_DIR/postgres_versions.yaml")
 if [ "${PINNED}" = "null" ]; then
 	echo "could not find ${MAJOR} pinned version"
 	exit 2

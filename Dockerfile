@@ -158,7 +158,9 @@ RUN apt-mark auto ${BUILD_PACKAGES}
 # do something more drastic.
 RUN apt-get install -y --allow-downgrades tzdata="2022a-*"
 
-COPY --chown=postgres:postgres build_scripts /build/scripts/
+# versions.yaml is copied in later, after the per-version install layers.
+# A change to it then only rebuilds the layers of the changed versions.
+COPY --chown=postgres:postgres build_scripts/*.sh build_scripts/install_extensions build_scripts/postgres_versions.yaml /build/scripts/
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
 RUN for pg in ${PG_VERSIONS}; do \
         mk-build-deps "postgresql-${pg}" && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
@@ -371,23 +373,130 @@ ARG RUST_RELEASE=release
 
 USER root
 
-# split the extension builds into two steps to allow caching of successful steps
 ARG ALLOW_ADDING_EXTENSIONS=true
 ARG GITHUB_REPO=timescale/timescaledb
 ARG TIMESCALEDB_VERSIONS
-RUN OSS_ONLY="${OSS_ONLY}" \
-        GITHUB_REPO="${GITHUB_REPO}" \
-        TIMESCALEDB_VERSIONS="${TIMESCALEDB_VERSIONS}" \
-        /build/scripts/install_extensions timescaledb
+ARG TOOLKIT_VERSIONS
+
+# Every timescaledb minor version and every toolkit version gets its own layer.
+# A new version only adds or changes its own layer; the other layers stay in
+# the build cache. The blocks below are generated from build_scripts/versions.yaml
+# by `make dockerfile`. Do not edit them by hand.
+# BEGIN GENERATED timescaledb
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.13.0 "15 16"
+/build/scripts/install_extensions timescaledb 2.13.1 "15 16"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.14.0 "15 16"
+/build/scripts/install_extensions timescaledb 2.14.1 "15 16"
+/build/scripts/install_extensions timescaledb 2.14.2 "15 16"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.15.0 "15 16"
+/build/scripts/install_extensions timescaledb 2.15.1 "15 16"
+/build/scripts/install_extensions timescaledb 2.15.2 "15 16"
+/build/scripts/install_extensions timescaledb 2.15.3 "15 16"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.16.0 "15 16"
+/build/scripts/install_extensions timescaledb 2.16.1 "15 16"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.17.0 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.17.1 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.17.2 "15 16 17"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.18.0 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.18.1 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.18.2 "15 16 17"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.19.0 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.19.1 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.19.2 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.19.3 "15 16 17"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.20.0 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.20.1 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.20.2 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.20.3 "15 16 17"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.21.0 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.21.1 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.21.2 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.21.3 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.21.4 "15 16 17"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.22.0 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.22.1 "15 16 17"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.23.0 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.23.1 "15 16 17 18"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.24.0 "15 16 17 18"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.25.0 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.25.1 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.25.2 "15 16 17 18"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.26.0 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.26.1 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.26.2 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.26.3 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.26.4 "15 16 17 18"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.27.0 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.27.1 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.27.2 "15 16 17 18"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.28.0 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.28.1 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.28.2 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.28.3 "15 16 17 18"
+EOF
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.29.0 "16 17 18"
+/build/scripts/install_extensions timescaledb 2.29.1 "16 17 18"
+/build/scripts/install_extensions timescaledb 2.29.2 "16 17 18"
+EOF
+# END GENERATED timescaledb
 
 USER postgres
 
-# install all rust packages in the same step to allow it to optimize for cargo-pgx installs
-ARG TOOLKIT_VERSIONS
-RUN OSS_ONLY="${OSS_ONLY}" \
-        RUST_RELEASE="${RUST_RELEASE}" \
-        TOOLKIT_VERSIONS="${TOOLKIT_VERSIONS}" \
-        /build/scripts/install_extensions rust
+# BEGIN GENERATED toolkit
+RUN /build/scripts/install_extensions toolkit 1.18.0 "15 16" 0.10.2
+RUN /build/scripts/install_extensions toolkit 1.19.0 "15 16 17" 0.12.8
+RUN /build/scripts/install_extensions toolkit 1.21.0 "15 16 17" 0.12.9
+RUN /build/scripts/install_extensions toolkit 1.22.0 "15 16 17 18" 0.16.1
+RUN /build/scripts/install_extensions toolkit 1.23.0 "15 16 17 18" 0.18.0
+RUN /build/scripts/install_extensions toolkit 1.24.0 "15 16 17 18" 0.18.1
+RUN /build/scripts/install_extensions toolkit 1.25.0 "15 16 17 18" 0.18.1
+RUN /build/scripts/install_extensions toolkit 1.26.0 "15 16 17 18" 0.18.1
+# END GENERATED toolkit
+
+USER root
+
+# versions.yaml is needed from here on: for branch builds of timescaledb and
+# toolkit (main, feature/x), for pgvectorscale, and for /.image_config.
+COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
+
+# timescaledb and toolkit versions that have no layer above: branch builds
+RUN /build/scripts/install_extensions timescaledb
+
+USER postgres
+
+RUN /build/scripts/install_extensions rust
 
 ARG PGVECTORSCALE_VERSIONS
 RUN OSS_ONLY="${OSS_ONLY}" \

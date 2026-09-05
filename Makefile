@@ -180,6 +180,10 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 					 $(DOCKER_EXTRA_BUILDARGS) \
 					 .
 
+.PHONY: dockerfile
+dockerfile: # regenerate the per-version install layers in the Dockerfile from build_scripts/versions.yaml
+	./build_scripts/gen_dockerfile_versions
+
 # We provide the fast target as the first (=default) target, as it will skip installing
 # many optional extensions, and it will only install a single timescaledb (master) version.
 # This is basically useful for developers of this repository, to allow fast feedback cycles.
@@ -196,8 +200,9 @@ fast: build
 
 .PHONY: latest
 latest: ALL_VERSIONS=false
-latest: TIMESCALEDB_VERSIONS=latest
-latest: TOOLKIT_VERSIONS=latest
+# the per-version install layers do not read versions.yaml, so resolve latest here
+latest: TIMESCALEDB_VERSIONS=$(shell yq '.timescaledb | keys | .[-1]' build_scripts/versions.yaml)
+latest: TOOLKIT_VERSIONS=$(shell yq '.toolkit | keys | .[-1]' build_scripts/versions.yaml)
 latest: PGVECTORSCALE_VERSIONS=latest
 latest: build
 

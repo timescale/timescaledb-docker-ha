@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+
+# Generate the per-version install layers in the Dockerfile from versions.yaml.
+#
+# Each timescaledb minor version (2.13.x, 2.14.x, ...) gets one RUN layer, each
+# toolkit version gets one RUN layer. A new version only adds or changes its
+# own layer, so the build cache for every other version stays valid.
+#
+# usage: gen_dockerfile_versions          rewrite the blocks in the Dockerfile
+#        gen_dockerfile_versions --check  exit 1 when the Dockerfile is stale
+
+set -euo pipefail
+
+SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
+VERSIONS="$SCRIPT_DIR/versions.yaml"
+DOCKERFILE="$SCRIPT_DIR/../Dockerfile"
+
+PG_MAJORS="$(yq '.postgres_versions | keys | .[]' "$SCRIPT_DIR/postgres_versions.yaml" | sort -n | xargs)"
+DEFAULT_PG_MIN="$(yq .default-pg-min "$VERSIONS")"
+DEFAULT_PG_MAX="$(yq .default-pg-max "$VERSIONS")"
+
+# release versions of $1, oldest first. Branch names such as main are left to
+# the catch-all install steps, because a cached layer would never rebuild them.
+release_versions() {
+    yq ".$1 | keys | .[]" "$VERSIONS" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V
+}
+
+# the pg majors that $1 version $2 supports. Same rules as version_is_supported
+# in shared_versions.sh.
+supported_pgs() {
+    local pkg="$1" ver="$2" pdata pgmin pgmax explicit pg out=""
+    pdata="$(yq ".${pkg}[\"$ver\"]" "$VERSIONS")"
+
+    if [ "$(yq .arch <<<"$pdata")" != null ]; then
+        echo "$pkg-$ver: arch is not supported by $0" >&2
+        exit 1
+    fi
+
+    pgmin="$(yq .pg-min <<<"$pdata")"
+    [ "$pgmin" = null ] && pgmin="$DEFAULT_PG_MIN"
+    pgmax="$(yq .pg-max <<<"$pdata")"
+    [ "$pgmax" = null ] && pgmax="$DEFAULT_PG_MAX"
+    explicit="$(yq '.pg // [] | .[]' <<<"$pdata" | xargs)"
+
+    for pg in $PG_MAJORS; do
+        [ "$pg" -ge "${pgmin%%.*}" ] || continue
+        [ "$pg" -le "${pgmax%%.*}" ] || continue
+        if [ -n "$explicit" ] && [[ " $explicit " != *" $pg "* ]]; then continue; fi
+        out="$out $pg"
+    done
+    echo "${out# }"
+}
+
+gen_timescaledb() {
+    local ver minor prev="" pgs
+    for ver in $(release_versions timescaledb); do
+        pgs="$(supported_pgs timescaledb "$ver")"
+        [ -n "$pgs" ] || continue
+        minor="${ver%.*}"
+        if [ "$minor" != "$prev" ]; then
+            [ -n "$prev" ] && echo "EOF"
+            echo "RUN <<EOF"
+            prev="$minor"
+        fi
+        echo "/build/scripts/install_extensions timescaledb $ver \"$pgs\""
+    done
+    [ -n "$prev" ] && echo "EOF"
+}
+
+gen_toolkit() {
+    local ver pgs cargopgrx
+    for ver in $(release_versions toolkit); do
+        pgs="$(supported_pgs toolkit "$ver")"
+        [ -n "$pgs" ] || continue
+        cargopgrx="$(yq ".toolkit[\"$ver\"].cargo-pgrx" "$VERSIONS")"
+        if [ "$cargopgrx" = null ]; then
+            echo "toolkit-$ver: cargo-pgrx is required in versions.yaml" >&2
+            exit 1
+        fi
+        echo "RUN /build/scripts/install_extensions toolkit $ver \"$pgs\" $cargopgrx"
+    done
+}
+
+# replace the lines between the BEGIN and END markers of block $1 with stdin
+replace_block() {
+    local name="$1" begin end
+    begin="# BEGIN GENERATED $name"
+    end="# END GENERATED $name"
+    local begin_line end_line
+    begin_line="$(grep -nxF "$begin" "$DOCKERFILE" | cut -d: -f1)"
+    end_line="$(grep -nxF "$end" "$DOCKERFILE" | cut -d: -f1)"
+    [ -n "$begin_line" ] || { echo "marker not found: $begin" >&2; exit 1; }
+    [ -n "$end_line" ] || { echo "marker not found: $end" >&2; exit 1; }
+    {
+        head -n "$begin_line" "$DOCKERFILE"
+        cat
+        tail -n "+$end_line" "$DOCKERFILE"
+    } > "$DOCKERFILE.tmp"
+    mv "$DOCKERFILE.tmp" "$DOCKERFILE"
+}
+
+if [ "${1:-}" = --check ]; then
+    before="$(cat "$DOCKERFILE")"
+    trap 'printf "%s\n" "$before" > "$DOCKERFILE"' EXIT
+fi
+
+gen_timescaledb | replace_block timescaledb
+gen_toolkit | replace_block toolkit
+
+if [ "${1:-}" = --check ]; then
+    if ! diff -u <(printf "%s\n" "$before") "$DOCKERFILE"; then
+        echo "Dockerfile is out of date, run: make dockerfile" >&2
+        exit 1
+    fi
+fi

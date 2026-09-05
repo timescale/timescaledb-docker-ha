@@ -98,8 +98,10 @@ format_pg_major_minor_version() {
     echo $((major * 100 + minor))
 }
 
+# $2 is an optional list of pg majors. When set, the caller has already
+# checked support (the per-version layers pass it).
 install_timescaledb() {
-    local version="$1" pg pkg=timescaledb unsupported_reason oss_only=""
+    local version="$1" pg_list="$2" pg pkg=timescaledb unsupported_reason oss_only=""
     [ "$OSS_ONLY" = true ] && oss_only="-DAPACHE_ONLY=1"
 
     ensure_packagecloud_repo
@@ -120,11 +122,13 @@ install_timescaledb() {
     DISTRO="${OS_ID}"
     DISTRO_VERSION="${OS_VERSION_CODENAME}"
 
-    for pg in $(available_pg_versions); do
-        unsupported_reason="$(supported_timescaledb "$pg" "$version")"
-        if [ -n "$unsupported_reason" ]; then
-            log "$pkg-$version: $unsupported_reason"
-            continue
+    for pg in ${pg_list:-$(available_pg_versions)}; do
+        if [ -z "$pg_list" ]; then
+            unsupported_reason="$(supported_timescaledb "$pg" "$version")"
+            if [ -n "$unsupported_reason" ]; then
+                log "$pkg-$version: $unsupported_reason"
+                continue
+            fi
         fi
 
         if [[ "$version" = main && "$pg" -lt 14 ]]; then
@@ -207,8 +211,9 @@ install_timescaledb() {
     done
 }
 
+# $3 is an optional list of pg majors, see install_timescaledb.
 install_toolkit() {
-    local rust_release cargo_pgrx_version="$1" version="$2" pg pkg=toolkit dpkg deb_version unsupported_reason pgrx_cmd
+    local rust_release cargo_pgrx_version="$1" version="$2" pg_list="$3" pg pkg=toolkit dpkg deb_version unsupported_reason pgrx_cmd
     [ -n "$RUST_RELEASE" ] && rust_release=release || rust_release=debug
     pgrx_cmd="$(cargo_pgrx_cmd "$cargo_pgrx_version")"
 
@@ -217,11 +222,13 @@ install_toolkit() {
         return
     fi
 
-    for pg in $(available_pg_versions); do
-        unsupported_reason="$(supported_toolkit "$pg" "$version")"
-        if [ -n "$unsupported_reason" ]; then
-            log "$pkg-$version: $unsupported_reason"
-            continue
+    for pg in ${pg_list:-$(available_pg_versions)}; do
+        if [ -z "$pg_list" ]; then
+            unsupported_reason="$(supported_toolkit "$pg" "$version")"
+            if [ -n "$unsupported_reason" ]; then
+                log "$pkg-$version: $unsupported_reason"
+                continue
+            fi
         fi
 
         read -rs dpkg deb_version <<< "$(find_deb "timescaledb-toolkit-postgresql-$pg" "$version")"

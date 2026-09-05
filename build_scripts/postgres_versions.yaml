@@ -1,0 +1,12 @@
+## This section contains the specific pg versions that will be installed.
+## from https://www.postgresql.org/about/news/postgresql-184-1710-1614-1518-and-1423-released-3297/
+##
+## This is a separate file from versions.yaml: the Dockerfile copies it in
+## early, before the PostgreSQL packages install. A change here rebuilds
+## everything after that point. A change to versions.yaml only rebuilds the
+## layers of the changed extension versions.
+postgres_versions:
+  18: 18.4
+  17: 17.10
+  16: 16.14
+  15: 15.18

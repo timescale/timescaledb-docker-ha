@@ -15,3 +15,11 @@ jobs:
 
       - name: Shellcheck and shfmt
         run: ./cicd/lint-sh "SC2148,SC2034,SC1091,SC2153,SC1090,SC2097,SC2098,SC2043" # exclude checks
+
+      - name: Install yq
+        run: |
+          sudo curl -Lso /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod 755 /usr/local/bin/yq
+
+      - name: Dockerfile matches versions.yaml
+        run: ./build_scripts/gen_dockerfile_versions --check
