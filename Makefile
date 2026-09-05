@@ -148,9 +148,17 @@ DOCKER_APPARMOR_ARG=--security-opt apparmor=unconfined
 #  3. timescale/timescaledb-ha:pg17.3-ts2.19
 #  4. timescale/timescaledb-ha:pg17.3-ts2.19.0
 
+# After a push, run the image by the digest the build reports. On runs-on the
+# docker.io pulls go through an ECR pull-through cache that revalidates a tag
+# at most once a day, so a pull by tag can return the previous build.
 $(VERSION_INFO):
 	docker rm --force builder_inspector >&/dev/null || true
-	docker run --rm -d $(DOCKER_APPARMOR_ARG) --name builder_inspector -e PGDATA=/tmp/pgdata --user=postgres "$(VERSION_IMAGE)" sleep 300
+	image="$(VERSION_IMAGE)"; \
+	case "$(DOCKER_OUTPUT)" in *--push*) \
+		image="$(DOCKER_PUBLISH_URL)@$$(jq -r '.["containerimage.digest"]' $(DOCKER_METADATA_FILE))";; \
+	esac; \
+	echo "smoketest image: $$image"; \
+	docker run --rm -d $(DOCKER_APPARMOR_ARG) --name builder_inspector -e PGDATA=/tmp/pgdata --user=postgres "$$image" sleep 300
 	docker cp ./cicd "builder_inspector:/cicd/"
 	docker exec builder_inspector /cicd/smoketest.sh || (docker logs -n100 builder_inspector && exit 1)
 	mkdir -p /tmp/outputs
