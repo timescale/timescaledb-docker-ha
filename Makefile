@@ -134,6 +134,12 @@ $(VERSION_INFO): builder
 endif
 VERSION_IMAGE := $(DOCKER_PUBLISH_URL):$(VERSION_TAG)
 
+# Docker 29 on Ubuntu 26.04 gives "docker exec" processes the AppArmor label
+# docker-default//&unconfined. The docker-default profile then denies signals
+# between processes in the container. PostgreSQL 18 AIO workers need SIGURG,
+# so connections hang. Run the containers that start PostgreSQL unconfined.
+DOCKER_APPARMOR_ARG=--security-opt apparmor=unconfined
+
 # The purpose of publishing the images under many tags, is to provide
 # some choice to the user as to their appetite for volatility.
 #
@@ -144,7 +150,7 @@ VERSION_IMAGE := $(DOCKER_PUBLISH_URL):$(VERSION_TAG)
 
 $(VERSION_INFO):
 	docker rm --force builder_inspector >&/dev/null || true
-	docker run --rm -d --name builder_inspector -e PGDATA=/tmp/pgdata --user=postgres "$(VERSION_IMAGE)" sleep 300
+	docker run --rm -d $(DOCKER_APPARMOR_ARG) --name builder_inspector -e PGDATA=/tmp/pgdata --user=postgres "$(VERSION_IMAGE)" sleep 300
 	docker cp ./cicd "builder_inspector:/cicd/"
 	docker exec builder_inspector /cicd/smoketest.sh || (docker logs -n100 builder_inspector && exit 1)
 	mkdir -p /tmp/outputs
@@ -352,6 +358,7 @@ check: # check images to see if they have all the requested content
 		docker rm --force "$$check_name" >&/dev/null || true
 		docker run \
 			--platform linux/"$$arch" \
+			$(DOCKER_APPARMOR_ARG) \
 			--pull always \
 			-d \
 			--name "$$check_name" \
@@ -383,6 +390,7 @@ check-sha: # check a specific git commit-based image
 	docker rm --force "$$check_name" >&/dev/null || true
 	docker run \
 		--platform linux/"$$arch" \
+		$(DOCKER_APPARMOR_ARG) \
 		-d \
 		--name "$$check_name" \
 		-e PGDATA=/tmp/pgdata \
