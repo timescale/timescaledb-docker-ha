@@ -63,6 +63,7 @@ jobs:
           OSS_ONLY: "false"
           DOCKER_TAG_POSTFIX: "-cicheck"
           DOCKER_CACHE_SCOPE: pg18-all-amd64
+          DOCKER_CACHE_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           make publish-builder
           docker builder prune --force || true

@@ -89,6 +89,7 @@ jobs:
           ALL_VERSIONS: ${{ matrix.all_versions }}
           OSS_ONLY: ${{ matrix.oss_only }}
           DOCKER_CACHE_SCOPE: pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }}-${{ matrix.platform }}
+          DOCKER_CACHE_BRANCH: ${{ github.head_ref || github.ref_name }}
           DOCKER_CACHE_FROM: ${{ github.event_name == 'schedule' && 'false' || 'true' }}
         run: |
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder

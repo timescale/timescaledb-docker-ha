@@ -67,6 +67,7 @@ jobs:
         env:
           PLATFORM: ${{ matrix.platform }}
           DOCKER_CACHE_SCOPE: pg${{ env.PG_MAJOR }}-all-${{ matrix.platform }}
+          DOCKER_CACHE_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: make build-sha
 
       - name: Check
