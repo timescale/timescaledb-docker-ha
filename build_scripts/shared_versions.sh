@@ -137,7 +137,7 @@ install_rust_extensions() {
     declare -A pgrx_versions=()
 
     for ver in $TOOLKIT_VERSIONS; do
-        has_own_layer toolkit "$ver" && continue
+        is_installed toolkit "$ver" && continue
         cargopgrx="$(pkg_cargo_pgrx_version "toolkit" "$ver")"
         if [ -z "$cargopgrx" ]; then
             error "no cargo-pgrx version found for toolkit-$ver"
@@ -199,13 +199,18 @@ version_is_supported() {
     fi
 }
 
-# A release version listed in versions.yaml is installed by its own layer in
-# the Dockerfile (see gen_dockerfile_versions). Branch builds such as main or
-# feature/x are not, so the catch-all install steps build those.
-has_own_layer() {
-    local pkg="$1" ver="$2"
-    [[ "$ver" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
-    [ "$(yq ".$pkg | has(\"$ver\")" <<<"$VERSION_DATA")" = true ]
+# The generated layers in the Dockerfile (see gen_dockerfile_versions) install
+# the release versions before the catch-all install steps run. The catch-all
+# steps skip a version that is installed for any pg major and build the rest:
+# branch builds such as main or feature/x.
+is_installed() {
+    local pkg="$1" ver="$2" so
+    case "$pkg" in
+    timescaledb) so="timescaledb-$ver.so";;
+    toolkit) so="timescaledb_toolkit-$ver.so";;
+    *) return 1;;
+    esac
+    compgen -G "/usr/lib/postgresql/*/lib/$so" > /dev/null
 }
 
 # Ensure PG version matching is performed only based upon MAJOR version.

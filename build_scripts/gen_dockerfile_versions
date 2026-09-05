@@ -19,8 +19,8 @@ PG_MAJORS="$(yq '.postgres_versions | keys | .[]' "$SCRIPT_DIR/postgres_versions
 DEFAULT_PG_MIN="$(yq .default-pg-min "$VERSIONS")"
 DEFAULT_PG_MAX="$(yq .default-pg-max "$VERSIONS")"
 
-# release versions of $1, oldest first. Branch names such as main are left to
-# the catch-all install steps, because a cached layer would never rebuild them.
+# release versions of $1, oldest first. The catch-all install steps build the
+# branch names such as main, because a cached layer would never rebuild them.
 release_versions() {
     yq ".$1 | keys | .[]" "$VERSIONS" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V
 }
@@ -81,35 +81,41 @@ gen_toolkit() {
     done
 }
 
-# replace the lines between the BEGIN and END markers of block $1 with stdin
+# replace the lines between the BEGIN and END markers of block $1 in file $3
+# with the content of file $2
 replace_block() {
-    local name="$1" begin end
+    local name="$1" content="$2" file="$3" begin end begin_line end_line
     begin="# BEGIN GENERATED $name"
     end="# END GENERATED $name"
-    local begin_line end_line
-    begin_line="$(grep -nxF "$begin" "$DOCKERFILE" | cut -d: -f1)"
-    end_line="$(grep -nxF "$end" "$DOCKERFILE" | cut -d: -f1)"
+    begin_line="$(grep -nxF "$begin" "$file" | cut -d: -f1)"
+    end_line="$(grep -nxF "$end" "$file" | cut -d: -f1)"
     [ -n "$begin_line" ] || { echo "marker not found: $begin" >&2; exit 1; }
     [ -n "$end_line" ] || { echo "marker not found: $end" >&2; exit 1; }
     {
-        head -n "$begin_line" "$DOCKERFILE"
-        cat
-        tail -n "+$end_line" "$DOCKERFILE"
-    } > "$DOCKERFILE.tmp"
-    mv "$DOCKERFILE.tmp" "$DOCKERFILE"
+        head -n "$begin_line" "$file"
+        cat "$content"
+        tail -n "+$end_line" "$file"
+    } > "$file.tmp"
+    mv "$file.tmp" "$file"
 }
 
-if [ "${1:-}" = --check ]; then
-    before="$(cat "$DOCKERFILE")"
-    trap 'printf "%s\n" "$before" > "$DOCKERFILE"' EXIT
-fi
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
 
-gen_timescaledb | replace_block timescaledb
-gen_toolkit | replace_block toolkit
+# generate everything first, so an error leaves the Dockerfile untouched
+gen_timescaledb > "$tmp/timescaledb"
+gen_toolkit > "$tmp/toolkit"
+
+cp "$DOCKERFILE" "$tmp/Dockerfile"
+for block in timescaledb toolkit; do
+    replace_block "$block" "$tmp/$block" "$tmp/Dockerfile"
+done
 
 if [ "${1:-}" = --check ]; then
-    if ! diff -u <(printf "%s\n" "$before") "$DOCKERFILE"; then
+    if ! diff -u "$DOCKERFILE" "$tmp/Dockerfile"; then
         echo "Dockerfile is out of date, run: make dockerfile" >&2
         exit 1
     fi
+else
+    cp "$tmp/Dockerfile" "$DOCKERFILE"
 fi
