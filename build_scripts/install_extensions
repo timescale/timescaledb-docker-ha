@@ -12,27 +12,114 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 # we use the following variables to decide on if/what to install:
 # - TOOLKIT_VERSIONS
 
+usage() {
+    echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch]" >&2
+    echo "       $0 [-n] <timescaledb|toolkit> <version> <pg majors> [cargo-pgrx version]" >&2
+    exit 1
+}
+
+# The cmake builds read MAKEFLAGS. Use every core of the build machine.
+MAKEFLAGS="-j$(nproc)"
+export MAKEFLAGS
+
+# The .so files of an install get mode 755. Fix the mode in this image layer.
+# A chmod in a later layer copies every changed file into that layer. Only the
+# owner can chmod a file, so limit the find to files of the current user.
+fix_so_modes() {
+    [ "$DRYRUN" = true ] && return 0
+    find /usr/lib/postgresql/*/lib -name '*.so' -perm /111 -user "$(id -un)" -exec chmod -x {} +
+}
+
+# $1=version $2=requested versions: a list, or "all". "latest" needs
+# versions.yaml, which the per-version layers do not have. The Makefile
+# resolves it before the build.
+version_requested() {
+    local version="$1" requested="$2" v
+    case "$requested" in
+    all) return 0;;
+    latest)
+        error "'latest' is not supported for a per-version install, pass the version"
+        exit 1;;
+    esac
+    for v in $requested; do
+        [ "$v" = "$version" ] && return 0
+    done
+    return 1
+}
+
+# Install one version in its own image layer. The Dockerfile generates these
+# calls from versions.yaml (make dockerfile), so versions.yaml is not needed.
+# The pg majors are the ones this version supports; only the installed ones
+# are built.
+install_one_version() {
+    local pkg="$1" version="$2" pg_list="$3" cargopgrx="$4" requested pg pgs=""
+    [[ -n "$version" && -n "$pg_list" ]] || usage
+
+    case "$pkg" in
+    timescaledb) requested="$TIMESCALEDB_VERSIONS";;
+    toolkit) requested="$TOOLKIT_VERSIONS"; [ -n "$cargopgrx" ] || usage;;
+    *) usage;;
+    esac
+
+    if ! version_requested "$version" "$requested"; then
+        log "$pkg-$version: not requested"
+        return 0
+    fi
+
+    for pg in $(available_pg_versions); do
+        [[ " $pg_list " == *" $pg "* ]] && pgs="$pgs $pg"
+    done
+    if [ -z "$pgs" ]; then
+        log "$pkg-$version: none of pg $pg_list is installed"
+        return 0
+    fi
+
+    case "$pkg" in
+    timescaledb)
+        install_timescaledb "$version" "$pgs"
+        rm -rf /build/timescaledb
+        ;;
+    toolkit)
+        install_toolkit "$cargopgrx" "$version" "$pgs"
+        # cargo recreates registry/src from registry/cache when it needs it.
+        rm -rf /build/toolkit /usr/local/cargo/registry/src
+        ;;
+    esac
+    fix_so_modes
+}
+
 [ "$1" = -n ] && { DRYRUN=true; shift; }
 
 [ "$OSS_ONLY" = true ] && log "installing extensions for OSS_ONLY"
 
 what="$1"
 [ -z "$what" ] && what=all
-if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch$ ]]; then
-    echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch]" >&2
-    exit 1
+
+if [ -n "$2" ]; then
+    install_one_version "$@"
+    exit 0
 fi
 
+if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch$ ]]; then
+    usage
+fi
+
+# The steps below run after versions.yaml is in the image. Release versions
+# from versions.yaml are installed by their own layers (install_one_version),
+# so timescaledb and rust only build the versions that have no layer: branch
+# builds such as main or feature/x.
 case "$what" in
 versions)
     # this outputs the expanded versions
     echo "TIMESCALEDB_VERSIONS=\"$TIMESCALEDB_VERSIONS\""
     echo "TOOLKIT_VERSIONS=\"$TOOLKIT_VERSIONS\""
     echo "PGVECTORSCALE_VERSIONS=\"$PGVECTORSCALE_VERSIONS\""
+    exit 0
     ;;
 
 timescaledb | all)
     for ver in $TIMESCALEDB_VERSIONS; do
+        has_own_layer timescaledb "$ver" && continue
         install_timescaledb "$ver"
     done
     # the source tree and build directory are not needed after install
@@ -55,9 +142,4 @@ pg_textsearch | all)
 
 esac
 
-# An install sets mode 755 on the .so files. Fix the mode in this image layer.
-# A chmod in a later layer copies every changed file into that layer. Only the
-# owner can chmod a file, so limit the find to files of the current user.
-if [ "$what" != versions ] && [ "$DRYRUN" != true ]; then
-    find /usr/lib/postgresql/*/lib -name '*.so' -perm /111 -user "$(id -un)" -exec chmod -x {} +
-fi
+fix_so_modes
