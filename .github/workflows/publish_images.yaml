@@ -38,14 +38,17 @@ jobs:
             oss: "-oss"
           - all_versions: "true"
             all: "-all"
+          # on-demand fleets: a spot interruption would cost a 3 hour build
           - platform: amd64
-            runs_on: ubuntu-22.04
+            runs_on: runs-on/fleet=linux-16cpu-x64-ondemand/env=ue1
           - platform: arm64
-            runs_on: cloud-image-runner-arm64
+            runs_on: runs-on/fleet=linux-16cpu-ondemand/env=ue1
 
     runs-on: "${{ matrix.runs_on }}"
 
     steps:
+      - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
+
       # Free up disk space on the runner. The pg18-all builds in particular need
       # a lot of space due to 4 PG versions worth of extensions and debug symbols.
       - name: remove unneeded runner software
@@ -76,6 +79,8 @@ jobs:
             [worker.oci]
               maxParallelism = 2
 
+      # The publish build writes the layer cache for the branch and PR builds
+      # but does not read it, so every publish picks up upstream package updates.
       - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
         id: build
         env:
@@ -83,6 +88,8 @@ jobs:
           PG_MAJOR: ${{ matrix.pg_major }}
           ALL_VERSIONS: ${{ matrix.all_versions }}
           OSS_ONLY: ${{ matrix.oss_only }}
+          DOCKER_CACHE_SCOPE: pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }}-${{ matrix.platform }}
+          DOCKER_CACHE_FROM: "false"
         run: |
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder
           docker builder prune --force || true

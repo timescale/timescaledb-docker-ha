@@ -39,6 +39,25 @@ ifeq ($(strip $(USE_DOCKER_CACHE)),true)
 else
   DOCKER_CACHE := --no-cache
 endif
+# Share layers between builds through the runs-on S3 cache bucket. The
+# runs-on/action step exports RUNS_ON_S3_BUCKET_CACHE, RUNS_ON_S3_CACHE_REPO_PREFIX
+# and RUNS_ON_AWS_REGION; the runner's IAM role grants access. CI sets
+# DOCKER_CACHE_SCOPE per image variant and platform; the blobs are shared
+# between scopes, the cache manifest is per scope.
+# DOCKER_CACHE_FROM=false writes the cache but does not read it: the publish
+# build must pick up upstream package updates, a cached apt layer would not.
+DOCKER_CACHE_SCOPE?=
+DOCKER_CACHE_FROM?=true
+ifneq ($(strip $(DOCKER_CACHE_SCOPE)),)
+  ifeq ($(strip $(RUNS_ON_S3_BUCKET_CACHE)),)
+    $(error DOCKER_CACHE_SCOPE is set but RUNS_ON_S3_BUCKET_CACHE is not; this needs a runs-on runner with the s3-cache extra)
+  endif
+  DOCKER_CACHE_S3=type=s3,region=$(RUNS_ON_AWS_REGION),bucket=$(RUNS_ON_S3_BUCKET_CACHE),blobs_prefix=$(RUNS_ON_S3_CACHE_REPO_PREFIX)/buildkit/blobs/,manifests_prefix=$(RUNS_ON_S3_CACHE_REPO_PREFIX)/buildkit/manifests/,name=$(DOCKER_CACHE_SCOPE)
+  ifneq ($(strip $(DOCKER_CACHE_FROM)),false)
+    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_S3)
+  endif
+  DOCKER_CACHE += --cache-to $(DOCKER_CACHE_S3),mode=max
+endif
 
 ifeq ($(ALL_VERSIONS),true)
   DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-all
