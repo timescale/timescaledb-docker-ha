@@ -1,0 +1,3 @@
+http://us-east-1.ec2.archive.ubuntu.com/ubuntu/	priority:1
+http://archive.ubuntu.com/ubuntu/	priority:2
+http://security.ubuntu.com/ubuntu/	priority:3
