@@ -47,10 +47,13 @@ POSTGIS_VERSIONS="" make build
 
 For further environment variables that can be set, we point you to the [Makefile](Makefile) itself.
 
-For updating changes in versions for timescaledb, pgvectorscale, or toolkit, update `build_scripts/versions.yaml`
-and then run `make dockerfile`. This regenerates the per-version install layers in the Dockerfile; CI fails when
-they are out of date. Each timescaledb minor version and each toolkit version has its own layer, so a new version
-does not rebuild the others.
+For updating changes in versions for timescaledb, pgvectorscale, or toolkit, update `build_scripts/versions.yaml`.
+The next image build, or `make dockerfile`, regenerates the per-version install layers in the Dockerfile; commit
+both. CI fails when the committed Dockerfile is out of date. Each toolkit version and each recent timescaledb
+minor version has its own layer, so a new version does not rebuild the others.
+
+The scripts outside the image need `yq`, `jq` and `shellcheck`. `mise install` installs the pinned versions from
+`mise.toml`.
 
 ## Verify your work
 
