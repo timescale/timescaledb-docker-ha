@@ -46,18 +46,10 @@ RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" post
 RUN echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/01norecommend
 RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 
-# The AWS mirror intermittently serves a Packages.gz whose size disagrees with
-# the Release file it just served ("Mirror sync in progress?"), and intermittently
-# refuses connections outright. apt treats both as fatal on the first attempt.
+# apt treats a transient fetch failure as fatal on the first attempt, and the
+# Ubuntu mirrors intermittently refuse connections or serve a Packages.gz whose
+# size disagrees with the Release file they just served.
 RUN echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/02retries
-
-# apt sources go through a mirror list: the official mirror first, the AWS mirror as fallback (sources/mirrors.*.txt).
-COPY sources /tmp/sources
-RUN arch="$(dpkg --print-architecture)"; \
-    mv /etc/apt/sources.list /etc/apt/sources.list.dist; \
-    cp "/tmp/sources/sources.list.$arch" /etc/apt/sources.list; \
-    cp "/tmp/sources/mirrors.$arch.txt" /etc/apt/mirrors.txt; \
-    rm -fr /tmp/sources
 
 # Make sure we're as up-to-date as possible, and install the highlest level dependencies
 RUN apt-get update; \
@@ -575,11 +567,6 @@ RUN set -e; \
     chmod -x /usr/lib/postgresql/*/lib/*.so; \
     chmod 1777 /var/run/postgresql; \
     chmod 755 "${PGROOT}"
-
-# return /etc/apt/sources.list back to a non-AWS version for anybody that wants to use this image elsewhere
-RUN set -eux; \
-    mv -f /etc/apt/sources.list /etc/apt/sources.list.aws; \
-    mv -f /etc/apt/sources.list.dist /etc/apt/sources.list
 
 # DOCKER_FROM needs re-importing as any args from before FROM only apply to FROM
 ARG DOCKER_FROM
