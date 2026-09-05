@@ -1,6 +1,5 @@
 # Since we're building in AWS, this should keep package fetches from getting throttled.
-# /etc/apt/mirrors.txt lists the AWS mirror first and the official mirror as fallback;
-# apt tries them in order for every index and package, including the security pocket.
+# /etc/apt/mirrors.txt: AWS mirror first, official mirror as fallback.
 #
 # arm64:
 

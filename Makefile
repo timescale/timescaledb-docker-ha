@@ -39,11 +39,8 @@ ifeq ($(strip $(USE_DOCKER_CACHE)),true)
 else
   DOCKER_CACHE := --no-cache
 endif
-# BuildKit layer cache in the runs-on S3 bucket. The runs-on/action step
-# exports the RUNS_ON_* variables. DOCKER_CACHE_SCOPE (one per image variant
-# and platform) turns the cache on. Each branch writes its own cache manifest
-# and reads its own and master's, so branches do not evict each other.
-# DOCKER_CACHE_FROM=false writes the cache without reading it.
+# BuildKit layer cache in the runs-on S3 bucket (RUNS_ON_* from runs-on/action).
+# DOCKER_CACHE_SCOPE turns it on. A branch reads its own manifest and master's.
 DOCKER_CACHE_FROM?=true
 DOCKER_CACHE_BRANCH?=$(shell git rev-parse --abbrev-ref HEAD)
 ifneq ($(strip $(DOCKER_CACHE_SCOPE)),)
@@ -134,10 +131,8 @@ $(VERSION_INFO): builder
 endif
 VERSION_IMAGE := $(DOCKER_PUBLISH_URL):$(VERSION_TAG)
 
-# Docker 29 on Ubuntu 26.04 gives "docker exec" processes the AppArmor label
-# docker-default//&unconfined. The docker-default profile then denies signals
-# between processes in the container. PostgreSQL 18 AIO workers need SIGURG,
-# so connections hang. Run the containers that start PostgreSQL unconfined.
+# On the runs-on AMI, docker exec processes cannot signal each other under the
+# docker-default AppArmor profile, and PostgreSQL 18 hangs.
 DOCKER_APPARMOR_ARG=--security-opt apparmor=unconfined
 
 # The purpose of publishing the images under many tags, is to provide
@@ -148,9 +143,7 @@ DOCKER_APPARMOR_ARG=--security-opt apparmor=unconfined
 #  3. timescale/timescaledb-ha:pg17.3-ts2.19
 #  4. timescale/timescaledb-ha:pg17.3-ts2.19.0
 
-# After a push, run the image by the digest the build reports. On runs-on the
-# docker.io pulls go through an ECR pull-through cache that revalidates a tag
-# at most once a day, so a pull by tag can return the previous build.
+# Run the pushed image by digest: the runs-on ECR mirror can serve a stale tag.
 $(VERSION_INFO):
 	docker rm --force builder_inspector >&/dev/null || true
 	image="$(VERSION_IMAGE)"; \
@@ -215,8 +208,7 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 dockerfile: # regenerate the per-version install layers in the Dockerfile from build_scripts/versions.yaml
 	./build_scripts/gen_dockerfile_versions
 
-# Every image build regenerates the layers first when their inputs changed,
-# so the committed Dockerfile cannot go stale by accident.
+# regenerate the layers before a build when their inputs changed
 Dockerfile: build_scripts/versions.yaml build_scripts/postgres_versions.yaml build_scripts/gen_dockerfile_versions
 	./build_scripts/gen_dockerfile_versions
 	touch Dockerfile
@@ -239,7 +231,7 @@ fast: build
 
 .PHONY: latest
 latest: ALL_VERSIONS=false
-# the per-version install layers do not read versions.yaml, so resolve latest here
+# the per-version layers do not read versions.yaml
 latest: TIMESCALEDB_VERSIONS=$(or $(shell yq '.timescaledb | keys | .[-1]' build_scripts/versions.yaml),$(error make latest needs yq to read build_scripts/versions.yaml))
 latest: TOOLKIT_VERSIONS=$(or $(shell yq '.toolkit | keys | .[-1]' build_scripts/versions.yaml),$(error make latest needs yq to read build_scripts/versions.yaml))
 latest: PGVECTORSCALE_VERSIONS=latest

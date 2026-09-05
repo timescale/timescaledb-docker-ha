@@ -66,9 +66,7 @@ elif [ "$ARCH" = x86_64 ]; then
     ARCH=amd64
 fi
 
-# The Dockerfile copies versions.yaml into the image after the per-version
-# install layers, so the file can be absent while those layers build. The
-# functions that need it call require_version_data.
+# versions.yaml is absent while the per-version layers build
 VERSION_DATA=""
 for versions_file in /build/scripts/versions.yaml /cicd/scripts/versions.yaml versions.yaml; do
     if [ -s "$versions_file" ]; then
@@ -199,10 +197,7 @@ version_is_supported() {
     fi
 }
 
-# The generated layers in the Dockerfile (see gen_dockerfile_versions) install
-# the release versions before the catch-all install steps run. The catch-all
-# steps skip a version that is installed for any pg major and build the rest:
-# branch builds such as main or feature/x.
+# installed for any pg major, by a generated layer
 is_installed() {
     local pkg="$1" ver="$2" so
     case "$pkg" in
