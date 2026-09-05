@@ -78,7 +78,9 @@ jobs:
             [worker.oci]
               maxParallelism = 2
 
-      # The scheduled publish does not read the cache, so it picks up upstream package updates.
+      # The packages in the image are not pinned. A cached build keeps the packages
+      # of the build that wrote the cache. The weekly scheduled publish builds cold
+      # and refreshes them; a publish from master ships what the PR build tested.
       - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
         id: build
         env:
