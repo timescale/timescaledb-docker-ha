@@ -1,0 +1,5 @@
+# tools for the scripts outside the image; CI uses jdx/mise-action, locally `mise install`
+[tools]
+yq = "4.53.6"
+shellcheck = "0.11.0"
+jq = "1.8.2"

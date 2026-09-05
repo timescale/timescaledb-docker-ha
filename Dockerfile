@@ -46,14 +46,6 @@ RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" post
 RUN echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/01norecommend
 RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 
-# Ubuntu will throttle downloads which can slow things down so much that we can't complete. Since we're
-# building in AWS, use their mirrors. arm64 and amd64 use different sources though
-COPY sources /tmp/sources
-RUN source="/tmp/sources/sources.list.$(dpkg --print-architecture)"; \
-    mv /etc/apt/sources.list /etc/apt/sources.list.dist; \
-    cp "$source" /etc/apt/sources.list; \
-    rm -fr /tmp/sources
-
 # Make sure we're as up-to-date as possible, and install the highlest level dependencies
 RUN apt-get update; \
     apt-get upgrade -y; \
@@ -158,9 +150,12 @@ RUN apt-mark auto ${BUILD_PACKAGES}
 # do something more drastic.
 RUN apt-get install -y --allow-downgrades tzdata="2022a-*"
 
-COPY --chown=postgres:postgres build_scripts /build/scripts/
-# We install the PostgreSQL build dependencies and mark the installed packages as auto-installed,
-RUN for pg in ${PG_VERSIONS}; do \
+# versions.yaml is copied in after the per-version layers, so a change to it does not rebuild them.
+COPY --chown=postgres:postgres build_scripts/*.sh build_scripts/install_extensions build_scripts/postgres_versions.yaml /build/scripts/
+# We install the PostgreSQL build dependencies and mark the installed packages as auto-installed.
+# apt-get update runs after the postgres_versions.yaml copy, so a new pinned minor is in the index.
+RUN apt-get update; \
+    for pg in ${PG_VERSIONS}; do \
         mk-build-deps "postgresql-${pg}" && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
     done
 
@@ -301,13 +296,6 @@ RUN for pg in ${PG_VERSIONS}; do \
         done; \
     done
 
-RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
-        # We want timescaledb to be loaded in this image by every created cluster
-        sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" $file \
-        # We need to listen on all interfaces, otherwise PostgreSQL is not accessible
-        && echo "listen_addresses = '*'" >> $file; \
-    done
-
 # required to install dbgsym packages. Only the directories change: a chgrp
 # or chmod on a file from an earlier layer copies the whole file into this layer.
 RUN mkdir -p /usr/lib/debug; \
@@ -369,25 +357,115 @@ ARG OSS_ONLY
 # RUST_RELEASE for some packages passes this to --profile
 ARG RUST_RELEASE=release
 
-USER root
-
-# split the extension builds into two steps to allow caching of successful steps
-ARG ALLOW_ADDING_EXTENSIONS=true
-ARG GITHUB_REPO=timescale/timescaledb
-ARG TIMESCALEDB_VERSIONS
-RUN OSS_ONLY="${OSS_ONLY}" \
-        GITHUB_REPO="${GITHUB_REPO}" \
-        TIMESCALEDB_VERSIONS="${TIMESCALEDB_VERSIONS}" \
-        /build/scripts/install_extensions timescaledb
+# One layer per extension version, generated from build_scripts/versions.yaml by
+# `make dockerfile`. Toolkit first: timescaledb releases more often. Each block
+# declares its ARG right before it, an ARG is part of the cache key of every later RUN.
 
 USER postgres
 
-# install all rust packages in the same step to allow it to optimize for cargo-pgx installs
 ARG TOOLKIT_VERSIONS
-RUN OSS_ONLY="${OSS_ONLY}" \
-        RUST_RELEASE="${RUST_RELEASE}" \
-        TOOLKIT_VERSIONS="${TOOLKIT_VERSIONS}" \
-        /build/scripts/install_extensions rust
+# BEGIN GENERATED toolkit
+RUN /build/scripts/install_extensions toolkit 1.18.0 "15 16" 0.10.2
+RUN /build/scripts/install_extensions toolkit 1.19.0 "15 16 17" 0.12.8
+RUN /build/scripts/install_extensions toolkit 1.21.0 "15 16 17" 0.12.9
+RUN /build/scripts/install_extensions toolkit 1.22.0 "15 16 17 18" 0.16.1
+RUN /build/scripts/install_extensions toolkit 1.23.0 "15 16 17 18" 0.18.0
+RUN /build/scripts/install_extensions toolkit 1.24.0 "15 16 17 18" 0.18.1
+RUN /build/scripts/install_extensions toolkit 1.25.0 "15 16 17 18" 0.18.1
+RUN /build/scripts/install_extensions toolkit 1.26.0 "15 16 17 18" 0.18.1
+# END GENERATED toolkit
+
+USER root
+
+ARG ALLOW_ADDING_EXTENSIONS=true
+ARG GITHUB_REPO=timescale/timescaledb
+ARG TIMESCALEDB_VERSIONS
+# BEGIN GENERATED timescaledb
+# built from source, one layer for all
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.13.0 "15 16"
+/build/scripts/install_extensions timescaledb 2.13.1 "15 16"
+/build/scripts/install_extensions timescaledb 2.14.0 "15 16"
+/build/scripts/install_extensions timescaledb 2.14.1 "15 16"
+/build/scripts/install_extensions timescaledb 2.14.2 "15 16"
+/build/scripts/install_extensions timescaledb 2.15.0 "15 16"
+/build/scripts/install_extensions timescaledb 2.15.1 "15 16"
+/build/scripts/install_extensions timescaledb 2.15.2 "15 16"
+/build/scripts/install_extensions timescaledb 2.15.3 "15 16"
+/build/scripts/install_extensions timescaledb 2.16.0 "15 16"
+/build/scripts/install_extensions timescaledb 2.16.1 "15 16"
+/build/scripts/install_extensions timescaledb 2.17.0 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.17.1 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.17.2 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.18.0 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.18.1 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.18.2 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.19.0 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.19.1 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.19.2 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.19.3 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.20.0 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.20.1 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.20.2 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.20.3 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.21.0 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.21.1 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.21.2 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.21.3 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.21.4 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.22.0 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.22.1 "15 16 17"
+/build/scripts/install_extensions timescaledb 2.23.0 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.23.1 "15 16 17 18"
+EOF
+# 2.24.x
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.24.0 "15 16 17 18"
+EOF
+# 2.25.x
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.25.0 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.25.1 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.25.2 "15 16 17 18"
+EOF
+# 2.26.x
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.26.0 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.26.1 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.26.2 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.26.3 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.26.4 "15 16 17 18"
+EOF
+# 2.27.x
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.27.0 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.27.1 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.27.2 "15 16 17 18"
+EOF
+# 2.28.x
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.28.0 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.28.1 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.28.2 "15 16 17 18"
+/build/scripts/install_extensions timescaledb 2.28.3 "15 16 17 18"
+EOF
+# 2.29.x
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.29.0 "16 17 18"
+/build/scripts/install_extensions timescaledb 2.29.1 "16 17 18"
+/build/scripts/install_extensions timescaledb 2.29.2 "16 17 18"
+EOF
+# END GENERATED timescaledb
+
+# versions.yaml is needed from here on.
+COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
+
+# branch builds (main, feature/x) have no layer above
+RUN /build/scripts/install_extensions timescaledb
+
+USER postgres
+
+RUN /build/scripts/install_extensions rust
 
 ARG PGVECTORSCALE_VERSIONS
 RUN OSS_ONLY="${OSS_ONLY}" \
@@ -401,10 +479,16 @@ RUN PG_TEXTSEARCH_VERSION="${PG_TEXTSEARCH_VERSION}" \
 
 USER root
 
-# pg_textsearch requires shared_preload_libraries (pg17+ only). This must run
-# AFTER pg_textsearch is installed: cargo-pgrx >= 0.18 runs initdb during
-# `cargo pgrx init` while building the toolkit, and a cluster that preloads a
-# not-yet-installed library fails to bootstrap (toolkit-1.23.0 build for pg17/18).
+# shared_preload_libraries is set after all installs: `cargo pgrx init` runs initdb,
+# which fails when a preloaded library is not installed yet.
+RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
+        # We want timescaledb to be loaded in this image by every created cluster
+        sed -r -i "s/[#]*\s*(shared_preload_libraries)\s*=\s*'(.*)'/\1 = 'timescaledb,\2'/;s/,'/'/" $file \
+        # We need to listen on all interfaces, otherwise PostgreSQL is not accessible
+        && echo "listen_addresses = '*'" >> $file; \
+    done
+
+# pg_textsearch requires shared_preload_libraries (pg17+ only)
 RUN for file in $(find /usr/share/postgresql -name 'postgresql.conf.sample'); do \
         pgver="$(basename "$(dirname "$file")")"; \
         if [ "$pgver" -ge 17 ] 2>/dev/null; then \
@@ -479,15 +563,12 @@ RUN set -e; \
     chmod 1777 /var/run/postgresql; \
     chmod 755 "${PGROOT}"
 
-# return /etc/apt/sources.list back to a non-AWS version for anybody that wants to use this image elsewhere
-RUN set -eux; \
-    mv -f /etc/apt/sources.list /etc/apt/sources.list.aws; \
-    mv -f /etc/apt/sources.list.dist /etc/apt/sources.list
-
 # DOCKER_FROM needs re-importing as any args from before FROM only apply to FROM
 ARG DOCKER_FROM
 ARG BUILDER_URL
 ARG RELEASE_URL
+# passed by the Makefile: a cached step would keep an old $(date)
+ARG BUILD_DATE
 RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "OSS_ONLY=\"$OSS_ONLY\"" >> /.image_config; \
     echo "PG_LOGERRORS=\"${PG_LOGERRORS}\"" >> /.image_config; \
@@ -505,7 +586,7 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "FROM=\"${DOCKER_FROM}\"" >> /.image_config; \
     echo "RELEASE_URL=\"${RELEASE_URL}\"" >> /.image_config; \
     echo "BUILDER_URL=\"${BUILDER_URL}\"" >> /.image_config; \
-    echo "BUILD_DATE=\"$(date -Iseconds)\"" >> /.image_config
+    echo "BUILD_DATE=\"${BUILD_DATE:-$(date -Iseconds)}\"" >> /.image_config
 
 
 

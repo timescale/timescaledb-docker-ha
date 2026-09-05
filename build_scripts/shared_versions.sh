@@ -66,24 +66,32 @@ elif [ "$ARCH" = x86_64 ]; then
     ARCH=amd64
 fi
 
-if [ -s /build/scripts/versions.yaml ]; then
-    VERSION_DATA="$(< /build/scripts/versions.yaml)"
-elif [ -s /cicd/scripts/versions.yaml ]; then
-    VERSION_DATA="$(< /cicd/scripts/versions.yaml)"
-elif [ -s versions.yaml ]; then
-    VERSION_DATA="$(< versions.yaml)"
-else
-    error "could not locate versions.yaml"
-    exit 1
-fi
+# versions.yaml is absent while the per-version layers build
+VERSION_DATA=""
+for versions_file in /build/scripts/versions.yaml /cicd/scripts/versions.yaml versions.yaml; do
+    if [ -s "$versions_file" ]; then
+        VERSION_DATA="$(< "$versions_file")"
+        break
+    fi
+done
 
-DEFAULT_PG_MIN="$(yq .default-pg-min <<< "$VERSION_DATA")"
-[ -z "$DEFAULT_PG_MIN" ] && { error "default-pg-min is required in versions.yaml"; exit 1; }
-DEFAULT_PG_MAX="$(yq .default-pg-max <<< "$VERSION_DATA")"
-[ -z "$DEFAULT_PG_MAX" ] && { error "default-pg-max is required in versions.yaml"; exit 1; }
+require_version_data() {
+    if [ -z "$VERSION_DATA" ]; then
+        error "could not locate versions.yaml"
+        exit 1
+    fi
+}
+
+if [ -n "$VERSION_DATA" ]; then
+    DEFAULT_PG_MIN="$(yq .default-pg-min <<< "$VERSION_DATA")"
+    [ -z "$DEFAULT_PG_MIN" ] && { error "default-pg-min is required in versions.yaml"; exit 1; }
+    DEFAULT_PG_MAX="$(yq .default-pg-max <<< "$VERSION_DATA")"
+    [ -z "$DEFAULT_PG_MAX" ] && { error "default-pg-max is required in versions.yaml"; exit 1; }
+fi
 
 pkg_versions() {
     local pkg="$1"
+    require_version_data
     yq ".$pkg | keys | .[]" <<<"$VERSION_DATA" | xargs
 }
 
@@ -106,6 +114,7 @@ requested_pkg_versions() {
 latest_pkg_version() {
     local pkg="$1"
     local -a versions
+    require_version_data
     readarray -t versions <<< "$(yq ".$pkg | keys | .[]" <<<"$VERSION_DATA")"
     echo "${versions[-1]}"
 }
@@ -113,6 +122,7 @@ latest_pkg_version() {
 # locate the cargo-pgrx key from versions.yaml
 pkg_cargo_pgrx_version() {
     local pkg="$1" ver="$2" cargopgrx
+    require_version_data
 
     cargopgrx="$(yq ".$pkg | pick([\"$ver\"]) | .[].cargo-pgrx" <<<"$VERSION_DATA")"
     if [ "$cargopgrx" = null ]; then return; else echo "$cargopgrx"; fi
@@ -125,6 +135,7 @@ install_rust_extensions() {
     declare -A pgrx_versions=()
 
     for ver in $TOOLKIT_VERSIONS; do
+        is_installed toolkit "$ver" && continue
         cargopgrx="$(pkg_cargo_pgrx_version "toolkit" "$ver")"
         if [ -z "$cargopgrx" ]; then
             error "no cargo-pgrx version found for toolkit-$ver"
@@ -153,6 +164,7 @@ version_is_supported() {
     local pkg="$1" pg="$2" ver="$3" pdata pgmin pgmax arch
     pg="$(major_version_only "$pg")"
     local -a pgversions
+    require_version_data
 
     pdata="$(yq ".$pkg | pick([\"$ver\"]) | .[]" <<<"$VERSION_DATA")"
     if [ "$pdata" = null ]; then
@@ -183,6 +195,17 @@ version_is_supported() {
         done
         if [ "$found" = "false" ]; then echo "does not support pg$pg"; return; fi
     fi
+}
+
+# installed for any pg major, by a generated layer
+is_installed() {
+    local pkg="$1" ver="$2" so
+    case "$pkg" in
+    timescaledb) so="timescaledb-$ver.so";;
+    toolkit) so="timescaledb_toolkit-$ver.so";;
+    *) return 1;;
+    esac
+    compgen -G "/usr/lib/postgresql/*/lib/$so" > /dev/null
 }
 
 # Ensure PG version matching is performed only based upon MAJOR version.
@@ -235,6 +258,8 @@ require_supported_arch() {
     fi
 }
 
-TIMESCALEDB_VERSIONS="$(requested_pkg_versions timescaledb "$TIMESCALEDB_VERSIONS")"
-TOOLKIT_VERSIONS="$(requested_pkg_versions toolkit "$TOOLKIT_VERSIONS")"
-PGVECTORSCALE_VERSIONS="$(requested_pkg_versions pgvectorscale "$PGVECTORSCALE_VERSIONS")"
+if [ -n "$VERSION_DATA" ]; then
+    TIMESCALEDB_VERSIONS="$(requested_pkg_versions timescaledb "$TIMESCALEDB_VERSIONS")"
+    TOOLKIT_VERSIONS="$(requested_pkg_versions toolkit "$TOOLKIT_VERSIONS")"
+    PGVECTORSCALE_VERSIONS="$(requested_pkg_versions pgvectorscale "$PGVECTORSCALE_VERSIONS")"
+fi

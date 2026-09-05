@@ -1,0 +1,8 @@
+## The pg versions that will be installed.
+## from https://www.postgresql.org/about/news/postgresql-184-1710-1614-1518-and-1423-released-3297/
+## Separate from versions.yaml: a change here rebuilds everything after the PostgreSQL install.
+postgres_versions:
+  18: 18.4
+  17: 17.10
+  16: 16.14
+  15: 15.18
