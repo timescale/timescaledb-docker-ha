@@ -312,6 +312,38 @@ check_files() {
 	done
 }
 
+# The layout the Dockerfile guarantees: extension libraries are mode 644 (a
+# chmod in a later layer would copy them all), build trees and the unpacked
+# cargo registry are removed in the layer that created them, and the release
+# image has no rust toolchain. /build exists in the builder image only.
+check_layout() {
+	local path executable
+	executable="$(find /usr/lib/postgresql/*/lib -name '*.so' -type f -perm /111 2>/dev/null)"
+	if [ -n "$executable" ]; then
+		error "extension libraries with an executable bit: ${executable//$'\n'/ }"
+	else
+		log "all extension libraries are mode 644"
+	fi
+
+	for path in /build/toolkit /build/timescaledb /usr/local/cargo/registry/src; do
+		[ -e "$path" ] && error "$path is in the image"
+	done
+
+	if [ -d /build ]; then
+		if [ "$(stat -c %U /usr/local/cargo)" = postgres ]; then
+			log "/usr/local/cargo is owned by postgres"
+		else
+			error "/usr/local/cargo is not owned by postgres"
+		fi
+	else
+		for path in /build /usr/local/cargo /usr/local/rustup; do
+			[ -e "$path" ] && error "$path is in the release image"
+		done
+		log "release image has no build tree or rust toolchain"
+	fi
+	return 0
+}
+
 EXTVERSIONS="$(mktemp -t extversions."$ARCH".XXXX)"
 cleanup() {
 	rm -f "$EXTVERSIONS".* >&/dev/null
