@@ -41,14 +41,18 @@ else
 endif
 # BuildKit layer cache in the runs-on S3 bucket. The runs-on/action step
 # exports the RUNS_ON_* variables. DOCKER_CACHE_SCOPE (one per image variant
-# and platform) turns the cache on. DOCKER_CACHE_FROM=false writes the cache
-# without reading it.
+# and platform) turns the cache on. Each branch writes its own cache manifest
+# and reads its own and master's, so branches do not evict each other.
+# DOCKER_CACHE_FROM=false writes the cache without reading it.
 DOCKER_CACHE_FROM?=true
+DOCKER_CACHE_BRANCH?=$(shell git rev-parse --abbrev-ref HEAD)
 ifneq ($(strip $(DOCKER_CACHE_SCOPE)),)
-  DOCKER_CACHE_S3=type=s3,region=$(RUNS_ON_AWS_REGION),bucket=$(RUNS_ON_S3_BUCKET_CACHE),blobs_prefix=$(RUNS_ON_S3_CACHE_REPO_PREFIX)/buildkit/blobs/,manifests_prefix=$(RUNS_ON_S3_CACHE_REPO_PREFIX)/buildkit/manifests/,name=$(DOCKER_CACHE_SCOPE)
-  DOCKER_CACHE += --cache-to $(DOCKER_CACHE_S3),mode=max
+  DOCKER_CACHE_S3=type=s3,region=$(RUNS_ON_AWS_REGION),bucket=$(RUNS_ON_S3_BUCKET_CACHE),blobs_prefix=$(RUNS_ON_S3_CACHE_REPO_PREFIX)/buildkit/blobs/,manifests_prefix=$(RUNS_ON_S3_CACHE_REPO_PREFIX)/buildkit/manifests/
+  DOCKER_CACHE_NAME=$(DOCKER_CACHE_SCOPE)-$(subst /,-,$(DOCKER_CACHE_BRANCH))
+  DOCKER_CACHE += --cache-to $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_NAME),mode=max
   ifneq ($(DOCKER_CACHE_FROM),false)
-    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_S3)
+    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_NAME)
+    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_SCOPE)-master
   endif
 endif
 
