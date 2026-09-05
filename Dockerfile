@@ -51,8 +51,7 @@ RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 # refuses connections outright. apt treats both as fatal on the first attempt.
 RUN echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/02retries
 
-# Ubuntu will throttle downloads which can slow things down so much that we can't complete. Since we're
-# building in AWS, use their mirrors, with the official mirrors as fallback (sources/mirrors.*.txt).
+# apt sources go through a mirror list: the official mirror first, the AWS mirror as fallback (sources/mirrors.*.txt).
 COPY sources /tmp/sources
 RUN arch="$(dpkg --print-architecture)"; \
     mv /etc/apt/sources.list /etc/apt/sources.list.dist; \
