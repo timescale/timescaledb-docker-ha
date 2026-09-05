@@ -389,70 +389,54 @@ ARG TIMESCALEDB_VERSIONS
 # the build cache. The blocks below are generated from build_scripts/versions.yaml
 # by `make dockerfile`. Do not edit them by hand.
 # BEGIN GENERATED timescaledb
+# built from source, one layer for all
 RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.13.0 "15 16"
 /build/scripts/install_extensions timescaledb 2.13.1 "15 16"
-EOF
-RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.14.0 "15 16"
 /build/scripts/install_extensions timescaledb 2.14.1 "15 16"
 /build/scripts/install_extensions timescaledb 2.14.2 "15 16"
-EOF
-RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.15.0 "15 16"
 /build/scripts/install_extensions timescaledb 2.15.1 "15 16"
 /build/scripts/install_extensions timescaledb 2.15.2 "15 16"
 /build/scripts/install_extensions timescaledb 2.15.3 "15 16"
-EOF
-RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.16.0 "15 16"
 /build/scripts/install_extensions timescaledb 2.16.1 "15 16"
-EOF
-RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.17.0 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.17.1 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.17.2 "15 16 17"
-EOF
-RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.18.0 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.18.1 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.18.2 "15 16 17"
-EOF
-RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.19.0 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.19.1 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.19.2 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.19.3 "15 16 17"
-EOF
-RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.20.0 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.20.1 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.20.2 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.20.3 "15 16 17"
-EOF
-RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.21.0 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.21.1 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.21.2 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.21.3 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.21.4 "15 16 17"
-EOF
-RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.22.0 "15 16 17"
 /build/scripts/install_extensions timescaledb 2.22.1 "15 16 17"
-EOF
-RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.23.0 "15 16 17 18"
 /build/scripts/install_extensions timescaledb 2.23.1 "15 16 17 18"
 EOF
+# 2.24.x
 RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.24.0 "15 16 17 18"
 EOF
+# 2.25.x
 RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.25.0 "15 16 17 18"
 /build/scripts/install_extensions timescaledb 2.25.1 "15 16 17 18"
 /build/scripts/install_extensions timescaledb 2.25.2 "15 16 17 18"
 EOF
+# 2.26.x
 RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.26.0 "15 16 17 18"
 /build/scripts/install_extensions timescaledb 2.26.1 "15 16 17 18"
@@ -460,17 +444,20 @@ RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.26.3 "15 16 17 18"
 /build/scripts/install_extensions timescaledb 2.26.4 "15 16 17 18"
 EOF
+# 2.27.x
 RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.27.0 "15 16 17 18"
 /build/scripts/install_extensions timescaledb 2.27.1 "15 16 17 18"
 /build/scripts/install_extensions timescaledb 2.27.2 "15 16 17 18"
 EOF
+# 2.28.x
 RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.28.0 "15 16 17 18"
 /build/scripts/install_extensions timescaledb 2.28.1 "15 16 17 18"
 /build/scripts/install_extensions timescaledb 2.28.2 "15 16 17 18"
 /build/scripts/install_extensions timescaledb 2.28.3 "15 16 17 18"
 EOF
+# 2.29.x
 RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.29.0 "16 17 18"
 /build/scripts/install_extensions timescaledb 2.29.1 "16 17 18"

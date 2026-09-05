@@ -2,9 +2,13 @@
 
 # Generate the per-version install layers in the Dockerfile from versions.yaml.
 #
-# Each timescaledb minor version (2.13.x, 2.14.x, ...) gets one RUN layer, each
-# toolkit version gets one RUN layer. A new version only adds or changes its
-# own layer, so the build cache for every other version stays valid.
+# Each toolkit version gets one RUN layer. timescaledb versions before DEB_SINCE
+# build from source (install_timescaledb in shared_install.sh) and never
+# change: they share one layer. From DEB_SINCE on, the newest SEPARATE_MINORS
+# minor versions (2.29.x, 2.28.x, ...) get one layer each and the older ones
+# share one layer. A deb install takes seconds, so the shared layer is cheap to
+# rebuild, and the layer count stays bounded. A new version only adds or
+# changes its own layer, so the build cache for every other version stays valid.
 #
 # usage: gen_dockerfile_versions          rewrite the blocks in the Dockerfile
 #        gen_dockerfile_versions --check  exit 1 when the Dockerfile is stale
@@ -18,6 +22,23 @@ DOCKERFILE="$SCRIPT_DIR/../Dockerfile"
 PG_MAJORS="$(yq '.postgres_versions | keys | .[]' "$SCRIPT_DIR/postgres_versions.yaml" | sort -n | xargs)"
 DEFAULT_PG_MIN="$(yq .default-pg-min "$VERSIONS")"
 DEFAULT_PG_MAX="$(yq .default-pg-max "$VERSIONS")"
+DEB_SINCE=2.24.0
+SEPARATE_MINORS=6
+
+version_lt() {
+    [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ]
+}
+
+# one RUN layer with the install lines from stdin; nothing when stdin is empty
+emit_layer() {
+    local comment="$1" lines
+    lines="$(cat)"
+    [ -n "$lines" ] || return 0
+    echo "# $comment"
+    echo "RUN <<EOF"
+    echo "$lines"
+    echo "EOF"
+}
 
 # release versions of $1, oldest first. The catch-all install steps build the
 # branch names such as main, because a cached layer would never rebuild them.
@@ -52,19 +73,34 @@ supported_pgs() {
 }
 
 gen_timescaledb() {
-    local ver minor prev="" pgs
+    local ver pgs line minor source="" older="" i first_separate
+    local -a minors=()
+    declare -A by_minor=()
+
     for ver in $(release_versions timescaledb); do
         pgs="$(supported_pgs timescaledb "$ver")"
         [ -n "$pgs" ] || continue
-        minor="${ver%.*}"
-        if [ "$minor" != "$prev" ]; then
-            [ -n "$prev" ] && echo "EOF"
-            echo "RUN <<EOF"
-            prev="$minor"
+        line="/build/scripts/install_extensions timescaledb $ver \"$pgs\""$'\n'
+        if version_lt "$ver" "$DEB_SINCE"; then
+            source+="$line"
+        else
+            minor="${ver%.*}"
+            [[ " ${minors[*]} " == *" $minor "* ]] || minors+=("$minor")
+            by_minor[$minor]+="$line"
         fi
-        echo "/build/scripts/install_extensions timescaledb $ver \"$pgs\""
     done
-    [ -n "$prev" ] && echo "EOF"
+
+    first_separate=$(( ${#minors[@]} - SEPARATE_MINORS ))
+    (( first_separate < 0 )) && first_separate=0
+    for (( i = 0; i < first_separate; i++ )); do
+        older+="${by_minor[${minors[i]}]}"
+    done
+
+    printf '%s' "$source" | emit_layer "built from source, one layer for all"
+    printf '%s' "$older" | emit_layer "older deb releases, one layer for all"
+    for (( i = first_separate; i < ${#minors[@]}; i++ )); do
+        printf '%s' "${by_minor[${minors[i]}]}" | emit_layer "${minors[i]}.x"
+    done
 }
 
 gen_toolkit() {
