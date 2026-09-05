@@ -214,6 +214,14 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 dockerfile: # regenerate the per-version install layers in the Dockerfile from build_scripts/versions.yaml
 	./build_scripts/gen_dockerfile_versions
 
+# Every image build regenerates the layers first when their inputs changed,
+# so the committed Dockerfile cannot go stale by accident.
+Dockerfile: build_scripts/versions.yaml build_scripts/postgres_versions.yaml build_scripts/gen_dockerfile_versions
+	./build_scripts/gen_dockerfile_versions
+	touch Dockerfile
+
+builder release build build-oss build-sha: Dockerfile
+
 # We provide the fast target as the first (=default) target, as it will skip installing
 # many optional extensions, and it will only install a single timescaledb (master) version.
 # This is basically useful for developers of this repository, to allow fast feedback cycles.
