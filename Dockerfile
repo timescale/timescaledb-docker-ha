@@ -46,6 +46,11 @@ RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" post
 RUN echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/01norecommend
 RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
 
+# The AWS mirror intermittently serves a Packages.gz whose size disagrees with
+# the Release file it just served ("Mirror sync in progress?"), and intermittently
+# refuses connections outright. apt treats both as fatal on the first attempt.
+RUN echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/02retries
+
 # Ubuntu will throttle downloads which can slow things down so much that we can't complete. Since we're
 # building in AWS, use their mirrors. arm64 and amd64 use different sources though
 COPY sources /tmp/sources
