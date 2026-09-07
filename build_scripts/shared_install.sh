@@ -65,12 +65,33 @@ install_timescaledb_for_pg_version() {
     local package_suffix
     local loader_package
     local main_package
+    local candidate
+    local -a suffixes=()
 
     os_suffix="$(get_package_suffix)"
 
-    # Try the current PG minor suffix first; fall back to the previous minor if
-    # packages haven't been published for the new PG minor yet.
-    for suffix in "${pg_full_suffix}" "$((pg_full_suffix - 1))"; do
+    # Try the pinned PG minor first, then walk back through preceding minors.
+    # Two reasons a single step back is not enough: packages for a new PG minor
+    # are published some time after the minor itself, and an older timescaledb
+    # version is only ever built against the minor that was current when it was
+    # released, so it can sit several minors behind the pin.
+    #
+    # Minors upstream never shipped are stepped over, since they would be tried
+    # and always miss. PostgreSQL 18.5 "was not shipped due to a regression",
+    # which makes 18.4 the real predecessor of 18.6:
+    # https://www.postgresql.org/about/news/postgresql-186-1711-1615-1519-1424-and-19-beta-3-released-3365/
+    local -r skipped_minors=" 1805 "
+    local -r fallback_depth=3
+
+    candidate="${pg_full_suffix}"
+    while [ "${#suffixes[@]}" -lt "${fallback_depth}" ]; do
+        if [[ "${skipped_minors}" != *" ${candidate} "* ]]; then
+            suffixes+=("${candidate}")
+        fi
+        candidate=$((candidate - 1))
+    done
+
+    for suffix in "${suffixes[@]}"; do
         package_suffix="${os_suffix}-${suffix}"
         loader_package=$(construct_loader_package_name "${pg_version}" "${ts_version}" "${package_suffix}")
         main_package=$(construct_package_name "${pg_version}" "${ts_version}" "${package_suffix}")

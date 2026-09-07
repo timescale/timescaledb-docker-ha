@@ -23,9 +23,22 @@ echo "shared_preload_libraries='${SHARED_PRELOAD_LIBRARIES}'" >>"${PGDATA}/postg
 
 pg_ctl start
 
-while ! pg_isready; do
+# Bounded on purpose: an unbounded wait turns "the server never came up" into a
+# silent hang until the surrounding container is reaped, which then surfaces as
+# an unrelated docker error instead of the actual failure.
+ready=false
+for _ in $(seq 1 150); do
+	if pg_isready -q; then ready=true; break; fi
 	sleep 0.2
 done
+
+if [ "${ready}" != true ]; then
+	echo "smoketest: server did not accept connections within 30s" >&2
+	pg_isready >&2 || true
+	ls -la /var/run/postgresql/ >&2 || true
+	pg_ctl status >&2 || true
+	exit 1
+fi
 
 psql -d postgres -f - <<__SQL__
 ALTER SYSTEM set log_statement to 'all';

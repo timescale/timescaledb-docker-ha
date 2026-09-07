@@ -23,11 +23,16 @@ default-pg-max: 18
 default-cargo-pgx: 0.6.1
 default-arch: both
 ## This section contains the specific pg versions that will be installed.
-## from https://www.postgresql.org/about/news/postgresql-184-1710-1614-1518-and-1423-released-3297/
+## from https://www.postgresql.org/about/news/postgresql-186-1711-1615-1519-1424-and-19-beta-3-released-3365/
+## 18.5 is absent on purpose: it "was not shipped due to a regression", so
+## upstream went from 18.4 straight to 18.6.
+## 15 deliberately stays on the May set: PG15 is being deprecated, and
+## timescaledb already dropped support for it in 2.29.0, so a minor bump
+## this close to removal buys nothing.
 postgres_versions:
-  18: 18.4
-  17: 17.10
-  16: 16.14
+  18: 18.6
+  17: 17.11
+  16: 16.15
   15: 15.18
 timescaledb:
   2.13.0:
