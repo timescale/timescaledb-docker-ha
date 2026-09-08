@@ -327,10 +327,14 @@ publish-combined-sha: is_ci # publish a combined image manifest for a CICD branc
 	echo "Pushed $(CICD_URL) (amd:$$amddigest_image, arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
 
 CHECK_NAME=ha-check
+# Which architectures `check` verifies. Callers that run on a native runner of
+# one architecture override this so nothing has to be emulated.
+CHECK_ARCHES?=amd64 arm64
+
 .PHONY: check
 check: # check images to see if they have all the requested content
 	@set -x
-	for arch in amd64 arm64; do
+	for arch in $(CHECK_ARCHES); do
 		key="$$(mktemp -u XXXXXX)"
 		check_name="$(CHECK_NAME)-$$key"
 		echo "### Checking $$arch $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY)
@@ -351,8 +355,8 @@ check: # check images to see if they have all the requested content
 		docker exec -e GITHUB_STEP_SUMMARY="/tmp/step_summary-$$key" -e CI="$(CI)" "$$check_name" /cicd/install_checks -v || { docker logs -n100 "$$check_name"; exit 1; }
 		docker exec "$$check_name" cat "/tmp/step_summary-$$key" >> "$(GITHUB_STEP_SUMMARY)" 2>&1
 		docker rm --force "$$check_name" >&/dev/null || true
-		# Drop the image before pulling the next arch; the pg*-all images are
-		# large enough that holding both amd64 and arm64 at once fills the disk.
+		# Drop the image once checked; the pg*-all images are large enough that
+		# keeping them around fills the disk.
 		docker rmi --force "$(DOCKER_RELEASE_URL)" >&/dev/null || true
 	done
 

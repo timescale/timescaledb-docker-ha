@@ -67,6 +67,19 @@ jobs:
           docker builder prune --force || true
           make publish-release
 
+      # Exercise the same `check` target master runs. Without this the target is
+      # only ever executed on a push to master, so a change to it cannot fail
+      # until after it has merged. amd64 only: this workflow builds one platform.
+      - name: Check pg18-all
+        env:
+          PG_MAJOR: "18"
+          PLATFORM: amd64
+          ALL_VERSIONS: "true"
+          OSS_ONLY: "false"
+          DOCKER_TAG_POSTFIX: "-cicheck"
+          CHECK_ARCHES: amd64
+        run: make get-image-config check
+
       - name: Validate digests for manifest compatibility
         run: |
           builder_id="${{ steps.build.outputs.builder_id }}"
