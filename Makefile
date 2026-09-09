@@ -213,9 +213,9 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 # EXTENSION_ARTIFACTS_BUCKET builds the tarballs without S3.
 # build_scripts/extension_builds needs yq.
 EXTENSION_ARTIFACTS?=false
-EXTENSION_ARTIFACTS_DIR=build_artifacts
+EXTENSION_ARTIFACTS_DIR=build_artifacts/$(PLATFORM)
 EXTENSION_ARTIFACTS_BUCKET?=timescale-ci-artifacts
-EXTENSION_ARTIFACTS_S3=s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))
+EXTENSION_ARTIFACTS_S3=s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))/$(PLATFORM)
 ifeq ($(EXTENSION_ARTIFACTS),true)
   # an OSS_ONLY image has no toolkit and builds timescaledb without timescaledb-tsl
   ifneq ($(OSS_ONLY),true)
@@ -224,26 +224,34 @@ ifeq ($(EXTENSION_ARTIFACTS),true)
     ifneq ($(.SHELLSTATUS),0)
       $(error build_scripts/extension_builds failed)
     endif
-    EXTENSION_ARTIFACT_FILES=$(addprefix $(EXTENSION_ARTIFACTS_DIR)/,$(addsuffix -$(PLATFORM).tar.gz,$(EXTENSION_BUILDS)))
+    EXTENSION_ARTIFACT_FILES=$(addprefix $(EXTENSION_ARTIFACTS_DIR)/,$(addsuffix .tar.gz,$(EXTENSION_BUILDS)))
   endif
   builder release build build-oss build-sha: extension-artifacts
 endif
 
-.PHONY: extension-artifacts
-extension-artifacts: $(EXTENSION_ARTIFACT_FILES) # fetch or build the extension tarballs the image unpacks
+# One sync fetches every tarball of the platform for PG_VERSIONS in parallel.
+.PHONY: extension-artifacts-sync
+extension-artifacts-sync:
+	[ -n "$(EXTENSION_ARTIFACTS_BUCKET)" ] || exit 0
+	aws s3 sync --region "$(RUNS_ON_AWS_REGION)" --no-progress --exclude '*' \
+		$(foreach pg,$(PG_VERSIONS),--include '*-pg$(pg).tar.gz') \
+		"$(EXTENSION_ARTIFACTS_S3)/" "$(EXTENSION_ARTIFACTS_DIR)/"
 
-# Fetch one tarball from S3, or build it from the <extension>-artifact stage and
-# store it. The build reads the layer cache but does not write it: a write would
-# replace the manifest the image build reads with one that has only the base layers.
-# The export goes to a directory per target, so `make -j` builds do not share a file name.
+# A second make builds what is still missing after the sync: make decides what a
+# target needs before it runs any recipe, so this make cannot see the synced files.
+.PHONY: extension-artifacts
+extension-artifacts: extension-artifacts-sync # fetch or build the extension tarballs the image unpacks
+	[ -z "$(EXTENSION_ARTIFACT_FILES)" ] || $(MAKE) --no-print-directory $(EXTENSION_ARTIFACT_FILES)
+
+# Build one tarball from the <extension>-artifact stage and store it. The build
+# reads the layer cache but does not write it: a write would replace the manifest
+# the image build reads with one that has only the base layers. The export goes
+# to a directory per target, so `make -j` builds do not share a file name.
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_OUTPUT=--output type=local,dest=$(EXTENSION_ARTIFACTS_DIR)/$*.out
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_CACHE=$(DOCKER_CACHE_FROM_ARGS)
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_EXTRA_BUILDARGS=
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz:
-	if [ -n "$(EXTENSION_ARTIFACTS_BUCKET)" ] && aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$(EXTENSION_ARTIFACTS_S3)/$(@F)" "$@"; then
-		exit 0
-	fi
-	IFS=- read -r pkg ver pg _ <<< "$*"
+	IFS=- read -r pkg ver pg <<< "$*"
 	$(DOCKER_BUILD_COMMAND) --target "$$pkg-artifact" --build-arg EXT_VERSION="$$ver" --build-arg EXT_PG="$${pg#pg}"
 	mv "$(EXTENSION_ARTIFACTS_DIR)/$*.out/extension.tar.gz" "$@"
 	rmdir "$(EXTENSION_ARTIFACTS_DIR)/$*.out"

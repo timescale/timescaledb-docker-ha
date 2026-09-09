@@ -1,5 +1,6 @@
 .build*
 .idea/
 # extension tarballs from `make extension-artifacts`
-build_artifacts/*
-!build_artifacts/.gitkeep
+build_artifacts/**
+!build_artifacts/*/
+!build_artifacts/*/.gitkeep

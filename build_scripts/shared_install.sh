@@ -128,7 +128,7 @@ format_pg_major_minor_version() {
 unpack_artifact() {
     local pkg="$1" version="$2" pg="$3" arch="$ARCH" artifact
     [ "$arch" = aarch64 ] && arch=arm64
-    artifact="/build/artifacts/$pkg-$version-pg$pg-$arch.tar.gz"
+    artifact="/build/artifacts/$arch/$pkg-$version-pg$pg.tar.gz"
     [ -s "$artifact" ] || return 1
     [ "$DRYRUN" = true ] && { log "would unpack $artifact"; return 0; }
     if ! tar -xzf "$artifact" -C /; then

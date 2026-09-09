@@ -403,8 +403,8 @@ COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
 
 USER postgres
 
-# The tarballs in build_artifacts/ come from `make extension-artifacts`. A version
-# without a tarball installs from a deb or builds from source here.
+# The tarballs in build_artifacts/<arch>/ come from `make extension-artifacts`. A
+# version without a tarball installs from a deb or builds from source here.
 ARG TOOLKIT_VERSIONS
 RUN --mount=type=bind,source=build_artifacts,target=/build/artifacts \
     /build/scripts/install_extensions toolkit
