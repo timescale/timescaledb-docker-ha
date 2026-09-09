@@ -119,6 +119,22 @@ format_pg_major_minor_version() {
     echo $((major * 100 + minor))
 }
 
+# Unpack $1-$2 for pg$3 from a tarball of `make extension-artifacts`, mounted by
+# the Dockerfile. Returns 1 when there is no tarball.
+unpack_artifact() {
+    local pkg="$1" version="$2" pg="$3" arch="$ARCH" artifact
+    [ "$arch" = aarch64 ] && arch=arm64
+    artifact="/build/artifacts/$pkg-$version-pg$pg-$arch.tar.gz"
+    [ -s "$artifact" ] || return 1
+    [ "$DRYRUN" = true ] && { log "would unpack $artifact"; return 0; }
+    if tar -xzf "$artifact" -C /; then
+        log "unpacked $artifact"
+        return 0
+    fi
+    error "failed unpacking $artifact"
+    return 1
+}
+
 # $2: optional pg majors; the caller has checked support
 install_timescaledb() {
     local version="$1" pg_list="$2" pg pkg=timescaledb unsupported_reason oss_only=""
@@ -160,6 +176,9 @@ install_timescaledb() {
         pg_full_suffix=$(format_pg_major_minor_version "${pg_full_version}")
 
         log "installing $pkg-$version for pg$pg"
+
+        # the tarballs carry timescaledb-tsl, an OSS_ONLY image builds without it
+        if [ "$OSS_ONLY" != true ] && unpack_artifact "$pkg" "$version" "$pg"; then continue; fi
 
         [[ "$DRYRUN" = true ]] && continue
 
@@ -234,10 +253,8 @@ install_timescaledb() {
 # $3: optional pg majors; the caller has checked support
 install_toolkit() {
     local rust_release cargo_pgrx_version="$1" version="$2" pg_list="$3" pg pkg=toolkit dpkg deb_version unsupported_reason pgrx_cmd
-    local artifact arch_deb="$ARCH"
     [ -n "$RUST_RELEASE" ] && rust_release=release || rust_release=debug
     pgrx_cmd="$(cargo_pgrx_cmd "$cargo_pgrx_version")"
-    [ "$arch_deb" = aarch64 ] && arch_deb=arm64
 
     if [ "$OSS_ONLY" = true ]; then
         log "skipped toolkit-$version due to OSS_ONLY"
@@ -253,16 +270,7 @@ install_toolkit() {
             fi
         fi
 
-        # a tarball from `make toolkit-artifacts`, mounted by the Dockerfile
-        artifact="/build/artifacts/$pkg-$version-pg$pg-$arch_deb.tar.gz"
-        if [ -s "$artifact" ]; then
-            [[ "$DRYRUN" = true ]] && { log "would unpack $artifact"; continue; }
-            if tar -xzf "$artifact" -C /; then
-                log "unpacked $artifact"
-                continue
-            fi
-            error "failed unpacking $artifact"
-        fi
+        unpack_artifact "$pkg" "$version" "$pg" && continue
 
         read -rs dpkg deb_version <<< "$(find_deb "timescaledb-toolkit-postgresql-$pg" "$version")"
         if [[ -n "$dpkg" && -n "$deb_version" ]]; then

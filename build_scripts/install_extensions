@@ -3,14 +3,17 @@
 SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 . "$SCRIPT_DIR"/shared.sh
 
-# Two modes:
+# Three modes:
 # - `install_extensions <timescaledb|rust|pgvectorscale|...>` installs the requested versions.
-# - `install_extensions toolkit <version> <pg major>` installs one toolkit version for one
-#   pg major. The toolkit-build stage in the Dockerfile calls this to pack a tarball.
+# - `install_extensions <timescaledb|toolkit> <version> <pg major>` installs one version for
+#   one pg major. The *-build stages in the Dockerfile call this.
+# - `install_extensions pack <timescaledb|toolkit> <version> <pg major> <tarball>` packs the
+#   files that install put in place. `make extension-artifacts` stores the tarball.
 
 usage() {
     echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch]" >&2
-    echo "       $0 [-n] toolkit <version> <pg major>" >&2
+    echo "       $0 [-n] <timescaledb|toolkit> <version> <pg major>" >&2
+    echo "       $0 pack <timescaledb|toolkit> <version> <pg major> <tarball>" >&2
     exit 1
 }
 
@@ -24,21 +27,50 @@ fix_so_modes() {
     find /usr/lib/postgresql/*/lib -name '*.so' -perm /111 -user "$(id -un)" -exec chmod -x {} +
 }
 
-# install one toolkit version for one pg major
-install_one_toolkit() {
-    local version="$1" pg="$2" cargopgrx
+# install one version for one pg major
+install_one_version() {
+    local pkg="$1" version="$2" pg="$3" cargopgrx
     [[ -n "$version" && -n "$pg" ]] || usage
 
-    cargopgrx="$(pkg_cargo_pgrx_version toolkit "$version")"
-    if [ -z "$cargopgrx" ]; then
-        error "no cargo-pgrx version found for toolkit-$version"
+    case "$pkg" in
+    timescaledb)
+        install_timescaledb "$version" "$pg"
+        rm -rf /build/timescaledb
+        ;;
+    toolkit)
+        cargopgrx="$(pkg_cargo_pgrx_version toolkit "$version")"
+        if [ -z "$cargopgrx" ]; then
+            error "no cargo-pgrx version found for toolkit-$version"
+            exit 1
+        fi
+        install_toolkit "$cargopgrx" "$version" "$pg"
+        # cargo recreates registry/src from registry/cache
+        rm -rf /build/toolkit /usr/local/cargo/registry/src
+        ;;
+    *) usage;;
+    esac
+    fix_so_modes
+}
+
+# pack the files of one installed version for one pg major
+pack_one_version() {
+    local pkg="$1" version="$2" pg="$3" out="$4" so glob
+    [[ -n "$version" && -n "$pg" && -n "$out" ]] || usage
+
+    # timescaledb[-.]* leaves out timescaledb_toolkit*
+    case "$pkg" in
+    timescaledb) so="timescaledb-$version.so"; glob='timescaledb[-.]*';;
+    toolkit) so="timescaledb_toolkit-$version.so"; glob='timescaledb_toolkit*';;
+    *) usage;;
+    esac
+
+    if [ ! -s "/usr/lib/postgresql/$pg/lib/$so" ]; then
+        error "$pkg-$version is not installed for pg$pg"
         exit 1
     fi
-
-    install_toolkit "$cargopgrx" "$version" "$pg"
-    # cargo recreates registry/src from registry/cache
-    rm -rf /build/toolkit /usr/local/cargo/registry/src
-    fix_so_modes
+    cd / || exit 1
+    find "usr/lib/postgresql/$pg/lib" "usr/share/postgresql/$pg/extension" -name "$glob" | tar -czf "$out" -T -
+    log "packed $pkg-$version for pg$pg into $out"
 }
 
 [ "$1" = -n ] && { DRYRUN=true; shift; }
@@ -48,9 +80,13 @@ install_one_toolkit() {
 what="$1"
 [ -z "$what" ] && what=all
 
+if [ "$what" = pack ]; then
+    pack_one_version "$2" "$3" "$4" "$5"
+    exit 0
+fi
+
 if [ -n "$2" ]; then
-    [ "$what" = toolkit ] || usage
-    install_one_toolkit "$2" "$3"
+    install_one_version "$what" "$2" "$3"
     exit 0
 fi
 

@@ -49,12 +49,14 @@ For further environment variables that can be set, we point you to the [Makefile
 
 For updating changes in versions for timescaledb, pgvectorscale, or toolkit, update `build_scripts/versions.yaml`.
 
-Toolkit builds from source take most of the build time. CI builds each toolkit version once per PostgreSQL
-major and architecture, and keeps the tarball in the runs-on S3 cache bucket under
-`toolkit/<base image>/toolkit-<version>-pg<major>-<arch>.tar.gz`. `make toolkit-artifacts` fetches the tarballs
-into `build_artifacts/`, builds the missing ones from the `toolkit-artifact` Dockerfile stage and stores them.
-The image build unpacks the tarballs it finds and builds the rest from source. Delete a tarball from the bucket
-to rebuild it. Without `TOOLKIT_ARTIFACTS=true`, such as a local build, the image builds toolkit from source.
+Installing the timescaledb and toolkit versions takes most of the build time. CI builds each version once per
+PostgreSQL major and architecture, and keeps the tarball in the runs-on S3 cache bucket under
+`extensions/<base image>/<extension>-<version>-pg<major>-<arch>.tar.gz`. `make extension-artifacts` fetches
+the tarballs into `build_artifacts/`, builds the missing ones from the `timescaledb-artifact` and
+`toolkit-artifact` Dockerfile stages and stores them. The image build unpacks the tarballs it finds and installs
+the rest itself. Delete a tarball from the bucket to rebuild it. Without `EXTENSION_ARTIFACTS=true`, such as a
+local build, the image installs every version itself. OSS-only images do not use the tarballs: they build
+timescaledb without timescaledb-tsl.
 
 The scripts outside the image need `yq`, `jq` and `shellcheck`. `mise install` installs the pinned versions from
 `mise.toml`.

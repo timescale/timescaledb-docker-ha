@@ -205,42 +205,44 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 					 $(DOCKER_EXTRA_BUILDARGS) \
 					 .
 
-# Toolkit tarballs. The image unpacks them instead of building toolkit from source.
-# TOOLKIT_ARTIFACTS=true fetches the tarballs for PG_VERSIONS and TOOLKIT_VERSIONS
-# from the runs-on S3 cache bucket, and builds and stores the missing ones. Without
-# it the image builds toolkit from source. build_scripts/toolkit_builds needs yq.
-TOOLKIT_ARTIFACTS?=false
-TOOLKIT_ARTIFACTS_DIR=build_artifacts
-TOOLKIT_ARTIFACTS_S3=s3://$(RUNS_ON_S3_BUCKET_CACHE)/$(RUNS_ON_S3_CACHE_REPO_PREFIX)/toolkit/$(subst :,-,$(DOCKER_FROM))
-ifeq ($(TOOLKIT_ARTIFACTS),true)
+# Extension tarballs, one per timescaledb or toolkit version, pg major and
+# architecture. The image unpacks them instead of installing or building.
+# EXTENSION_ARTIFACTS=true fetches the tarballs from the runs-on S3 cache bucket,
+# and builds and stores the missing ones. Without it the image installs the
+# versions itself. build_scripts/extension_builds needs yq.
+EXTENSION_ARTIFACTS?=false
+EXTENSION_ARTIFACTS_DIR=build_artifacts
+EXTENSION_ARTIFACTS_S3=s3://$(RUNS_ON_S3_BUCKET_CACHE)/$(RUNS_ON_S3_CACHE_REPO_PREFIX)/extensions/$(subst :,-,$(DOCKER_FROM))
+ifeq ($(EXTENSION_ARTIFACTS),true)
+  # an OSS_ONLY image has no toolkit and builds timescaledb without timescaledb-tsl
   ifneq ($(OSS_ONLY),true)
-    TOOLKIT_BUILDS:=$(shell PG_VERSIONS="$(PG_VERSIONS)" TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" ./build_scripts/toolkit_builds | awk '{print "toolkit-" $$1 "-pg" $$2}')
+    EXTENSION_BUILDS:=$(shell PG_VERSIONS="$(PG_VERSIONS)" TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" ./build_scripts/extension_builds | awk '{print $$1 "-" $$2 "-pg" $$3}')
     ifneq ($(.SHELLSTATUS),0)
-      $(error build_scripts/toolkit_builds failed)
+      $(error build_scripts/extension_builds failed)
     endif
-    TOOLKIT_ARTIFACT_FILES=$(addprefix $(TOOLKIT_ARTIFACTS_DIR)/,$(addsuffix -$(PLATFORM).tar.gz,$(TOOLKIT_BUILDS)))
+    EXTENSION_ARTIFACT_FILES=$(addprefix $(EXTENSION_ARTIFACTS_DIR)/,$(addsuffix -$(PLATFORM).tar.gz,$(EXTENSION_BUILDS)))
   endif
-  builder release build build-oss build-sha: toolkit-artifacts
+  builder release build build-oss build-sha: extension-artifacts
 endif
 
-.PHONY: toolkit-artifacts
-toolkit-artifacts: $(TOOLKIT_ARTIFACT_FILES) # fetch or build the toolkit tarballs the image unpacks
+.PHONY: extension-artifacts
+extension-artifacts: $(EXTENSION_ARTIFACT_FILES) # fetch or build the extension tarballs the image unpacks
 
-# Fetch one tarball from S3, or build it from the toolkit-artifact stage and store it.
-# The build reads the layer cache but does not write it: a write would replace the
-# manifest the image build reads with one that has only the base layers.
-$(TOOLKIT_ARTIFACTS_DIR)/toolkit-%.tar.gz: DOCKER_OUTPUT=--output type=local,dest=$(TOOLKIT_ARTIFACTS_DIR)
-$(TOOLKIT_ARTIFACTS_DIR)/toolkit-%.tar.gz: DOCKER_CACHE=$(DOCKER_CACHE_FROM_ARGS)
-$(TOOLKIT_ARTIFACTS_DIR)/toolkit-%.tar.gz: DOCKER_EXTRA_BUILDARGS=--target toolkit-artifact
-$(TOOLKIT_ARTIFACTS_DIR)/toolkit-%.tar.gz:
-	if [ -n "$(RUNS_ON_S3_BUCKET_CACHE)" ] && aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$(TOOLKIT_ARTIFACTS_S3)/$(@F)" "$@"; then
+# Fetch one tarball from S3, or build it from the <extension>-artifact stage and
+# store it. The build reads the layer cache but does not write it: a write would
+# replace the manifest the image build reads with one that has only the base layers.
+$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_OUTPUT=--output type=local,dest=$(EXTENSION_ARTIFACTS_DIR)
+$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_CACHE=$(DOCKER_CACHE_FROM_ARGS)
+$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_EXTRA_BUILDARGS=
+$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz:
+	if [ -n "$(RUNS_ON_S3_BUCKET_CACHE)" ] && aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$(EXTENSION_ARTIFACTS_S3)/$(@F)" "$@"; then
 		exit 0
 	fi
-	IFS=- read -r ver pg _ <<< "$*"
-	$(DOCKER_BUILD_COMMAND) --build-arg TOOLKIT_VERSION="$$ver" --build-arg TOOLKIT_PG="$${pg#pg}"
-	mv "$(TOOLKIT_ARTIFACTS_DIR)/toolkit.tar.gz" "$@"
+	IFS=- read -r pkg ver pg _ <<< "$*"
+	$(DOCKER_BUILD_COMMAND) --target "$$pkg-artifact" --build-arg EXT_VERSION="$$ver" --build-arg EXT_PG="$${pg#pg}"
+	mv "$(EXTENSION_ARTIFACTS_DIR)/extension.tar.gz" "$@"
 	if [ -n "$(RUNS_ON_S3_BUCKET_CACHE)" ]; then
-		aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$@" "$(TOOLKIT_ARTIFACTS_S3)/$(@F)"
+		aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$@" "$(EXTENSION_ARTIFACTS_S3)/$(@F)"
 	fi
 
 # We provide the fast target as the first (=default) target, as it will skip installing

@@ -60,7 +60,7 @@ jobs:
           PLATFORM: ${{ matrix.platform }}
           DOCKER_CACHE_SCOPE: pg${{ env.PG_MAJOR }}-all-${{ matrix.platform }}
           DOCKER_CACHE_BRANCH: ${{ github.head_ref || github.ref_name }}
-          TOOLKIT_ARTIFACTS: "true"
+          EXTENSION_ARTIFACTS: "true"
         run: make build-sha
 
       - name: Check

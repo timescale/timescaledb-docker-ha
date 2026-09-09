@@ -355,25 +355,30 @@ RUN if [ -n "${PG_LOGERRORS}" ]; then \
         done; \
     fi
 
-# Builds one toolkit version for one pg major and packs the installed files.
-# `make toolkit-artifacts` exports this stage and keeps the tarball in S3, so the
-# builder stage only unpacks it. This stage is not part of the image.
-FROM base AS toolkit-build
-
-ARG RUST_RELEASE=release
-ARG TOOLKIT_VERSION
-ARG TOOLKIT_PG
-
+# These stages build one extension version for one pg major and pack the
+# installed files. `make extension-artifacts` exports them and keeps the tarballs
+# in S3, so the builder stage only unpacks. They are not part of the image.
+# timescaledb installs as root, like in the builder stage; toolkit as postgres.
+FROM base AS timescaledb-build
+ARG GITHUB_REPO=timescale/timescaledb
+ARG EXT_VERSION
+ARG EXT_PG
 COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
+USER root
+RUN /build/scripts/install_extensions timescaledb "${EXT_VERSION}" "${EXT_PG}"
+RUN mkdir /build/out; /build/scripts/install_extensions pack timescaledb "${EXT_VERSION}" "${EXT_PG}" /build/out/extension.tar.gz
 
+FROM scratch AS timescaledb-artifact
+COPY --from=timescaledb-build /build/out/ /
+
+FROM base AS toolkit-build
+ARG RUST_RELEASE=release
+ARG EXT_VERSION
+ARG EXT_PG
+COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
 USER postgres
-
-RUN /build/scripts/install_extensions toolkit "${TOOLKIT_VERSION}" "${TOOLKIT_PG}"
-RUN test -s "/usr/lib/postgresql/${TOOLKIT_PG}/lib/timescaledb_toolkit-${TOOLKIT_VERSION}.so"; \
-    mkdir /build/out; \
-    cd /; \
-    find "usr/lib/postgresql/${TOOLKIT_PG}/lib" "usr/share/postgresql/${TOOLKIT_PG}/extension" -name 'timescaledb_toolkit*' \
-        | tar -czf /build/out/toolkit.tar.gz -T -
+RUN /build/scripts/install_extensions toolkit "${EXT_VERSION}" "${EXT_PG}"
+RUN mkdir /build/out; /build/scripts/install_extensions pack toolkit "${EXT_VERSION}" "${EXT_PG}" /build/out/extension.tar.gz
 
 FROM scratch AS toolkit-artifact
 COPY --from=toolkit-build /build/out/ /
@@ -397,9 +402,8 @@ COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
 
 USER postgres
 
-# Toolkit before timescaledb: timescaledb releases more often. The tarballs in
-# build_artifacts/ come from `make toolkit-artifacts`. A version without a
-# tarball builds from source here.
+# The tarballs in build_artifacts/ come from `make extension-artifacts`. A version
+# without a tarball installs from a deb or builds from source here.
 ARG TOOLKIT_VERSIONS
 RUN --mount=type=bind,source=build_artifacts,target=/build/artifacts \
     /build/scripts/install_extensions toolkit
@@ -409,7 +413,8 @@ USER root
 ARG ALLOW_ADDING_EXTENSIONS=true
 ARG GITHUB_REPO=timescale/timescaledb
 ARG TIMESCALEDB_VERSIONS
-RUN /build/scripts/install_extensions timescaledb
+RUN --mount=type=bind,source=build_artifacts,target=/build/artifacts \
+    /build/scripts/install_extensions timescaledb
 
 USER postgres
 

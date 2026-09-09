@@ -76,7 +76,7 @@ jobs:
       # The packages in the image are not pinned. A cached build keeps the packages
       # of the build that wrote the cache. The weekly scheduled publish builds cold
       # and refreshes them; a publish from master ships what the PR build tested.
-      # The toolkit tarballs build from pinned inputs, so a cold build reuses them.
+      # The extension tarballs build from pinned inputs, so a cold build reuses them.
       - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
         id: build
         env:
@@ -87,7 +87,7 @@ jobs:
           DOCKER_CACHE_SCOPE: pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }}-${{ matrix.platform }}
           DOCKER_CACHE_BRANCH: ${{ github.head_ref || github.ref_name }}
           DOCKER_CACHE_FROM: ${{ github.event_name == 'schedule' && 'false' || 'true' }}
-          TOOLKIT_ARTIFACTS: "true"
+          EXTENSION_ARTIFACTS: "true"
         run: |
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-release

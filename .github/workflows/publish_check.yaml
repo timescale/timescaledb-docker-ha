@@ -68,7 +68,7 @@ jobs:
           DOCKER_TAG_POSTFIX: "-cicheck"
           DOCKER_CACHE_SCOPE: pg18-all-${{ matrix.platform }}
           DOCKER_CACHE_BRANCH: ${{ github.head_ref || github.ref_name }}
-          TOOLKIT_ARTIFACTS: "true"
+          EXTENSION_ARTIFACTS: "true"
         run: |
           make publish-builder
           make publish-release
