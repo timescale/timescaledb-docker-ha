@@ -217,15 +217,12 @@ EXTENSION_ARTIFACTS_DIR=build_artifacts/$(PLATFORM)
 EXTENSION_ARTIFACTS_BUCKET?=timescale-ci-artifacts
 EXTENSION_ARTIFACTS_S3=s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))/$(PLATFORM)
 ifeq ($(EXTENSION_ARTIFACTS),true)
-  # an OSS_ONLY image has no toolkit and builds timescaledb without timescaledb-tsl
-  ifneq ($(OSS_ONLY),true)
-    # no pipe here: .SHELLSTATUS reports the last command of the pipeline
-    EXTENSION_BUILDS:=$(shell PG_VERSIONS="$(PG_VERSIONS)" TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" ./build_scripts/extension_builds)
-    ifneq ($(.SHELLSTATUS),0)
-      $(error build_scripts/extension_builds failed)
-    endif
-    EXTENSION_ARTIFACT_FILES=$(addprefix $(EXTENSION_ARTIFACTS_DIR)/,$(addsuffix .tar.gz,$(EXTENSION_BUILDS)))
+  # no pipe here: .SHELLSTATUS reports the last command of the pipeline
+  EXTENSION_BUILDS:=$(shell OSS_ONLY="$(OSS_ONLY)" PG_VERSIONS="$(PG_VERSIONS)" TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" ./build_scripts/extension_builds)
+  ifneq ($(.SHELLSTATUS),0)
+    $(error build_scripts/extension_builds failed)
   endif
+  EXTENSION_ARTIFACT_FILES=$(addprefix $(EXTENSION_ARTIFACTS_DIR)/,$(addsuffix .tar.gz,$(EXTENSION_BUILDS)))
   builder release build build-oss build-sha: extension-artifacts
 endif
 
@@ -380,6 +377,8 @@ publish-combined-manifest: $(VERSION_INFO)
 		docker manifest rm "$$url" || true
 		docker manifest create "$$url" "$${images[@]}"
 		docker manifest push "$$url"
+		# the publish jobs checked each image; this checks the list points at both
+		docker manifest inspect "$$url" | jq -e '([.manifests[].platform.architecture] | sort) == ["amd64", "arm64"]' > /dev/null
 		echo "Pushed $$url ($${images[@]})" | tee -a "$(GITHUB_STEP_SUMMARY)"
 	done
 
