@@ -38,10 +38,13 @@ jobs:
             oss: "-oss"
           - all_versions: "true"
             all: "-all"
+          # On-demand capacity: these runs need up to 2 hours. The weekly
+          # publish also builds cold on purpose, so an interruption
+          # rebuilds every layer.
           - platform: amd64
-            runs_on: runs-on/fleet=linux-8cpu-x64/env=ue1
+            runs_on: runs-on/fleet=linux-8cpu-x64-ondemand/env=ue1
           - platform: arm64
-            runs_on: runs-on/fleet=linux-8cpu/env=ue1
+            runs_on: runs-on/fleet=linux-8cpu-ondemand/env=ue1
 
     runs-on: "${{ matrix.runs_on }}"
 
