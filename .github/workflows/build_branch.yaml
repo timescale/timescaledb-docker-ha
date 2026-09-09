@@ -43,7 +43,7 @@ jobs:
         run: |
           df -h
           sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft \
-                      /opt/hostedtoolcache /usr/local/.ghcup /usr/local/share/boost || true
+                      /usr/local/.ghcup /usr/local/share/boost || true
           sudo docker image prune --all --force || true
           df -h
 
@@ -74,9 +74,6 @@ jobs:
         env:
           PLATFORM: ${{ matrix.platform }}
         run: make check-sha
-
-      - name: Prune build cache
-        run: docker builder prune --force || true
 
       - name: Publish
         env:

@@ -369,6 +369,16 @@ check: # check images to see if they have all the requested content
 		check_name="$(CHECK_NAME)-$$key"
 		echo "### Checking $$arch $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY)
 		docker rm --force "$$check_name" >&/dev/null || true
+		# By digest, not by tag: the runs-on ECR mirror answers a mutable tag
+		# from its own cache for up to 24 hours, so --pull always can hand us
+		# the image an earlier run pushed. A digest is content-addressed, so
+		# the mirror cannot answer it with the wrong image. fetch_tag_digest
+		# asks Docker Hub, and only Docker Hub tags can be resolved this way.
+		check_image="$(DOCKER_RELEASE_URL)"
+		case "$(DOCKER_RELEASE_URL)" in docker.io/*) \
+			check_image="$$(./fetch_tag_digest "$(DOCKER_RELEASE_URL)")";; \
+		esac
+		echo "checking image: $$check_image"
 		docker run \
 			--platform linux/"$$arch" \
 			$(DOCKER_APPARMOR_ARG) \
@@ -377,7 +387,7 @@ check: # check images to see if they have all the requested content
 			--name "$$check_name" \
 			-e PGDATA=/tmp/pgdata \
 			--user=postgres \
-			"$(DOCKER_RELEASE_URL)" sleep 300
+			"$$check_image" sleep 300
 		docker exec -u root "$$check_name" mkdir -p /cicd/scripts
 		docker exec -u root "$$check_name" chown -R postgres: /cicd
 		tar -cf - -C ./cicd . | docker exec -i "$$check_name" tar -C /cicd -x
@@ -387,7 +397,7 @@ check: # check images to see if they have all the requested content
 		docker rm --force "$$check_name" >&/dev/null || true
 		# Drop the image once checked; the pg*-all images are large enough that
 		# keeping them around fills the disk.
-		docker rmi --force "$(DOCKER_RELEASE_URL)" >&/dev/null || true
+		docker rmi --force "$$check_image" >&/dev/null || true
 	done
 
 .PHONY: check-sha

@@ -57,7 +57,7 @@ jobs:
         run: |
           df -h
           sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft \
-                      /opt/hostedtoolcache /usr/local/.ghcup /usr/local/share/boost || true
+                      /usr/local/.ghcup /usr/local/share/boost || true
           sudo docker image prune --all --force || true
           df -h
 
@@ -96,7 +96,6 @@ jobs:
           DOCKER_CACHE_FROM: ${{ github.event_name == 'schedule' && 'false' || 'true' }}
         run: |
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder
-          docker builder prune --force || true
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-release
 
       - name: export outputs
@@ -200,7 +199,7 @@ jobs:
         run: |
           df -h
           sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft \
-                      /opt/hostedtoolcache /usr/local/.ghcup /usr/local/share/boost || true
+                      /usr/local/.ghcup /usr/local/share/boost || true
           sudo docker image prune --all --force || true
           df -h
 
