@@ -207,12 +207,15 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 
 # Extension tarballs, one per timescaledb or toolkit version, pg major and
 # architecture. The image unpacks them instead of installing or building.
-# EXTENSION_ARTIFACTS=true fetches the tarballs from the runs-on S3 cache bucket,
-# and builds and stores the missing ones. Without it the image installs the
-# versions itself. build_scripts/extension_builds needs yq.
+# EXTENSION_ARTIFACTS=true fetches the tarballs from the CI artifacts bucket,
+# which every CI runner reads and writes, and builds and stores the missing
+# ones. Without it the image installs the versions itself. An empty
+# EXTENSION_ARTIFACTS_BUCKET builds the tarballs without S3.
+# build_scripts/extension_builds needs yq.
 EXTENSION_ARTIFACTS?=false
 EXTENSION_ARTIFACTS_DIR=build_artifacts
-EXTENSION_ARTIFACTS_S3=s3://$(RUNS_ON_S3_BUCKET_CACHE)/$(RUNS_ON_S3_CACHE_REPO_PREFIX)/extensions/$(subst :,-,$(DOCKER_FROM))
+EXTENSION_ARTIFACTS_BUCKET?=timescale-ci-artifacts
+EXTENSION_ARTIFACTS_S3=s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))
 ifeq ($(EXTENSION_ARTIFACTS),true)
   # an OSS_ONLY image has no toolkit and builds timescaledb without timescaledb-tsl
   ifneq ($(OSS_ONLY),true)
@@ -237,14 +240,14 @@ $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_OUTPUT=--output type=local,dest=$(EX
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_CACHE=$(DOCKER_CACHE_FROM_ARGS)
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_EXTRA_BUILDARGS=
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz:
-	if [ -n "$(RUNS_ON_S3_BUCKET_CACHE)" ] && aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$(EXTENSION_ARTIFACTS_S3)/$(@F)" "$@"; then
+	if [ -n "$(EXTENSION_ARTIFACTS_BUCKET)" ] && aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$(EXTENSION_ARTIFACTS_S3)/$(@F)" "$@"; then
 		exit 0
 	fi
 	IFS=- read -r pkg ver pg _ <<< "$*"
 	$(DOCKER_BUILD_COMMAND) --target "$$pkg-artifact" --build-arg EXT_VERSION="$$ver" --build-arg EXT_PG="$${pg#pg}"
 	mv "$(EXTENSION_ARTIFACTS_DIR)/$*.out/extension.tar.gz" "$@"
 	rmdir "$(EXTENSION_ARTIFACTS_DIR)/$*.out"
-	if [ -n "$(RUNS_ON_S3_BUCKET_CACHE)" ]; then
+	if [ -n "$(EXTENSION_ARTIFACTS_BUCKET)" ]; then
 		aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$@" "$(EXTENSION_ARTIFACTS_S3)/$(@F)"
 	fi
 
