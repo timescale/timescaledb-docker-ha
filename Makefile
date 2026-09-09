@@ -65,7 +65,7 @@ ifeq ($(OSS_ONLY),true)
   DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-oss
 endif
 
-DOCKER_FROM?=ubuntu:22.04
+DOCKER_FROM?=ubuntu:24.04
 DOCKER_EXTRA_BUILDARGS?=
 DOCKER_OUTPUT?=--load
 DOCKER_METADATA_FILE=/tmp/docker-metadata.json
