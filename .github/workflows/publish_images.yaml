@@ -158,10 +158,6 @@ jobs:
           username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
           password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
 
-      # QEMU for multiplatform, which should be quick enough for pulling version information out of the images
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
-
       - name: Publish combined manifest for pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
           PG_MAJOR: ${{ matrix.pg_major }}
