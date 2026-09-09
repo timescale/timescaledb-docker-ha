@@ -20,8 +20,18 @@ jobs:
   # Dry-run the most demanding build variant (pg18-all = 4 PG versions) to catch
   # disk space, build, and manifest issues before they hit the publish workflow.
   publish-check:
-    name: Dry run pg18-all amd64
-    runs-on: runs-on/fleet=linux-8cpu-x64/env=ue1
+    name: Dry run pg18-all ${{ matrix.platform }}
+    # On-demand capacity: this job needs 1h40m on average. A required check
+    # must not run that long on spot capacity.
+    runs-on: ${{ matrix.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: amd64
+            runs_on: runs-on/fleet=linux-8cpu-x64-ondemand/env=ue1
+          - platform: arm64
+            runs_on: runs-on/fleet=linux-8cpu-ondemand/env=ue1
 
     steps:
       - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
@@ -57,7 +67,7 @@ jobs:
       - name: Build and push
         id: build
         env:
-          PLATFORM: amd64
+          PLATFORM: ${{ matrix.platform }}
           PG_MAJOR: "18"
           ALL_VERSIONS: "true"
           OSS_ONLY: "false"
@@ -66,6 +76,21 @@ jobs:
           make publish-builder
           docker builder prune --force || true
           make publish-release
+
+      # Exercise the same `check` target master runs. Without this the target is
+      # only ever executed on a push to master, so a change to it cannot fail
+      # until after it has merged. amd64 only: this workflow builds one platform.
+      - name: Check pg18-all ${{ matrix.platform }}
+        env:
+          PG_MAJOR: "18"
+          PLATFORM: ${{ matrix.platform }}
+          OSS_ONLY: "false"
+          # Each leg builds one platform and never runs publish-manifests, so the
+          # multi-arch tag is never pushed - only the arch-suffixed one. Spell it out
+          # rather than letting ALL_VERSIONS append -all to a tag that does not exist.
+          DOCKER_TAG_POSTFIX: "-cicheck-all-${{ matrix.platform }}"
+          CHECK_ARCHES: ${{ matrix.platform }}
+        run: make get-image-config check
 
       - name: Validate digests for manifest compatibility
         run: |
