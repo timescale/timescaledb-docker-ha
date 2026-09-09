@@ -327,10 +327,11 @@ publish-combined-sha: is_ci # publish a combined image manifest for a CICD branc
 	echo "Pushed $(CICD_URL) (amd:$$amddigest_image, arm:$$armdigest_image)" >> "$(GITHUB_STEP_SUMMARY)"
 
 CHECK_NAME=ha-check
+CHECK_ARCHS?=amd64 arm64
 .PHONY: check
 check: # check images to see if they have all the requested content
 	@set -x
-	for arch in amd64 arm64; do
+	for arch in $(CHECK_ARCHS); do
 		key="$$(mktemp -u XXXXXX)"
 		check_name="$(CHECK_NAME)-$$key"
 		echo "### Checking $$arch $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY)
@@ -344,7 +345,13 @@ check: # check images to see if they have all the requested content
 			-e PGDATA=/tmp/pgdata \
 			--user=postgres \
 			"$(DOCKER_RELEASE_URL)" sleep 300
-		docker exec -u root "$$check_name" mkdir -p /cicd/scripts
+		# A container that died on startup otherwise reports only "container
+		# is not running" on the first exec, with no reason for it.
+		docker exec -u root "$$check_name" mkdir -p /cicd/scripts || {
+			docker logs -n100 "$$check_name" || true
+			docker inspect --format 'exit code {{.State.ExitCode}} {{.State.Error}}' "$$check_name" || true
+			exit 1
+		}
 		docker exec -u root "$$check_name" chown -R postgres: /cicd
 		tar -cf - -C ./cicd . | docker exec -i "$$check_name" tar -C /cicd -x
 		tar -cf - -C ./build_scripts . | docker exec -i "$$check_name" tar -C /cicd/scripts -x
