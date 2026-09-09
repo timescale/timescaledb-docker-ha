@@ -26,7 +26,7 @@
 ## tools we use will be the same across the board, as most of our tools our
 ## installed using external repositories.
 ARG DOCKER_FROM=ubuntu:22.04
-FROM ${DOCKER_FROM} AS builder
+FROM ${DOCKER_FROM} AS base
 
 SHELL ["/bin/bash", "-exu", "-o", "pipefail", "-c"]
 
@@ -155,7 +155,7 @@ RUN apt-mark auto ${BUILD_PACKAGES}
 # do something more drastic.
 RUN apt-get install -y --allow-downgrades tzdata="2022a-*"
 
-# versions.yaml is copied in after the per-version layers, so a change to it does not rebuild them.
+# versions.yaml is copied in later, so a change to it does not rebuild the PostgreSQL install.
 COPY --chown=postgres:postgres build_scripts/*.sh build_scripts/install_extensions build_scripts/postgres_versions.yaml /build/scripts/
 # We install the PostgreSQL build dependencies and mark the installed packages as auto-installed.
 # apt-get update runs after the postgres_versions.yaml copy, so a new pinned minor is in the index.
@@ -355,6 +355,42 @@ RUN if [ -n "${PG_LOGERRORS}" ]; then \
         done; \
     fi
 
+# These stages build one extension version for one pg major and pack the
+# installed files. `make extension-artifacts` exports them and keeps the tarballs
+# in S3, so the builder stage only unpacks. They are not part of the image.
+# timescaledb installs as root, like in the builder stage; toolkit as postgres.
+FROM base AS timescaledb-build
+ARG GITHUB_REPO=timescale/timescaledb
+# the from-source builds put this in the telemetry, like the builder stage does
+ARG INSTALL_METHOD=docker-ha
+ARG EXT_VERSION
+ARG EXT_PG
+COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
+USER root
+RUN /build/scripts/install_extensions timescaledb "${EXT_VERSION}" "${EXT_PG}"
+RUN mkdir /build/out; /build/scripts/install_extensions pack timescaledb "${EXT_VERSION}" "${EXT_PG}" /build/out/extension.tar.gz
+
+FROM scratch AS timescaledb-artifact
+COPY --from=timescaledb-build /build/out/ /
+
+FROM base AS toolkit-build
+ARG RUST_RELEASE=release
+ARG EXT_VERSION
+ARG EXT_PG
+COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
+USER postgres
+RUN /build/scripts/install_extensions toolkit "${EXT_VERSION}" "${EXT_PG}"
+RUN mkdir /build/out; /build/scripts/install_extensions pack toolkit "${EXT_VERSION}" "${EXT_PG}" /build/out/extension.tar.gz
+
+FROM scratch AS toolkit-artifact
+COPY --from=toolkit-build /build/out/ /
+
+
+FROM base AS builder
+
+# Build args do not cross a FROM. This stage reads this again.
+ARG PG_VERSIONS
+
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations
 ARG INSTALL_METHOD=docker-ha
 ARG OSS_ONLY
@@ -362,119 +398,26 @@ ARG OSS_ONLY
 # RUST_RELEASE for some packages passes this to --profile
 ARG RUST_RELEASE=release
 
-# One layer per extension version, generated from build_scripts/versions.yaml by
-# `make dockerfile`. Toolkit first: timescaledb releases more often. Each block
-# declares its ARG right before it, an ARG is part of the cache key of every later RUN.
+# versions.yaml is needed from here on.
+COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
 
 USER postgres
 
+# The tarballs in build_artifacts/<arch>/ come from `make extension-artifacts`. A
+# version without a tarball installs from a deb or builds from source here.
 ARG TOOLKIT_VERSIONS
-# BEGIN GENERATED toolkit
-RUN /build/scripts/install_extensions toolkit 1.18.0 "15 16" 0.10.2
-RUN /build/scripts/install_extensions toolkit 1.19.0 "15 16 17" 0.12.8
-RUN /build/scripts/install_extensions toolkit 1.21.0 "15 16 17" 0.12.9
-RUN /build/scripts/install_extensions toolkit 1.22.0 "15 16 17 18" 0.16.1
-RUN /build/scripts/install_extensions toolkit 1.23.0 "15 16 17 18" 0.18.0
-RUN /build/scripts/install_extensions toolkit 1.24.0 "15 16 17 18" 0.18.1
-RUN /build/scripts/install_extensions toolkit 1.25.0 "15 16 17 18" 0.18.1
-RUN /build/scripts/install_extensions toolkit 1.26.0 "15 16 17 18" 0.18.1
-# END GENERATED toolkit
+RUN --mount=type=bind,source=build_artifacts,target=/build/artifacts \
+    /build/scripts/install_extensions toolkit
 
 USER root
 
 ARG ALLOW_ADDING_EXTENSIONS=true
 ARG GITHUB_REPO=timescale/timescaledb
 ARG TIMESCALEDB_VERSIONS
-# BEGIN GENERATED timescaledb
-# built from source, one layer for all
-RUN <<EOF
-/build/scripts/install_extensions timescaledb 2.13.0 "15 16"
-/build/scripts/install_extensions timescaledb 2.13.1 "15 16"
-/build/scripts/install_extensions timescaledb 2.14.0 "15 16"
-/build/scripts/install_extensions timescaledb 2.14.1 "15 16"
-/build/scripts/install_extensions timescaledb 2.14.2 "15 16"
-/build/scripts/install_extensions timescaledb 2.15.0 "15 16"
-/build/scripts/install_extensions timescaledb 2.15.1 "15 16"
-/build/scripts/install_extensions timescaledb 2.15.2 "15 16"
-/build/scripts/install_extensions timescaledb 2.15.3 "15 16"
-/build/scripts/install_extensions timescaledb 2.16.0 "15 16"
-/build/scripts/install_extensions timescaledb 2.16.1 "15 16"
-/build/scripts/install_extensions timescaledb 2.17.0 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.17.1 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.17.2 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.18.0 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.18.1 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.18.2 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.19.0 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.19.1 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.19.2 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.19.3 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.20.0 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.20.1 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.20.2 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.20.3 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.21.0 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.21.1 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.21.2 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.21.3 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.21.4 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.22.0 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.22.1 "15 16 17"
-/build/scripts/install_extensions timescaledb 2.23.0 "15 16 17 18"
-/build/scripts/install_extensions timescaledb 2.23.1 "15 16 17 18"
-EOF
-# older deb releases, one layer for all
-RUN <<EOF
-/build/scripts/install_extensions timescaledb 2.24.0 "15 16 17 18"
-EOF
-# 2.25.x
-RUN <<EOF
-/build/scripts/install_extensions timescaledb 2.25.0 "15 16 17 18"
-/build/scripts/install_extensions timescaledb 2.25.1 "15 16 17 18"
-/build/scripts/install_extensions timescaledb 2.25.2 "15 16 17 18"
-EOF
-# 2.26.x
-RUN <<EOF
-/build/scripts/install_extensions timescaledb 2.26.0 "15 16 17 18"
-/build/scripts/install_extensions timescaledb 2.26.1 "15 16 17 18"
-/build/scripts/install_extensions timescaledb 2.26.2 "15 16 17 18"
-/build/scripts/install_extensions timescaledb 2.26.3 "15 16 17 18"
-/build/scripts/install_extensions timescaledb 2.26.4 "15 16 17 18"
-EOF
-# 2.27.x
-RUN <<EOF
-/build/scripts/install_extensions timescaledb 2.27.0 "15 16 17 18"
-/build/scripts/install_extensions timescaledb 2.27.1 "15 16 17 18"
-/build/scripts/install_extensions timescaledb 2.27.2 "15 16 17 18"
-EOF
-# 2.28.x
-RUN <<EOF
-/build/scripts/install_extensions timescaledb 2.28.0 "15 16 17 18"
-/build/scripts/install_extensions timescaledb 2.28.1 "15 16 17 18"
-/build/scripts/install_extensions timescaledb 2.28.2 "15 16 17 18"
-/build/scripts/install_extensions timescaledb 2.28.3 "15 16 17 18"
-EOF
-# 2.29.x
-RUN <<EOF
-/build/scripts/install_extensions timescaledb 2.29.0 "16 17 18"
-/build/scripts/install_extensions timescaledb 2.29.1 "16 17 18"
-/build/scripts/install_extensions timescaledb 2.29.2 "16 17 18"
-EOF
-# 2.30.x
-RUN <<EOF
-/build/scripts/install_extensions timescaledb 2.30.0 "16 17 18"
-EOF
-# END GENERATED timescaledb
-
-# versions.yaml is needed from here on.
-COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
-
-# branch builds (main, feature/x) have no layer above
-RUN /build/scripts/install_extensions timescaledb
+RUN --mount=type=bind,source=build_artifacts,target=/build/artifacts \
+    /build/scripts/install_extensions timescaledb
 
 USER postgres
-
-RUN /build/scripts/install_extensions rust
 
 ARG PGVECTORSCALE_VERSIONS
 RUN OSS_ONLY="${OSS_ONLY}" \
@@ -572,8 +515,16 @@ RUN set -e; \
     chmod 1777 /var/run/postgresql; \
     chmod 755 "${PGROOT}"
 
-# DOCKER_FROM needs re-importing as any args from before FROM only apply to FROM
+# Build args do not cross a FROM. This stage reads these again.
 ARG DOCKER_FROM
+ARG POSTGIS_VERSIONS
+ARG PG_AUTH_MON
+ARG PG_STAT_MONITOR
+ARG PG_LOGERRORS
+ARG PGVECTO_RS
+ARG VECTORCHORD
+ARG PGBOUNCER_EXPORTER_VERSION
+ARG PGBACKREST_EXPORTER_VERSION
 ARG BUILDER_URL
 ARG RELEASE_URL
 # passed by the Makefile: a cached step would keep an old $(date)

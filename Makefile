@@ -48,9 +48,10 @@ ifneq ($(strip $(DOCKER_CACHE_SCOPE)),)
   DOCKER_CACHE_NAME=$(DOCKER_CACHE_SCOPE)-$(subst /,-,$(DOCKER_CACHE_BRANCH))
   DOCKER_CACHE += --cache-to $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_NAME),mode=max
   ifneq ($(DOCKER_CACHE_FROM),false)
-    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_NAME)
-    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_SCOPE)-master
+    DOCKER_CACHE_FROM_ARGS += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_NAME)
+    DOCKER_CACHE_FROM_ARGS += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_SCOPE)-master
   endif
+  DOCKER_CACHE += $(DOCKER_CACHE_FROM_ARGS)
 endif
 
 ifeq ($(ALL_VERSIONS),true)
@@ -204,16 +205,59 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 					 $(DOCKER_EXTRA_BUILDARGS) \
 					 .
 
-.PHONY: dockerfile
-dockerfile: # regenerate the per-version install layers in the Dockerfile from build_scripts/versions.yaml
-	./build_scripts/gen_dockerfile_versions
+# Extension tarballs, one per timescaledb or toolkit version, pg major and
+# architecture. The image unpacks them instead of installing or building.
+# EXTENSION_ARTIFACTS=true fetches the tarballs from the CI artifacts bucket,
+# which every CI runner reads and writes, and builds and stores the missing
+# ones. Without it the image installs the versions itself. An empty
+# EXTENSION_ARTIFACTS_BUCKET builds the tarballs without S3.
+# build_scripts/extension_builds needs yq.
+EXTENSION_ARTIFACTS?=false
+EXTENSION_ARTIFACTS_DIR=build_artifacts/$(PLATFORM)
+EXTENSION_ARTIFACTS_BUCKET?=timescale-ci-artifacts
+EXTENSION_ARTIFACTS_S3=s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))/$(PLATFORM)
+ifeq ($(EXTENSION_ARTIFACTS),true)
+  # an OSS_ONLY image has no toolkit and builds timescaledb without timescaledb-tsl
+  ifneq ($(OSS_ONLY),true)
+    # no pipe here: .SHELLSTATUS reports the last command of the pipeline
+    EXTENSION_BUILDS:=$(shell PG_VERSIONS="$(PG_VERSIONS)" TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" ./build_scripts/extension_builds)
+    ifneq ($(.SHELLSTATUS),0)
+      $(error build_scripts/extension_builds failed)
+    endif
+    EXTENSION_ARTIFACT_FILES=$(addprefix $(EXTENSION_ARTIFACTS_DIR)/,$(addsuffix .tar.gz,$(EXTENSION_BUILDS)))
+  endif
+  builder release build build-oss build-sha: extension-artifacts
+endif
 
-# regenerate the layers before a build when their inputs changed
-Dockerfile: build_scripts/versions.yaml build_scripts/postgres_versions.yaml build_scripts/gen_dockerfile_versions
-	./build_scripts/gen_dockerfile_versions
-	touch Dockerfile
+# One sync fetches every tarball of the platform for PG_VERSIONS in parallel.
+.PHONY: extension-artifacts-sync
+extension-artifacts-sync:
+	[ -n "$(EXTENSION_ARTIFACTS_BUCKET)" ] || exit 0
+	aws s3 sync --region "$(RUNS_ON_AWS_REGION)" --no-progress --exclude '*' \
+		$(foreach pg,$(PG_VERSIONS),--include '*-pg$(pg).tar.gz') \
+		"$(EXTENSION_ARTIFACTS_S3)/" "$(EXTENSION_ARTIFACTS_DIR)/"
 
-builder release build build-oss build-sha: Dockerfile
+# A second make builds what is still missing after the sync: make decides what a
+# target needs before it runs any recipe, so this make cannot see the synced files.
+.PHONY: extension-artifacts
+extension-artifacts: extension-artifacts-sync # fetch or build the extension tarballs the image unpacks
+	[ -z "$(EXTENSION_ARTIFACT_FILES)" ] || $(MAKE) --no-print-directory $(EXTENSION_ARTIFACT_FILES)
+
+# Build one tarball from the <extension>-artifact stage and store it. The build
+# reads the layer cache but does not write it: a write would replace the manifest
+# the image build reads with one that has only the base layers. The export goes
+# to a directory per target, so `make -j` builds do not share a file name.
+$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_OUTPUT=--output type=local,dest=$(EXTENSION_ARTIFACTS_DIR)/$*.out
+$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_CACHE=$(DOCKER_CACHE_FROM_ARGS)
+$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_EXTRA_BUILDARGS=
+$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz:
+	IFS=- read -r pkg ver pg <<< "$*"
+	$(DOCKER_BUILD_COMMAND) --target "$$pkg-artifact" --build-arg EXT_VERSION="$$ver" --build-arg EXT_PG="$${pg#pg}"
+	mv "$(EXTENSION_ARTIFACTS_DIR)/$*.out/extension.tar.gz" "$@"
+	rmdir "$(EXTENSION_ARTIFACTS_DIR)/$*.out"
+	if [ -n "$(EXTENSION_ARTIFACTS_BUCKET)" ]; then
+		aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$@" "$(EXTENSION_ARTIFACTS_S3)/$(@F)"
+	fi
 
 # We provide the fast target as the first (=default) target, as it will skip installing
 # many optional extensions, and it will only install a single timescaledb (master) version.
@@ -231,9 +275,8 @@ fast: build
 
 .PHONY: latest
 latest: ALL_VERSIONS=false
-# the per-version layers do not read versions.yaml
-latest: TIMESCALEDB_VERSIONS=$(or $(shell yq '.timescaledb | keys | .[-1]' build_scripts/versions.yaml),$(error make latest needs yq to read build_scripts/versions.yaml))
-latest: TOOLKIT_VERSIONS=$(or $(shell yq '.toolkit | keys | .[-1]' build_scripts/versions.yaml),$(error make latest needs yq to read build_scripts/versions.yaml))
+latest: TIMESCALEDB_VERSIONS=latest
+latest: TOOLKIT_VERSIONS=latest
 latest: PGVECTORSCALE_VERSIONS=latest
 latest: build
 
