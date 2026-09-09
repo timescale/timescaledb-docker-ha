@@ -51,9 +51,8 @@ For updating changes in versions for timescaledb, pgvectorscale, or toolkit, upd
 
 Installing the timescaledb and toolkit versions takes most of the build time. CI builds each version once per
 PostgreSQL major and architecture, and keeps the tarball in the CI artifacts bucket `timescale-ci-artifacts` under
-`timescaledb-docker-ha/extensions/<base image>/<arch>/<extension>-<version>-pg<major>.tar.gz`. The runs-on cache
-bucket expires its objects after ten days, this one keeps them. `make extension-artifacts` fetches
-the tarballs into `build_artifacts/<arch>/`, builds the missing ones from the `timescaledb-artifact` and
+`timescaledb-docker-ha/extensions/<base image>/<arch>/<extension>-<version>-pg<major>.tar.gz`.
+`make extension-artifacts` fetches the tarballs into `build_artifacts/<arch>/`, builds the missing ones from the `timescaledb-artifact` and
 `toolkit-artifact` Dockerfile stages and stores them. The image build unpacks the tarballs it finds and installs
 the rest itself. Delete a tarball from the bucket to rebuild it. Without `EXTENSION_ARTIFACTS=true`, such as a
 local build, the image installs every version itself. OSS-only images do not use the tarballs: they build
