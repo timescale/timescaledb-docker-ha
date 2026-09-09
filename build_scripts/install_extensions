@@ -4,14 +4,13 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 . "$SCRIPT_DIR"/shared.sh
 
 # Two modes:
-# - `install_extensions <timescaledb|toolkit> <version> "<pg majors>" [cargo-pgrx]`
-#   installs one version. The generated Dockerfile layers call this.
-# - `install_extensions <timescaledb|rust|pgvectorscale|...>` installs the requested
-#   versions that are not installed yet, such as branch builds.
+# - `install_extensions <timescaledb|rust|pgvectorscale|...>` installs the requested versions.
+# - `install_extensions toolkit <version> <pg major>` installs one toolkit version for one
+#   pg major. The toolkit-build stage in the Dockerfile calls this to pack a tarball.
 
 usage() {
     echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch]" >&2
-    echo "       $0 [-n] <timescaledb|toolkit> <version> <pg majors> [cargo-pgrx version]" >&2
+    echo "       $0 [-n] toolkit <version> <pg major>" >&2
     exit 1
 }
 
@@ -25,56 +24,20 @@ fix_so_modes() {
     find /usr/lib/postgresql/*/lib -name '*.so' -perm /111 -user "$(id -un)" -exec chmod -x {} +
 }
 
-# $1=version $2=requested versions, a list or "all". The Makefile resolves "latest".
-version_requested() {
-    local version="$1" requested="$2" v
-    case "$requested" in
-    all) return 0;;
-    latest)
-        error "'latest' is not supported for a per-version install, pass the version"
-        exit 1;;
-    esac
-    for v in $requested; do
-        [ "$v" = "$version" ] && return 0
-    done
-    return 1
-}
+# install one toolkit version for one pg major
+install_one_toolkit() {
+    local version="$1" pg="$2" cargopgrx
+    [[ -n "$version" && -n "$pg" ]] || usage
 
-# install one version for the installed pg majors it supports
-install_one_version() {
-    local pkg="$1" version="$2" pg_list="$3" cargopgrx="$4" requested pg pgs=""
-    [[ -n "$version" && -n "$pg_list" ]] || usage
-
-    case "$pkg" in
-    timescaledb) requested="$TIMESCALEDB_VERSIONS";;
-    toolkit) requested="$TOOLKIT_VERSIONS"; [ -n "$cargopgrx" ] || usage;;
-    *) usage;;
-    esac
-
-    if ! version_requested "$version" "$requested"; then
-        log "$pkg-$version: not requested"
-        return 0
+    cargopgrx="$(pkg_cargo_pgrx_version toolkit "$version")"
+    if [ -z "$cargopgrx" ]; then
+        error "no cargo-pgrx version found for toolkit-$version"
+        exit 1
     fi
 
-    for pg in $(available_pg_versions); do
-        [[ " $pg_list " == *" $pg "* ]] && pgs="$pgs $pg"
-    done
-    if [ -z "$pgs" ]; then
-        log "$pkg-$version: none of pg $pg_list is installed"
-        return 0
-    fi
-
-    case "$pkg" in
-    timescaledb)
-        install_timescaledb "$version" "$pgs"
-        rm -rf /build/timescaledb
-        ;;
-    toolkit)
-        install_toolkit "$cargopgrx" "$version" "$pgs"
-        # cargo recreates registry/src from registry/cache
-        rm -rf /build/toolkit /usr/local/cargo/registry/src
-        ;;
-    esac
+    install_toolkit "$cargopgrx" "$version" "$pg"
+    # cargo recreates registry/src from registry/cache
+    rm -rf /build/toolkit /usr/local/cargo/registry/src
     fix_so_modes
 }
 
@@ -86,7 +49,8 @@ what="$1"
 [ -z "$what" ] && what=all
 
 if [ -n "$2" ]; then
-    install_one_version "$@"
+    [ "$what" = toolkit ] || usage
+    install_one_toolkit "$2" "$3"
     exit 0
 fi
 
@@ -94,7 +58,6 @@ if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_texts
     usage
 fi
 
-# versions.yaml is in the image here. Skip what the generated layers installed.
 case "$what" in
 versions)
     # this outputs the expanded versions
@@ -106,7 +69,6 @@ versions)
 
 timescaledb | all)
     for ver in $TIMESCALEDB_VERSIONS; do
-        is_installed timescaledb "$ver" && continue
         install_timescaledb "$ver"
     done
     # the source tree and build directory are not needed after install

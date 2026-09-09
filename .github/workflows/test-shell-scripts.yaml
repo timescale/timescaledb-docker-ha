@@ -19,6 +19,3 @@ jobs:
 
       - name: Shellcheck and shfmt
         run: ./cicd/lint-sh "SC2148,SC2034,SC1091,SC2153,SC1090,SC2097,SC2098,SC2043" # exclude checks
-
-      - name: Dockerfile matches versions.yaml
-        run: ./build_scripts/gen_dockerfile_versions --check

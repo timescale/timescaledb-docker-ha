@@ -48,9 +48,10 @@ ifneq ($(strip $(DOCKER_CACHE_SCOPE)),)
   DOCKER_CACHE_NAME=$(DOCKER_CACHE_SCOPE)-$(subst /,-,$(DOCKER_CACHE_BRANCH))
   DOCKER_CACHE += --cache-to $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_NAME),mode=max
   ifneq ($(DOCKER_CACHE_FROM),false)
-    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_NAME)
-    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_SCOPE)-master
+    DOCKER_CACHE_FROM_ARGS += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_NAME)
+    DOCKER_CACHE_FROM_ARGS += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_SCOPE)-master
   endif
+  DOCKER_CACHE += $(DOCKER_CACHE_FROM_ARGS)
 endif
 
 ifeq ($(ALL_VERSIONS),true)
@@ -204,16 +205,43 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 					 $(DOCKER_EXTRA_BUILDARGS) \
 					 .
 
-.PHONY: dockerfile
-dockerfile: # regenerate the per-version install layers in the Dockerfile from build_scripts/versions.yaml
-	./build_scripts/gen_dockerfile_versions
+# Toolkit tarballs. The image unpacks them instead of building toolkit from source.
+# TOOLKIT_ARTIFACTS=true fetches the tarballs for PG_VERSIONS and TOOLKIT_VERSIONS
+# from the runs-on S3 cache bucket, and builds and stores the missing ones. Without
+# it the image builds toolkit from source. build_scripts/toolkit_builds needs yq.
+TOOLKIT_ARTIFACTS?=false
+TOOLKIT_ARTIFACTS_DIR=build_artifacts
+TOOLKIT_ARTIFACTS_S3=s3://$(RUNS_ON_S3_BUCKET_CACHE)/$(RUNS_ON_S3_CACHE_REPO_PREFIX)/toolkit/$(subst :,-,$(DOCKER_FROM))
+ifeq ($(TOOLKIT_ARTIFACTS),true)
+  ifneq ($(OSS_ONLY),true)
+    TOOLKIT_BUILDS:=$(shell PG_VERSIONS="$(PG_VERSIONS)" TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" ./build_scripts/toolkit_builds | awk '{print "toolkit-" $$1 "-pg" $$2}')
+    ifneq ($(.SHELLSTATUS),0)
+      $(error build_scripts/toolkit_builds failed)
+    endif
+    TOOLKIT_ARTIFACT_FILES=$(addprefix $(TOOLKIT_ARTIFACTS_DIR)/,$(addsuffix -$(PLATFORM).tar.gz,$(TOOLKIT_BUILDS)))
+  endif
+  builder release build build-oss build-sha: toolkit-artifacts
+endif
 
-# regenerate the layers before a build when their inputs changed
-Dockerfile: build_scripts/versions.yaml build_scripts/postgres_versions.yaml build_scripts/gen_dockerfile_versions
-	./build_scripts/gen_dockerfile_versions
-	touch Dockerfile
+.PHONY: toolkit-artifacts
+toolkit-artifacts: $(TOOLKIT_ARTIFACT_FILES) # fetch or build the toolkit tarballs the image unpacks
 
-builder release build build-oss build-sha: Dockerfile
+# Fetch one tarball from S3, or build it from the toolkit-artifact stage and store it.
+# The build reads the layer cache but does not write it: a write would replace the
+# manifest the image build reads with one that has only the base layers.
+$(TOOLKIT_ARTIFACTS_DIR)/toolkit-%.tar.gz: DOCKER_OUTPUT=--output type=local,dest=$(TOOLKIT_ARTIFACTS_DIR)
+$(TOOLKIT_ARTIFACTS_DIR)/toolkit-%.tar.gz: DOCKER_CACHE=$(DOCKER_CACHE_FROM_ARGS)
+$(TOOLKIT_ARTIFACTS_DIR)/toolkit-%.tar.gz: DOCKER_EXTRA_BUILDARGS=--target toolkit-artifact
+$(TOOLKIT_ARTIFACTS_DIR)/toolkit-%.tar.gz:
+	if [ -n "$(RUNS_ON_S3_BUCKET_CACHE)" ] && aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$(TOOLKIT_ARTIFACTS_S3)/$(@F)" "$@"; then
+		exit 0
+	fi
+	IFS=- read -r ver pg _ <<< "$*"
+	$(DOCKER_BUILD_COMMAND) --build-arg TOOLKIT_VERSION="$$ver" --build-arg TOOLKIT_PG="$${pg#pg}"
+	mv "$(TOOLKIT_ARTIFACTS_DIR)/toolkit.tar.gz" "$@"
+	if [ -n "$(RUNS_ON_S3_BUCKET_CACHE)" ]; then
+		aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$@" "$(TOOLKIT_ARTIFACTS_S3)/$(@F)"
+	fi
 
 # We provide the fast target as the first (=default) target, as it will skip installing
 # many optional extensions, and it will only install a single timescaledb (master) version.
@@ -231,9 +259,8 @@ fast: build
 
 .PHONY: latest
 latest: ALL_VERSIONS=false
-# the per-version layers do not read versions.yaml
-latest: TIMESCALEDB_VERSIONS=$(or $(shell yq '.timescaledb | keys | .[-1]' build_scripts/versions.yaml),$(error make latest needs yq to read build_scripts/versions.yaml))
-latest: TOOLKIT_VERSIONS=$(or $(shell yq '.toolkit | keys | .[-1]' build_scripts/versions.yaml),$(error make latest needs yq to read build_scripts/versions.yaml))
+latest: TIMESCALEDB_VERSIONS=latest
+latest: TOOLKIT_VERSIONS=latest
 latest: PGVECTORSCALE_VERSIONS=latest
 latest: build
 

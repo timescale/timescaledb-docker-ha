@@ -234,8 +234,10 @@ install_timescaledb() {
 # $3: optional pg majors; the caller has checked support
 install_toolkit() {
     local rust_release cargo_pgrx_version="$1" version="$2" pg_list="$3" pg pkg=toolkit dpkg deb_version unsupported_reason pgrx_cmd
+    local artifact arch_deb="$ARCH"
     [ -n "$RUST_RELEASE" ] && rust_release=release || rust_release=debug
     pgrx_cmd="$(cargo_pgrx_cmd "$cargo_pgrx_version")"
+    [ "$arch_deb" = aarch64 ] && arch_deb=arm64
 
     if [ "$OSS_ONLY" = true ]; then
         log "skipped toolkit-$version due to OSS_ONLY"
@@ -249,6 +251,17 @@ install_toolkit() {
                 log "$pkg-$version: $unsupported_reason"
                 continue
             fi
+        fi
+
+        # a tarball from `make toolkit-artifacts`, mounted by the Dockerfile
+        artifact="/build/artifacts/$pkg-$version-pg$pg-$arch_deb.tar.gz"
+        if [ -s "$artifact" ]; then
+            [[ "$DRYRUN" = true ]] && { log "would unpack $artifact"; continue; }
+            if tar -xzf "$artifact" -C /; then
+                log "unpacked $artifact"
+                continue
+            fi
+            error "failed unpacking $artifact"
         fi
 
         read -rs dpkg deb_version <<< "$(find_deb "timescaledb-toolkit-postgresql-$pg" "$version")"
