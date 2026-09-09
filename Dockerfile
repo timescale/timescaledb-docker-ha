@@ -423,7 +423,7 @@ RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.23.0 "15 16 17 18"
 /build/scripts/install_extensions timescaledb 2.23.1 "15 16 17 18"
 EOF
-# 2.24.x
+# older deb releases, one layer for all
 RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.24.0 "15 16 17 18"
 EOF
@@ -459,6 +459,10 @@ RUN <<EOF
 /build/scripts/install_extensions timescaledb 2.29.0 "16 17 18"
 /build/scripts/install_extensions timescaledb 2.29.1 "16 17 18"
 /build/scripts/install_extensions timescaledb 2.29.2 "16 17 18"
+EOF
+# 2.30.x
+RUN <<EOF
+/build/scripts/install_extensions timescaledb 2.30.0 "16 17 18"
 EOF
 # END GENERATED timescaledb
 
