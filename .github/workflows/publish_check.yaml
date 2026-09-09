@@ -36,14 +36,6 @@ jobs:
     steps:
       - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
 
-      - name: remove unneeded runner software
-        run: |
-          df -h
-          sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft \
-                      /usr/local/.ghcup /usr/local/share/boost || true
-          sudo docker image prune --all --force || true
-          df -h
-
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 

@@ -51,16 +51,6 @@ jobs:
     steps:
       - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
 
-      # Free up disk space on the runner. The pg18-all builds in particular need
-      # a lot of space due to 4 PG versions worth of extensions and debug symbols.
-      - name: remove unneeded runner software
-        run: |
-          df -h
-          sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft \
-                      /usr/local/.ghcup /usr/local/share/boost || true
-          sudo docker image prune --all --force || true
-          df -h
-
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -195,17 +185,6 @@ jobs:
 
     steps:
       - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
-
-      # Free up disk space on the runner. The check pulls both the amd64 and
-      # arm64 variants of the image, and the pg*-all images in particular are
-      # large enough that a stock runner's ~14GB free on / overflows otherwise.
-      - name: remove unneeded runner software
-        run: |
-          df -h
-          sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft \
-                      /usr/local/.ghcup /usr/local/share/boost || true
-          sudo docker image prune --all --force || true
-          df -h
 
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
