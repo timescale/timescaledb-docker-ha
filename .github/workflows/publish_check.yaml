@@ -74,9 +74,12 @@ jobs:
         env:
           PG_MAJOR: "18"
           PLATFORM: amd64
-          ALL_VERSIONS: "true"
           OSS_ONLY: "false"
-          DOCKER_TAG_POSTFIX: "-cicheck"
+          # This workflow builds a single platform and never runs publish-manifests,
+          # so the multi-arch tag is never pushed - only the arch-suffixed one. Spell
+          # it out here rather than letting ALL_VERSIONS append -all to a tag that
+          # does not exist.
+          DOCKER_TAG_POSTFIX: "-cicheck-all-amd64"
           CHECK_ARCHES: amd64
         run: make get-image-config check
 
