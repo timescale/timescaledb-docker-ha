@@ -3,7 +3,7 @@
 # Print "<extension>-<version>-pg<major>" for every timescaledb and toolkit
 # release the image needs. The Makefile reads this list to fetch or build the
 # extension tarballs. Branch builds (main, feature/x) are not listed: they
-# build in the image.
+# build in the image. An OSS_ONLY image has no toolkit.
 #
 # usage: TIMESCALEDB_VERSIONS=all TOOLKIT_VERSIONS=all PG_VERSIONS="18 17" extension_builds
 
@@ -18,6 +18,7 @@ for ver in $TIMESCALEDB_VERSIONS; do
         [ -z "$(supported_timescaledb "$pg" "$ver")" ] && echo "timescaledb-$ver-pg$pg"
     done
 done
+[ "$OSS_ONLY" = true ] && TOOLKIT_VERSIONS=""
 for ver in $TOOLKIT_VERSIONS; do
     [[ "$ver" =~ $release ]] || continue
     for pg in $PG_VERSIONS; do

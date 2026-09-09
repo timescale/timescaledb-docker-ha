@@ -178,8 +178,16 @@ install_timescaledb() {
 
         log "installing $pkg-$version for pg$pg"
 
-        # the tarballs carry timescaledb-tsl, an OSS_ONLY image builds without it
-        if [ "$OSS_ONLY" != true ] && unpack_artifact "$pkg" "$version" "$pg"; then continue; fi
+        # The tarball carries timescaledb-tsl. APACHE_ONLY only leaves out the tsl
+        # directory of the build, so an OSS_ONLY image removes the file, as the deb
+        # path does.
+        if unpack_artifact "$pkg" "$version" "$pg"; then
+            if [ "$OSS_ONLY" = true ]; then
+                log "removing timescaledb-tsl due to OSS_ONLY"
+                rm -f /usr/lib/postgresql/"$pg"/lib/timescaledb-tsl-"$version".so
+            fi
+            continue
+        fi
 
         [[ "$DRYRUN" = true ]] && continue
 

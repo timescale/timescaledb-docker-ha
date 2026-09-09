@@ -92,6 +92,20 @@ jobs:
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-release
 
+      # Checks the image this job pushed, by digest. The check job that ran after
+      # the manifests pulled every image again on a fresh runner.
+      - name: Check pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }}
+        env:
+          PG_MAJOR: ${{ matrix.pg_major }}
+          PLATFORM: ${{ matrix.platform }}
+          CHECK_ARCHES: ${{ matrix.platform }}
+          # The multi-arch tag does not exist yet, only the arch-suffixed one.
+          # Spell the postfix out; ALL_VERSIONS and OSS_ONLY would append to it.
+          ALL_VERSIONS: "false"
+          OSS_ONLY: "false"
+          DOCKER_TAG_POSTFIX: "${{ matrix.all }}${{ matrix.oss }}-${{ matrix.platform }}"
+        run: make check
+
       - name: export outputs
         run: |
           mkdir -p /tmp/outputs
@@ -167,45 +181,9 @@ jobs:
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
         run: make publish-manifests
 
-  check:
-    name: Check image pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }} ${{ matrix.arch }}
-    needs: [ "publish", "publish-combined-manifests" ]
-    runs-on: ${{ matrix.runs_on }}
-    strategy:
-      fail-fast: false
-      matrix:
-        pg_major: [ "18", "17", "16", "15" ]
-        docker_tag_postfix: ["", "-all", "-oss", "-all-oss" ]
-        arch: [ amd64, arm64 ]
-        include:
-          - arch: amd64
-            runs_on: runs-on/fleet=linux-8cpu-x64/env=ue1
-          - arch: arm64
-            runs_on: runs-on/fleet=linux-8cpu/env=ue1
-
-    steps:
-      - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
-
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
-        with:
-          username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
-
-      - name: Check pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
-        env:
-          PG_MAJOR: ${{ matrix.pg_major }}
-          DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
-          CHECK_ARCHES: ${{ matrix.arch }}
-          PLATFORM: ${{ matrix.arch }}
-        run: make get-image-config check
-
   dispatch-ha-image-published-event:
     name: Dispatch HA image published event
-    needs: [ "check" ]
+    needs: [ "publish-combined-manifests" ]
     if: ${{ github.event_name == 'push' }}
     runs-on: runs-on/fleet=linux-2cpu-x64/env=ue1
 

@@ -55,8 +55,7 @@ PostgreSQL major and architecture, and keeps the tarball in the CI artifacts buc
 `make extension-artifacts` fetches the tarballs into `build_artifacts/<arch>/`, builds the missing ones from the `timescaledb-artifact` and
 `toolkit-artifact` Dockerfile stages and stores them. The image build unpacks the tarballs it finds and installs
 the rest itself. Delete a tarball from the bucket to rebuild it. Without `EXTENSION_ARTIFACTS=true`, such as a
-local build, the image installs every version itself. OSS-only images do not use the tarballs: they build
-timescaledb without timescaledb-tsl.
+local build, the image installs every version itself.
 
 The scripts outside the image need `yq`, `jq` and `shellcheck`. `mise install` installs the pinned versions from
 `mise.toml`.
