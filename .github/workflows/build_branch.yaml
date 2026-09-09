@@ -30,9 +30,9 @@ jobs:
         platform: [ amd64, arm64 ]
         include:
           - platform: amd64
-            runs_on: runs-on/fleet=linux-8cpu-x64/env=ue1
+            runs_on: runs-on/fleet=linux-8cpu-x64-ondemand/env=ue1
           - platform: arm64
-            runs_on: runs-on/fleet=linux-8cpu/env=ue1
+            runs_on: runs-on/fleet=linux-8cpu-ondemand/env=ue1
 
     steps:
       - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
@@ -43,7 +43,7 @@ jobs:
         run: |
           df -h
           sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft \
-                      /opt/hostedtoolcache /usr/local/.ghcup /usr/local/share/boost || true
+                      /usr/local/.ghcup /usr/local/share/boost || true
           sudo docker image prune --all --force || true
           df -h
 
@@ -74,9 +74,6 @@ jobs:
         env:
           PLATFORM: ${{ matrix.platform }}
         run: make check-sha
-
-      - name: Prune build cache
-        run: docker builder prune --force || true
 
       - name: Publish
         env:
