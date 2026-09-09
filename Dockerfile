@@ -361,6 +361,8 @@ RUN if [ -n "${PG_LOGERRORS}" ]; then \
 # timescaledb installs as root, like in the builder stage; toolkit as postgres.
 FROM base AS timescaledb-build
 ARG GITHUB_REPO=timescale/timescaledb
+# the from-source builds put this in the telemetry, like the builder stage does
+ARG INSTALL_METHOD=docker-ha
 ARG EXT_VERSION
 ARG EXT_PG
 COPY --chown=postgres:postgres build_scripts/versions.yaml /build/scripts/
@@ -386,8 +388,7 @@ COPY --from=toolkit-build /build/out/ /
 
 FROM base AS builder
 
-# Build args do not cross a FROM. This stage reads these again.
-ARG PG_MAJOR
+# Build args do not cross a FROM. This stage reads this again.
 ARG PG_VERSIONS
 
 # INSTALL_METHOD will show up in the telemetry, which makes it easier to identify these installations

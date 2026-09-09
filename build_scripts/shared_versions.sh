@@ -70,6 +70,8 @@ if [ -s /build/scripts/versions.yaml ]; then
     VERSION_DATA="$(< /build/scripts/versions.yaml)"
 elif [ -s /cicd/scripts/versions.yaml ]; then
     VERSION_DATA="$(< /cicd/scripts/versions.yaml)"
+elif [ -s "$SCRIPT_DIR/versions.yaml" ]; then
+    VERSION_DATA="$(< "$SCRIPT_DIR/versions.yaml")"
 elif [ -s versions.yaml ]; then
     VERSION_DATA="$(< versions.yaml)"
 else

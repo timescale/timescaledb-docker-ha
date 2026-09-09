@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 
-# Print "<extension> <version> <pg major>" for every timescaledb and toolkit
+# Print "<extension>-<version>-pg<major>" for every timescaledb and toolkit
 # release the image needs. The Makefile reads this list to fetch or build the
 # extension tarballs. Branch builds (main, feature/x) are not listed: they
 # build in the image.
 #
 # usage: TIMESCALEDB_VERSIONS=all TOOLKIT_VERSIONS=all PG_VERSIONS="18 17" extension_builds
 
-# shared_versions.sh reads versions.yaml from the current directory
-cd "${BASH_SOURCE[0]%/*}" || exit 1
-SCRIPT_DIR=.
+SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 . "$SCRIPT_DIR"/shared.sh
 
 release='^[0-9]+\.[0-9]+\.[0-9]+$'
@@ -17,13 +15,13 @@ release='^[0-9]+\.[0-9]+\.[0-9]+$'
 for ver in $TIMESCALEDB_VERSIONS; do
     [[ "$ver" =~ $release ]] || continue
     for pg in $PG_VERSIONS; do
-        [ -z "$(supported_timescaledb "$pg" "$ver")" ] && echo "timescaledb $ver $pg"
+        [ -z "$(supported_timescaledb "$pg" "$ver")" ] && echo "timescaledb-$ver-pg$pg"
     done
 done
 for ver in $TOOLKIT_VERSIONS; do
     [[ "$ver" =~ $release ]] || continue
     for pg in $PG_VERSIONS; do
-        [ -z "$(supported_toolkit "$pg" "$ver")" ] && echo "toolkit $ver $pg"
+        [ -z "$(supported_toolkit "$pg" "$ver")" ] && echo "toolkit-$ver-pg$pg"
     done
 done
 exit 0

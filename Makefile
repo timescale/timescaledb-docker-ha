@@ -216,7 +216,8 @@ EXTENSION_ARTIFACTS_S3=s3://$(RUNS_ON_S3_BUCKET_CACHE)/$(RUNS_ON_S3_CACHE_REPO_P
 ifeq ($(EXTENSION_ARTIFACTS),true)
   # an OSS_ONLY image has no toolkit and builds timescaledb without timescaledb-tsl
   ifneq ($(OSS_ONLY),true)
-    EXTENSION_BUILDS:=$(shell PG_VERSIONS="$(PG_VERSIONS)" TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" ./build_scripts/extension_builds | awk '{print $$1 "-" $$2 "-pg" $$3}')
+    # no pipe here: .SHELLSTATUS reports the last command of the pipeline
+    EXTENSION_BUILDS:=$(shell PG_VERSIONS="$(PG_VERSIONS)" TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" ./build_scripts/extension_builds)
     ifneq ($(.SHELLSTATUS),0)
       $(error build_scripts/extension_builds failed)
     endif
@@ -231,7 +232,8 @@ extension-artifacts: $(EXTENSION_ARTIFACT_FILES) # fetch or build the extension 
 # Fetch one tarball from S3, or build it from the <extension>-artifact stage and
 # store it. The build reads the layer cache but does not write it: a write would
 # replace the manifest the image build reads with one that has only the base layers.
-$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_OUTPUT=--output type=local,dest=$(EXTENSION_ARTIFACTS_DIR)
+# The export goes to a directory per target, so `make -j` builds do not share a file name.
+$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_OUTPUT=--output type=local,dest=$(EXTENSION_ARTIFACTS_DIR)/$*.out
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_CACHE=$(DOCKER_CACHE_FROM_ARGS)
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_EXTRA_BUILDARGS=
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz:
@@ -240,7 +242,8 @@ $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz:
 	fi
 	IFS=- read -r pkg ver pg _ <<< "$*"
 	$(DOCKER_BUILD_COMMAND) --target "$$pkg-artifact" --build-arg EXT_VERSION="$$ver" --build-arg EXT_PG="$${pg#pg}"
-	mv "$(EXTENSION_ARTIFACTS_DIR)/extension.tar.gz" "$@"
+	mv "$(EXTENSION_ARTIFACTS_DIR)/$*.out/extension.tar.gz" "$@"
+	rmdir "$(EXTENSION_ARTIFACTS_DIR)/$*.out"
 	if [ -n "$(RUNS_ON_S3_BUCKET_CACHE)" ]; then
 		aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$@" "$(EXTENSION_ARTIFACTS_S3)/$(@F)"
 	fi

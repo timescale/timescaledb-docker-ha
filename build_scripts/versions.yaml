@@ -23,7 +23,7 @@ default-pg-max: 18
 default-cargo-pgx: 0.6.1
 default-arch: both
 ## The pinned PostgreSQL versions are in postgres_versions.yaml.
-## `make dockerfile` regenerates the Dockerfile layers from this file.
+## `make extension-artifacts` reads this file to list the release tarballs.
 timescaledb:
   2.13.0:
     pg-max: 16

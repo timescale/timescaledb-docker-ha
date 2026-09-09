@@ -41,7 +41,10 @@ construct_loader_package_name() {
     echo "timescaledb-2-loader-postgresql-${pg_version}=${ts_version}${package_suffix}"
 }
 
+# runs once per process: the apt index does not change between the installs
 ensure_packagecloud_repo() {
+    [ -n "$PACKAGECLOUD_REPO_READY" ] && return 0
+    PACKAGECLOUD_REPO_READY=true
     if apt-cache policy | grep -qi "packagecloud.io/timescale/timescaledb"; then
         log "timescale packagecloud repository already configured, skipping re-add."
         apt-get update -y
@@ -120,19 +123,19 @@ format_pg_major_minor_version() {
 }
 
 # Unpack $1-$2 for pg$3 from a tarball of `make extension-artifacts`, mounted by
-# the Dockerfile. Returns 1 when there is no tarball.
+# the Dockerfile. Returns 1 when there is no tarball. A tarball that does not
+# unpack fails the build: a fallback install would hide a corrupt object in S3.
 unpack_artifact() {
     local pkg="$1" version="$2" pg="$3" arch="$ARCH" artifact
     [ "$arch" = aarch64 ] && arch=arm64
     artifact="/build/artifacts/$pkg-$version-pg$pg-$arch.tar.gz"
     [ -s "$artifact" ] || return 1
     [ "$DRYRUN" = true ] && { log "would unpack $artifact"; return 0; }
-    if tar -xzf "$artifact" -C /; then
-        log "unpacked $artifact"
-        return 0
+    if ! tar -xzf "$artifact" -C /; then
+        error "failed unpacking $artifact"
+        exit 1
     fi
-    error "failed unpacking $artifact"
-    return 1
+    log "unpacked $artifact"
 }
 
 # $2: optional pg majors; the caller has checked support
@@ -140,8 +143,6 @@ install_timescaledb() {
     local version="$1" pg_list="$2" pg pkg=timescaledb unsupported_reason oss_only=""
     [ "$OSS_ONLY" = true ] && oss_only="-DAPACHE_ONLY=1"
 
-    ensure_packagecloud_repo
-    
     ARCH=$(dpkg --print-architecture)
     log "detected architecture: ${ARCH}"
     
@@ -186,7 +187,9 @@ install_timescaledb() {
         # skip deb install for branch names (main, feature/foo, etc.) and build from source instead
         if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]] && [ "$(printf '%s\n' "$version" "2.24.0" | sort -V | tail -n1)" = "$version" ]; then
             log "installing deb package for $pkg-$version for pg$pg"
-            
+
+            # only the deb path needs the repository; a tarball build never touches apt
+            ensure_packagecloud_repo
             install_timescaledb_for_pg_version "${pg}" "${version}" "${pg_full_suffix}"
             err=$?
 
