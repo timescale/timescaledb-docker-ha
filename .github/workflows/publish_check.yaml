@@ -40,7 +40,7 @@ jobs:
         run: |
           df -h
           sudo rm -fr /usr/share/dotnet /usr/local/lib/android /opt/microsoft \
-                      /opt/hostedtoolcache /usr/local/.ghcup /usr/local/share/boost || true
+                      /usr/local/.ghcup /usr/local/share/boost || true
           sudo docker image prune --all --force || true
           df -h
 
@@ -72,9 +72,10 @@ jobs:
           ALL_VERSIONS: "true"
           OSS_ONLY: "false"
           DOCKER_TAG_POSTFIX: "-cicheck"
+          DOCKER_CACHE_SCOPE: pg18-all-${{ matrix.platform }}
+          DOCKER_CACHE_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           make publish-builder
-          docker builder prune --force || true
           make publish-release
 
       # Exercise the same `check` target master runs. Without this the target is

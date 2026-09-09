@@ -3,14 +3,80 @@
 SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 . "$SCRIPT_DIR"/shared.sh
 
-# This takes the requested toolkit and other extensions, figures out what versions of cargo-pgx/pgrx those
-# versions want, and then build from the oldest pgx/pgrx to the newest so that `cargo install cargo-pgx/pgrx --version`
-# commands are only ran once. Once cargo-pgrx has been installed, run the installation for the extensions,
-# and then continue through the next cargo-pgrx version. At the end, we're left with the latest version of
-# cargo-pgrx so that the builder image can be used to test master/main branches.
+# Two modes:
+# - `install_extensions <timescaledb|toolkit> <version> "<pg majors>" [cargo-pgrx]`
+#   installs one version. The generated Dockerfile layers call this.
+# - `install_extensions <timescaledb|rust|pgvectorscale|...>` installs the requested
+#   versions that are not installed yet, such as branch builds.
 
-# we use the following variables to decide on if/what to install:
-# - TOOLKIT_VERSIONS
+usage() {
+    echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch]" >&2
+    echo "       $0 [-n] <timescaledb|toolkit> <version> <pg majors> [cargo-pgrx version]" >&2
+    exit 1
+}
+
+# use every core for the cmake builds
+MAKEFLAGS="-j$(nproc)"
+export MAKEFLAGS
+
+# chmod in the layer that installed the files; a later chmod copies them into a new layer
+fix_so_modes() {
+    [ "$DRYRUN" = true ] && return 0
+    find /usr/lib/postgresql/*/lib -name '*.so' -perm /111 -user "$(id -un)" -exec chmod -x {} +
+}
+
+# $1=version $2=requested versions, a list or "all". The Makefile resolves "latest".
+version_requested() {
+    local version="$1" requested="$2" v
+    case "$requested" in
+    all) return 0;;
+    latest)
+        error "'latest' is not supported for a per-version install, pass the version"
+        exit 1;;
+    esac
+    for v in $requested; do
+        [ "$v" = "$version" ] && return 0
+    done
+    return 1
+}
+
+# install one version for the installed pg majors it supports
+install_one_version() {
+    local pkg="$1" version="$2" pg_list="$3" cargopgrx="$4" requested pg pgs=""
+    [[ -n "$version" && -n "$pg_list" ]] || usage
+
+    case "$pkg" in
+    timescaledb) requested="$TIMESCALEDB_VERSIONS";;
+    toolkit) requested="$TOOLKIT_VERSIONS"; [ -n "$cargopgrx" ] || usage;;
+    *) usage;;
+    esac
+
+    if ! version_requested "$version" "$requested"; then
+        log "$pkg-$version: not requested"
+        return 0
+    fi
+
+    for pg in $(available_pg_versions); do
+        [[ " $pg_list " == *" $pg "* ]] && pgs="$pgs $pg"
+    done
+    if [ -z "$pgs" ]; then
+        log "$pkg-$version: none of pg $pg_list is installed"
+        return 0
+    fi
+
+    case "$pkg" in
+    timescaledb)
+        install_timescaledb "$version" "$pgs"
+        rm -rf /build/timescaledb
+        ;;
+    toolkit)
+        install_toolkit "$cargopgrx" "$version" "$pgs"
+        # cargo recreates registry/src from registry/cache
+        rm -rf /build/toolkit /usr/local/cargo/registry/src
+        ;;
+    esac
+    fix_so_modes
+}
 
 [ "$1" = -n ] && { DRYRUN=true; shift; }
 
@@ -18,21 +84,29 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 
 what="$1"
 [ -z "$what" ] && what=all
-if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch$ ]]; then
-    echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch]" >&2
-    exit 1
+
+if [ -n "$2" ]; then
+    install_one_version "$@"
+    exit 0
 fi
 
+if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch$ ]]; then
+    usage
+fi
+
+# versions.yaml is in the image here. Skip what the generated layers installed.
 case "$what" in
 versions)
     # this outputs the expanded versions
     echo "TIMESCALEDB_VERSIONS=\"$TIMESCALEDB_VERSIONS\""
     echo "TOOLKIT_VERSIONS=\"$TOOLKIT_VERSIONS\""
     echo "PGVECTORSCALE_VERSIONS=\"$PGVECTORSCALE_VERSIONS\""
+    exit 0
     ;;
 
 timescaledb | all)
     for ver in $TIMESCALEDB_VERSIONS; do
+        is_installed timescaledb "$ver" && continue
         install_timescaledb "$ver"
     done
     # the source tree and build directory are not needed after install
@@ -55,9 +129,4 @@ pg_textsearch | all)
 
 esac
 
-# An install sets mode 755 on the .so files. Fix the mode in this image layer.
-# A chmod in a later layer copies every changed file into that layer. Only the
-# owner can chmod a file, so limit the find to files of the current user.
-if [ "$what" != versions ] && [ "$DRYRUN" != true ]; then
-    find /usr/lib/postgresql/*/lib -name '*.so' -perm /111 -user "$(id -un)" -exec chmod -x {} +
-fi
+fix_so_modes

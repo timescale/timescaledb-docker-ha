@@ -39,6 +39,19 @@ ifeq ($(strip $(USE_DOCKER_CACHE)),true)
 else
   DOCKER_CACHE := --no-cache
 endif
+# BuildKit layer cache in the runs-on S3 bucket (RUNS_ON_* from runs-on/action).
+# DOCKER_CACHE_SCOPE turns it on. A branch reads its own manifest and master's.
+DOCKER_CACHE_FROM?=true
+DOCKER_CACHE_BRANCH?=$(shell git rev-parse --abbrev-ref HEAD)
+ifneq ($(strip $(DOCKER_CACHE_SCOPE)),)
+  DOCKER_CACHE_S3=type=s3,region=$(RUNS_ON_AWS_REGION),bucket=$(RUNS_ON_S3_BUCKET_CACHE),blobs_prefix=$(RUNS_ON_S3_CACHE_REPO_PREFIX)/buildkit/blobs/,manifests_prefix=$(RUNS_ON_S3_CACHE_REPO_PREFIX)/buildkit/manifests/
+  DOCKER_CACHE_NAME=$(DOCKER_CACHE_SCOPE)-$(subst /,-,$(DOCKER_CACHE_BRANCH))
+  DOCKER_CACHE += --cache-to $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_NAME),mode=max
+  ifneq ($(DOCKER_CACHE_FROM),false)
+    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_NAME)
+    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_SCOPE)-master
+  endif
+endif
 
 ifeq ($(ALL_VERSIONS),true)
   DOCKER_TAG_POSTFIX := $(strip $(DOCKER_TAG_POSTFIX))-all
@@ -118,10 +131,8 @@ $(VERSION_INFO): builder
 endif
 VERSION_IMAGE := $(DOCKER_PUBLISH_URL):$(VERSION_TAG)
 
-# Docker 29 on Ubuntu 26.04 gives "docker exec" processes the AppArmor label
-# docker-default//&unconfined. The docker-default profile then denies signals
-# between processes in the container. PostgreSQL 18 AIO workers need SIGURG,
-# so connections hang. Run the containers that start PostgreSQL unconfined.
+# On the runs-on AMI, docker exec processes cannot signal each other under the
+# docker-default AppArmor profile, and PostgreSQL 18 hangs.
 DOCKER_APPARMOR_ARG=--security-opt apparmor=unconfined
 
 # The purpose of publishing the images under many tags, is to provide
@@ -132,9 +143,15 @@ DOCKER_APPARMOR_ARG=--security-opt apparmor=unconfined
 #  3. timescale/timescaledb-ha:pg17.3-ts2.19
 #  4. timescale/timescaledb-ha:pg17.3-ts2.19.0
 
+# Run the pushed image by digest: the runs-on ECR mirror can serve a stale tag.
 $(VERSION_INFO):
 	docker rm --force builder_inspector >&/dev/null || true
-	docker run --rm -d $(DOCKER_APPARMOR_ARG) --name builder_inspector -e PGDATA=/tmp/pgdata --user=postgres "$(VERSION_IMAGE)" sleep 300
+	image="$(VERSION_IMAGE)"; \
+	case "$(DOCKER_OUTPUT)" in *--push*) \
+		image="$(DOCKER_PUBLISH_URL)@$$(jq -r '.["containerimage.digest"]' $(DOCKER_METADATA_FILE))";; \
+	esac; \
+	echo "smoketest image: $$image"; \
+	docker run --rm -d $(DOCKER_APPARMOR_ARG) --name builder_inspector -e PGDATA=/tmp/pgdata --user=postgres "$$image" sleep 300
 	docker cp ./cicd "builder_inspector:/cicd/"
 	docker exec builder_inspector /cicd/smoketest.sh || (docker logs -n100 builder_inspector && exit 1)
 	mkdir -p /tmp/outputs
@@ -178,6 +195,7 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 					 --build-arg BUILDER_URL="$(DOCKER_BUILDER_URL)" \
 					 --build-arg PGBOUNCER_EXPORTER_VERSION=$(PGBOUNCER_EXPORTER_VERSION) \
 					 --build-arg PGBACKREST_EXPORTER_VERSION=$(PGBACKREST_EXPORTER_VERSION) \
+					 --build-arg BUILD_DATE="$$(date -Iseconds -u)" \
 					 --label com.timescaledb.image.install_method=$(INSTALL_METHOD) \
 					 --label org.opencontainers.image.created="$$(date -Iseconds -u)" \
 					 --label org.opencontainers.image.revision="$(GIT_REV)" \
@@ -185,6 +203,17 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 					 --label org.opencontainers.image.vendor=Timescale \
 					 $(DOCKER_EXTRA_BUILDARGS) \
 					 .
+
+.PHONY: dockerfile
+dockerfile: # regenerate the per-version install layers in the Dockerfile from build_scripts/versions.yaml
+	./build_scripts/gen_dockerfile_versions
+
+# regenerate the layers before a build when their inputs changed
+Dockerfile: build_scripts/versions.yaml build_scripts/postgres_versions.yaml build_scripts/gen_dockerfile_versions
+	./build_scripts/gen_dockerfile_versions
+	touch Dockerfile
+
+builder release build build-oss build-sha: Dockerfile
 
 # We provide the fast target as the first (=default) target, as it will skip installing
 # many optional extensions, and it will only install a single timescaledb (master) version.
@@ -202,8 +231,9 @@ fast: build
 
 .PHONY: latest
 latest: ALL_VERSIONS=false
-latest: TIMESCALEDB_VERSIONS=latest
-latest: TOOLKIT_VERSIONS=latest
+# the per-version layers do not read versions.yaml
+latest: TIMESCALEDB_VERSIONS=$(or $(shell yq '.timescaledb | keys | .[-1]' build_scripts/versions.yaml),$(error make latest needs yq to read build_scripts/versions.yaml))
+latest: TOOLKIT_VERSIONS=$(or $(shell yq '.toolkit | keys | .[-1]' build_scripts/versions.yaml),$(error make latest needs yq to read build_scripts/versions.yaml))
 latest: PGVECTORSCALE_VERSIONS=latest
 latest: build
 
@@ -339,6 +369,16 @@ check: # check images to see if they have all the requested content
 		check_name="$(CHECK_NAME)-$$key"
 		echo "### Checking $$arch $(DOCKER_RELEASE_URL)" >> $(GITHUB_STEP_SUMMARY)
 		docker rm --force "$$check_name" >&/dev/null || true
+		# By digest, not by tag: the runs-on ECR mirror answers a mutable tag
+		# from its own cache for up to 24 hours, so --pull always can hand us
+		# the image an earlier run pushed. A digest is content-addressed, so
+		# the mirror cannot answer it with the wrong image. fetch_tag_digest
+		# asks Docker Hub, and only Docker Hub tags can be resolved this way.
+		check_image="$(DOCKER_RELEASE_URL)"
+		case "$(DOCKER_RELEASE_URL)" in docker.io/*) \
+			check_image="$$(./fetch_tag_digest "$(DOCKER_RELEASE_URL)")";; \
+		esac
+		echo "checking image: $$check_image"
 		docker run \
 			--platform linux/"$$arch" \
 			$(DOCKER_APPARMOR_ARG) \
@@ -347,7 +387,7 @@ check: # check images to see if they have all the requested content
 			--name "$$check_name" \
 			-e PGDATA=/tmp/pgdata \
 			--user=postgres \
-			"$(DOCKER_RELEASE_URL)" sleep 300
+			"$$check_image" sleep 300
 		docker exec -u root "$$check_name" mkdir -p /cicd/scripts
 		docker exec -u root "$$check_name" chown -R postgres: /cicd
 		tar -cf - -C ./cicd . | docker exec -i "$$check_name" tar -C /cicd -x
@@ -357,7 +397,7 @@ check: # check images to see if they have all the requested content
 		docker rm --force "$$check_name" >&/dev/null || true
 		# Drop the image once checked; the pg*-all images are large enough that
 		# keeping them around fills the disk.
-		docker rmi --force "$(DOCKER_RELEASE_URL)" >&/dev/null || true
+		docker rmi --force "$$check_image" >&/dev/null || true
 	done
 
 .PHONY: check-sha
