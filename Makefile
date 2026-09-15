@@ -39,19 +39,18 @@ ifeq ($(strip $(USE_DOCKER_CACHE)),true)
 else
   DOCKER_CACHE := --no-cache
 endif
-# BuildKit layer cache in the runs-on S3 bucket (RUNS_ON_* from runs-on/action).
-# DOCKER_CACHE_SCOPE turns it on. A branch reads its own manifest and master's.
+# BuildKit layer cache through the GitHub Actions cache API. On runs-on the
+# Magic Cache serves that API from S3. The API scopes a cache to the branch,
+# its base branch and master, so a branch reads its own cache and master's.
+# The workflow exports ACTIONS_CACHE_URL, ACTIONS_RESULTS_URL and
+# ACTIONS_RUNTIME_TOKEN before the build. DOCKER_CACHE_SCOPE turns it on.
 DOCKER_CACHE_FROM?=true
-DOCKER_CACHE_BRANCH?=$(shell git rev-parse --abbrev-ref HEAD)
 ifneq ($(strip $(DOCKER_CACHE_SCOPE)),)
-  DOCKER_CACHE_S3=type=s3,region=$(RUNS_ON_AWS_REGION),bucket=$(RUNS_ON_S3_BUCKET_CACHE),blobs_prefix=$(RUNS_ON_S3_CACHE_REPO_PREFIX)/buildkit/blobs/,manifests_prefix=$(RUNS_ON_S3_CACHE_REPO_PREFIX)/buildkit/manifests/
-  DOCKER_CACHE_NAME=$(DOCKER_CACHE_SCOPE)-$(subst /,-,$(DOCKER_CACHE_BRANCH))
-  DOCKER_CACHE += --cache-to $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_NAME),mode=max
+  DOCKER_CACHE_GHA=type=gha,scope=$(DOCKER_CACHE_SCOPE)
+  DOCKER_CACHE += --cache-to $(DOCKER_CACHE_GHA),mode=max
   ifneq ($(DOCKER_CACHE_FROM),false)
-    DOCKER_CACHE_FROM_ARGS += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_NAME)
-    DOCKER_CACHE_FROM_ARGS += --cache-from $(DOCKER_CACHE_S3),name=$(DOCKER_CACHE_SCOPE)-master
+    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_GHA)
   endif
-  DOCKER_CACHE += $(DOCKER_CACHE_FROM_ARGS)
 endif
 
 ifeq ($(ALL_VERSIONS),true)

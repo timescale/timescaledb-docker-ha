@@ -58,6 +58,16 @@ jobs:
             [worker.oci]
               maxParallelism = 2
 
+      # docker buildx reads the GitHub Actions cache API from these variables.
+      # The runner only gives them to actions, so this step exports them.
+      - name: Setup | Actions cache variables
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            for (const name of ['ACTIONS_CACHE_URL', 'ACTIONS_RESULTS_URL', 'ACTIONS_RUNTIME_TOKEN', 'ACTIONS_CACHE_SERVICE_V2']) {
+              if (process.env[name]) core.exportVariable(name, process.env[name]);
+            }
+
       - name: Build and push
         id: build
         env:
@@ -67,7 +77,6 @@ jobs:
           OSS_ONLY: "false"
           DOCKER_TAG_POSTFIX: "-cicheck"
           DOCKER_CACHE_SCOPE: pg18-all-${{ matrix.platform }}
-          DOCKER_CACHE_BRANCH: ${{ github.head_ref || github.ref_name }}
           EXTENSION_ARTIFACTS: "true"
         run: |
           make publish-builder
