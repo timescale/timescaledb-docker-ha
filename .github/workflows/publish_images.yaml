@@ -2,6 +2,11 @@ name: Publish images
 
 on:
   workflow_dispatch:
+    inputs:
+      rebuild_extension_artifacts:
+        description: "Build cold and rebuild every extension tarball"
+        type: boolean
+        default: false
 
   push:
     branches:
@@ -87,7 +92,8 @@ jobs:
       # of the build that wrote the cache. The weekly scheduled publish builds cold
       # and refreshes them; a publish from master ships what the PR build tested.
       # The S3 prefix of the extension tarballs is a hash of their inputs, so a
-      # cold build reuses them until an input changes.
+      # cold build reuses them until an input changes. The rebuild input of a
+      # manual run builds cold and replaces every tarball.
       - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
         id: build
         env:
@@ -96,8 +102,9 @@ jobs:
           ALL_VERSIONS: ${{ matrix.all_versions }}
           OSS_ONLY: ${{ matrix.oss_only }}
           DOCKER_CACHE_SCOPE: pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }}-${{ matrix.platform }}
-          DOCKER_CACHE_FROM: ${{ github.event_name == 'schedule' && 'false' || 'true' }}
+          DOCKER_CACHE_FROM: ${{ (github.event_name == 'schedule' || inputs.rebuild_extension_artifacts) && 'false' || 'true' }}
           EXTENSION_ARTIFACTS: "true"
+          EXTENSION_ARTIFACTS_REBUILD: ${{ inputs.rebuild_extension_artifacts && 'true' || 'false' }}
         run: |
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-release

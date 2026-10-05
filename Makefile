@@ -216,15 +216,17 @@ EXTENSION_ARTIFACTS?=false
 EXTENSION_ARTIFACTS_DIR=build_artifacts/$(PLATFORM)
 EXTENSION_ARTIFACTS_BUCKET?=timescale-ci-artifacts
 # The S3 prefix is a hash of what goes into a tarball: the Dockerfile up to the
-# builder stage (the toolchain and the build stages) and the files that the base
-# stage copies (the install scripts and the pinned PostgreSQL minors). A change to
-# one of them gives a new prefix, so the next CI build rebuilds every tarball.
-# versions.yaml is not in the hash: a new version adds a tarball and does not
-# change the others. After a change to the entry of an existing version, delete
-# the tarballs of that version. build_artifacts/ is not keyed: clear it locally
-# when an input changes.
-EXTENSION_ARTIFACTS_INPUTS:=$(shell sed '/^FROM base AS builder/,$$d' Dockerfile | cat - $(sort $(wildcard build_scripts/*.sh)) build_scripts/install_extensions build_scripts/postgres_versions.yaml | sha256sum | cut -c1-12)
-EXTENSION_ARTIFACTS_S3=s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))/$(PLATFORM)/$(EXTENSION_ARTIFACTS_INPUTS)
+# builder stage (the toolchain and the build stages) and build_scripts/ (the
+# install scripts and the pinned PostgreSQL minors). A change to one of them
+# gives a new prefix, so the next CI build rebuilds every tarball. versions.yaml
+# is not in the hash: a new version adds a tarball and does not change the
+# others. To rebuild the tarballs for another reason, set
+# EXTENSION_ARTIFACTS_REBUILD=true (the "Publish images" workflow has an input
+# for it). The hash is empty if a command fails. A recipe that uses the S3
+# prefix then stops, so it does not use a prefix that has no key.
+EXTENSION_ARTIFACTS_REBUILD?=false
+EXTENSION_ARTIFACTS_INPUTS:=$(shell set -o pipefail; sum="$$(sed '/^FROM base AS builder/,$$d' Dockerfile | cat - $(filter-out build_scripts/versions.yaml,$(sort $(wildcard build_scripts/*))) | sha256sum)" && echo "$${sum:0:12}")
+EXTENSION_ARTIFACTS_S3=$(if $(EXTENSION_ARTIFACTS_INPUTS),s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))/$(PLATFORM)/$(EXTENSION_ARTIFACTS_INPUTS),$(error cannot hash the extension tarball inputs (see EXTENSION_ARTIFACTS_INPUTS)))
 ifeq ($(EXTENSION_ARTIFACTS),true)
   # no pipe here: .SHELLSTATUS reports the last command of the pipeline
   EXTENSION_BUILDS:=$(shell OSS_ONLY="$(OSS_ONLY)" PG_VERSIONS="$(PG_VERSIONS)" TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" ./build_scripts/extension_builds)
@@ -236,8 +238,16 @@ ifeq ($(EXTENSION_ARTIFACTS),true)
 endif
 
 # One sync fetches every tarball of the platform for PG_VERSIONS in parallel.
+# It removes the local tarballs if .inputs has a different hash or for a rebuild.
+# A rebuild does not fetch from S3, so the next step builds every tarball.
 .PHONY: extension-artifacts-sync
 extension-artifacts-sync:
+	stamp="$(EXTENSION_ARTIFACTS_DIR)/.inputs"
+	if [ "$(EXTENSION_ARTIFACTS_REBUILD)" = true ] || [ "$$(cat "$$stamp" 2>/dev/null)" != "$(EXTENSION_ARTIFACTS_INPUTS)" ]; then
+		rm -f "$(EXTENSION_ARTIFACTS_DIR)"/*.tar.gz
+		echo "$(EXTENSION_ARTIFACTS_INPUTS)" > "$$stamp"
+	fi
+	[ "$(EXTENSION_ARTIFACTS_REBUILD)" != true ] || exit 0
 	[ -n "$(EXTENSION_ARTIFACTS_BUCKET)" ] || exit 0
 	aws s3 sync --region "$(RUNS_ON_AWS_REGION)" --no-progress --exclude '*' \
 		$(foreach pg,$(PG_VERSIONS),--include '*-pg$(pg).tar.gz') \
@@ -295,7 +305,7 @@ endif
 
 .PHONY: get-image-config
 get-image-config:
-	docker run --platform "linux/$(PLATFORM)" --rm $(DOCKER_RELEASE_URL) cat /.image_config
+	docker run --platform "linux/$(PLATFORM)" --rm $(or $(CHECK_IMAGE),$(DOCKER_RELEASE_URL)) cat /.image_config
 
 .PHONY: builder
 builder: # build the `builder` target image
@@ -413,7 +423,8 @@ CHECK_NAME=ha-check
 CHECK_ARCHES?=amd64 arm64
 # The image that `check` verifies, by digest (<registry>/<repository>@sha256:...).
 # A job that pushed the image sets this to the digest it pushed. Without it,
-# `check` looks up the digest of the tag.
+# `check` looks up the digest of the tag. The digest is of one platform, so set
+# CHECK_ARCHES to that platform.
 CHECK_IMAGE?=
 
 .PHONY: check

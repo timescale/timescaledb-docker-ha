@@ -52,12 +52,14 @@ For updating changes in versions for timescaledb, pgvectorscale, or toolkit, upd
 Installing the timescaledb and toolkit versions takes most of the build time. CI builds each version once per
 PostgreSQL major and architecture, and keeps the tarball in the CI artifacts bucket `timescale-ci-artifacts` under
 `timescaledb-docker-ha/extensions/<base image>/<arch>/<inputs>/<extension>-<version>-pg<major>.tar.gz`.
-`<inputs>` is a hash of the Dockerfile up to the `builder` stage, the install scripts and
-`build_scripts/postgres_versions.yaml`. A change to one of them, such as a new PostgreSQL minor or Rust version,
-rebuilds every tarball. `build_scripts/versions.yaml` is not in the hash: after a change to the entry of an
-existing version, delete the tarballs of that version. `make extension-artifacts` fetches the tarballs into `build_artifacts/<arch>/`, builds the missing ones from the `timescaledb-artifact` and
-`toolkit-artifact` Dockerfile stages and stores them. The image build unpacks the tarballs it finds and installs
-the rest itself. Delete a tarball from the bucket to rebuild it. Without `EXTENSION_ARTIFACTS=true`, such as a
+`<inputs>` is a hash of the Dockerfile up to the `builder` stage and of `build_scripts/` without `versions.yaml`.
+A change to one of them, such as a new PostgreSQL minor or Rust version, rebuilds every tarball. A new version in
+`build_scripts/versions.yaml` adds tarballs and does not change the hash. `make extension-artifacts` fetches the
+tarballs into `build_artifacts/<arch>/`, builds the missing ones from the `timescaledb-artifact` and
+`toolkit-artifact` Dockerfile stages and stores them. It removes the local tarballs when the hash changes. The image
+build unpacks the tarballs it finds and installs the rest itself. To rebuild every tarball for another reason, such
+as a change to the entry of an existing version in `versions.yaml`, run the "Publish images" workflow with
+"rebuild_extension_artifacts". Without `EXTENSION_ARTIFACTS=true`, such as a
 local build, the image installs every version itself.
 
 The scripts outside the image need `yq`, `jq` and `shellcheck`. `mise install` installs the pinned versions from
