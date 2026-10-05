@@ -49,7 +49,8 @@ ifneq ($(strip $(DOCKER_CACHE_SCOPE)),)
   DOCKER_CACHE_GHA=type=gha,scope=$(DOCKER_CACHE_SCOPE)
   DOCKER_CACHE += --cache-to $(DOCKER_CACHE_GHA),mode=max
   ifneq ($(DOCKER_CACHE_FROM),false)
-    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_GHA)
+    DOCKER_CACHE_FROM_ARGS := --cache-from $(DOCKER_CACHE_GHA)
+    DOCKER_CACHE += $(DOCKER_CACHE_FROM_ARGS)
   endif
 endif
 
@@ -214,7 +215,16 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 EXTENSION_ARTIFACTS?=false
 EXTENSION_ARTIFACTS_DIR=build_artifacts/$(PLATFORM)
 EXTENSION_ARTIFACTS_BUCKET?=timescale-ci-artifacts
-EXTENSION_ARTIFACTS_S3=s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))/$(PLATFORM)
+# The S3 prefix is a hash of what goes into a tarball: the Dockerfile up to the
+# builder stage (the toolchain and the build stages) and the files that the base
+# stage copies (the install scripts and the pinned PostgreSQL minors). A change to
+# one of them gives a new prefix, so the next CI build rebuilds every tarball.
+# versions.yaml is not in the hash: a new version adds a tarball and does not
+# change the others. After a change to the entry of an existing version, delete
+# the tarballs of that version. build_artifacts/ is not keyed: clear it locally
+# when an input changes.
+EXTENSION_ARTIFACTS_INPUTS:=$(shell sed '/^FROM base AS builder/,$$d' Dockerfile | cat - $(sort $(wildcard build_scripts/*.sh)) build_scripts/install_extensions build_scripts/postgres_versions.yaml | sha256sum | cut -c1-12)
+EXTENSION_ARTIFACTS_S3=s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))/$(PLATFORM)/$(EXTENSION_ARTIFACTS_INPUTS)
 ifeq ($(EXTENSION_ARTIFACTS),true)
   # no pipe here: .SHELLSTATUS reports the last command of the pipeline
   EXTENSION_BUILDS:=$(shell OSS_ONLY="$(OSS_ONLY)" PG_VERSIONS="$(PG_VERSIONS)" TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" ./build_scripts/extension_builds)
@@ -401,6 +411,10 @@ CHECK_NAME=ha-check
 # Which architectures `check` verifies. Callers that run on a native runner of
 # one architecture override this so nothing has to be emulated.
 CHECK_ARCHES?=amd64 arm64
+# The image that `check` verifies, by digest (<registry>/<repository>@sha256:...).
+# A job that pushed the image sets this to the digest it pushed. Without it,
+# `check` looks up the digest of the tag.
+CHECK_IMAGE?=
 
 .PHONY: check
 check: # check images to see if they have all the requested content
@@ -415,10 +429,16 @@ check: # check images to see if they have all the requested content
 		# the image an earlier run pushed. A digest is content-addressed, so
 		# the mirror cannot answer it with the wrong image. fetch_tag_digest
 		# asks Docker Hub, and only Docker Hub tags can be resolved this way.
+		# Docker Hub can give the previous digest for some seconds after a push,
+		# so a job that pushed the image gives its digest in CHECK_IMAGE.
 		check_image="$(DOCKER_RELEASE_URL)"
-		case "$(DOCKER_RELEASE_URL)" in docker.io/*) \
-			check_image="$$(./fetch_tag_digest "$(DOCKER_RELEASE_URL)")";; \
-		esac
+		if [ -n "$(CHECK_IMAGE)" ]; then
+			check_image="$(CHECK_IMAGE)"
+		else
+			case "$(DOCKER_RELEASE_URL)" in docker.io/*) \
+				check_image="$$(./fetch_tag_digest "$(DOCKER_RELEASE_URL)")";; \
+			esac
+		fi
 		echo "checking image: $$check_image"
 		docker run \
 			--platform linux/"$$arch" \

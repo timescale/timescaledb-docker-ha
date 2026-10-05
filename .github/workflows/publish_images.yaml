@@ -86,7 +86,8 @@ jobs:
       # The packages in the image are not pinned. A cached build keeps the packages
       # of the build that wrote the cache. The weekly scheduled publish builds cold
       # and refreshes them; a publish from master ships what the PR build tested.
-      # The extension tarballs build from pinned inputs, so a cold build reuses them.
+      # The S3 prefix of the extension tarballs is a hash of their inputs, so a
+      # cold build reuses them until an input changes.
       - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
         id: build
         env:
@@ -113,6 +114,7 @@ jobs:
           ALL_VERSIONS: "false"
           OSS_ONLY: "false"
           DOCKER_TAG_POSTFIX: "${{ matrix.all }}${{ matrix.oss }}-${{ matrix.platform }}"
+          CHECK_IMAGE: ${{ env.DOCKER_REGISTRY }}/${{ steps.build.outputs.release_id }}
         run: make check
 
       - name: export outputs
