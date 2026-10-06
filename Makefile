@@ -234,16 +234,22 @@ ifeq ($(EXTENSION_ARTIFACTS),true)
 endif
 
 # One sync fetches every tarball of the platform for PG_VERSIONS in parallel.
-# It removes the local tarballs if .inputs has a different hash or for a rebuild.
-# A rebuild does not fetch from S3, so the next step builds every tarball.
+# It removes the local tarballs if .inputs has a different base image or hash,
+# or for a rebuild. A rebuild also removes the build cache of the current
+# builder, so the first tarball build makes a new base stage and the others use
+# it. A rebuild does not fetch from S3, so the next step builds every tarball.
 .PHONY: extension-artifacts-sync
 extension-artifacts-sync:
 	stamp="$(EXTENSION_ARTIFACTS_DIR)/.inputs"
-	if [ "$(EXTENSION_ARTIFACTS_REBUILD)" = true ] || [ "$$(cat "$$stamp" 2>/dev/null)" != "$(EXTENSION_ARTIFACTS_INPUTS)" ]; then
+	key="$(DOCKER_FROM) $(EXTENSION_ARTIFACTS_INPUTS)"
+	if [ "$(EXTENSION_ARTIFACTS_REBUILD)" = true ] || [ "$$(cat "$$stamp" 2>/dev/null)" != "$$key" ]; then
 		rm -f "$(EXTENSION_ARTIFACTS_DIR)"/*.tar.gz
-		echo "$(EXTENSION_ARTIFACTS_INPUTS)" > "$$stamp"
+		echo "$$key" > "$$stamp"
 	fi
-	[ "$(EXTENSION_ARTIFACTS_REBUILD)" != true ] || exit 0
+	if [ "$(EXTENSION_ARTIFACTS_REBUILD)" = true ]; then
+		docker buildx prune --all --force
+		exit 0
+	fi
 	[ -n "$(EXTENSION_ARTIFACTS_BUCKET)" ] || exit 0
 	aws s3 sync --region "$(RUNS_ON_AWS_REGION)" --no-progress --exclude '*' \
 		$(foreach pg,$(PG_VERSIONS),--include '*-pg$(pg).tar.gz') \
@@ -258,10 +264,11 @@ extension-artifacts: extension-artifacts-sync # fetch or build the extension tar
 # Build one tarball from the <extension>-artifact stage and store it. The build
 # reads the layer cache but does not write it: a write would replace the manifest
 # the image build reads with one that has only the base layers. A rebuild does
-# not read the layer cache. The export goes to a directory per target, so
-# `make -j` builds do not share a file name.
+# not read the layer cache. USE_DOCKER_CACHE=false uses no cache, as for the
+# image. The export goes to a directory per target, so `make -j` builds do not
+# share a file name.
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_OUTPUT=--output type=local,dest=$(EXTENSION_ARTIFACTS_DIR)/$*.out
-$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_CACHE=$(if $(filter true,$(EXTENSION_ARTIFACTS_REBUILD)),,$(DOCKER_CACHE_FROM_ARGS))
+$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_CACHE=$(if $(filter false,$(USE_DOCKER_CACHE)),--no-cache,$(if $(filter true,$(EXTENSION_ARTIFACTS_REBUILD)),,$(DOCKER_CACHE_FROM_ARGS)))
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_EXTRA_BUILDARGS=
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz:
 	IFS=- read -r pkg ver pg <<< "$*"

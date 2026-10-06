@@ -56,11 +56,11 @@ PostgreSQL major and architecture, and keeps the tarball in the CI artifacts buc
 A change to one of them, such as a new PostgreSQL minor or Rust version, rebuilds every tarball. A new version in
 `build_scripts/versions.yaml` adds tarballs and does not change the hash. `make extension-artifacts` fetches the
 tarballs into `build_artifacts/<arch>/`, builds the missing ones from the `timescaledb-artifact` and
-`toolkit-artifact` Dockerfile stages and stores them. It removes the local tarballs when the hash changes. The image
+`toolkit-artifact` Dockerfile stages and stores them. It removes the local tarballs when the base image or the hash changes. The image
 build unpacks the tarballs it finds and installs the rest itself. The first scheduled publish of each month rebuilds
 every tarball, because the hash does not include the unpinned packages of the base stage. To rebuild every tarball
 for another reason, such as a change to the entry of an existing version in `versions.yaml`, run the
-"Publish images" workflow with "rebuild_extension_artifacts". Without `EXTENSION_ARTIFACTS=true`, such as a
+"Publish images" workflow with "rebuild_extension_artifacts". Locally, `EXTENSION_ARTIFACTS_REBUILD=true` does the same and also removes the build cache of the current Docker builder. Without `EXTENSION_ARTIFACTS=true`, such as a
 local build, the image installs every version itself.
 
 The scripts outside the image need `yq`, `jq` and `shellcheck`. `mise install` installs the pinned versions from
