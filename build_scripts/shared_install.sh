@@ -111,6 +111,7 @@ install_timescaledb_for_pg_version() {
     done
 
     error "failed to install TimescaleDB ${ts_version} for PostgreSQL ${pg_version}"
+    return 1
 }
 
 # 18.1 -> 1801
