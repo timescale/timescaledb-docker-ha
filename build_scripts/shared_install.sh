@@ -215,8 +215,10 @@ install_timescaledb() {
             log "building $pkg-$version for pg$pg"
 
             PATH="/usr/lib/postgresql/$pg/bin:${ORIGINAL_PATH}"
-            git_clone "https://github.com/${GITHUB_REPO}" "$pkg" || continue
-            git_checkout $pkg "$version" || continue
+            # Stop on a clone or checkout error. With continue, the build
+            # passed and the image did not have this version.
+            git_clone "https://github.com/${GITHUB_REPO}" "$pkg" || return
+            git_checkout $pkg "$version" || return
             (
                 set -e
                 cd /build/$pkg
