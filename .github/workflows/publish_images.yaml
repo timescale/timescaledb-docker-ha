@@ -118,9 +118,11 @@ jobs:
           DOCKER_CACHE_FROM: ${{ (github.event_name == 'schedule' || steps.rebuild.outputs.rebuild == 'true') && 'false' || 'true' }}
           EXTENSION_ARTIFACTS: "true"
           EXTENSION_ARTIFACTS_REBUILD: ${{ steps.rebuild.outputs.rebuild }}
+        # publish-builder rebuilds the tarballs. publish-release must not rebuild
+        # them again, so it uses the tarballs that publish-builder made.
         run: |
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder
-          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-release
+          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-release EXTENSION_ARTIFACTS_REBUILD=false
 
       # Checks the image this job pushed, by digest. The check job that ran after
       # the manifests pulled every image again on a fresh runner.

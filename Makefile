@@ -257,10 +257,11 @@ extension-artifacts: extension-artifacts-sync # fetch or build the extension tar
 
 # Build one tarball from the <extension>-artifact stage and store it. The build
 # reads the layer cache but does not write it: a write would replace the manifest
-# the image build reads with one that has only the base layers. The export goes
-# to a directory per target, so `make -j` builds do not share a file name.
+# the image build reads with one that has only the base layers. A rebuild does
+# not read the layer cache. The export goes to a directory per target, so
+# `make -j` builds do not share a file name.
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_OUTPUT=--output type=local,dest=$(EXTENSION_ARTIFACTS_DIR)/$*.out
-$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_CACHE=$(DOCKER_CACHE_FROM_ARGS)
+$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_CACHE=$(if $(filter true,$(EXTENSION_ARTIFACTS_REBUILD)),,$(DOCKER_CACHE_FROM_ARGS))
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_EXTRA_BUILDARGS=
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz:
 	IFS=- read -r pkg ver pg <<< "$*"

@@ -19,5 +19,8 @@ for f in build_scripts/*; do
     [ "$f" = build_scripts/versions.yaml ] || files+=("$f")
 done
 
+# Without this line, sed does not cut the Dockerfile and the hash changes on
+# each Dockerfile change.
+grep -q '^FROM base AS builder' Dockerfile
 sum="$({ sed '/^FROM base AS builder/,$d' Dockerfile; cat "${files[@]}"; } | sha256sum)"
 echo "${sum:0:12}"
