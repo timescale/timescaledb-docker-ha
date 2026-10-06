@@ -215,17 +215,13 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 EXTENSION_ARTIFACTS?=false
 EXTENSION_ARTIFACTS_DIR=build_artifacts/$(PLATFORM)
 EXTENSION_ARTIFACTS_BUCKET?=timescale-ci-artifacts
-# The S3 prefix is a hash of what goes into a tarball: the Dockerfile up to the
-# builder stage (the toolchain and the build stages) and build_scripts/ (the
-# install scripts and the pinned PostgreSQL minors). A change to one of them
-# gives a new prefix, so the next CI build rebuilds every tarball. versions.yaml
-# is not in the hash: a new version adds a tarball and does not change the
-# others. To rebuild the tarballs for another reason, set
-# EXTENSION_ARTIFACTS_REBUILD=true (the "Publish images" workflow has an input
-# for it). The hash is empty if a command fails. A recipe that uses the S3
-# prefix then stops, so it does not use a prefix that has no key.
+# The S3 prefix is a hash of what goes into a tarball, see
+# build_scripts/extension_inputs. A change to an input gives a new prefix, so the
+# next CI build rebuilds every tarball. To rebuild the tarballs for another
+# reason, set EXTENSION_ARTIFACTS_REBUILD=true (the "Publish images" workflow has
+# an input for it). If the hash is empty, a recipe that uses the S3 prefix stops.
 EXTENSION_ARTIFACTS_REBUILD?=false
-EXTENSION_ARTIFACTS_INPUTS:=$(shell set -o pipefail; sum="$$(sed '/^FROM base AS builder/,$$d' Dockerfile | cat - $(filter-out build_scripts/versions.yaml,$(sort $(wildcard build_scripts/*))) | sha256sum)" && echo "$${sum:0:12}")
+EXTENSION_ARTIFACTS_INPUTS:=$(shell ./build_scripts/extension_inputs)
 EXTENSION_ARTIFACTS_S3=$(if $(EXTENSION_ARTIFACTS_INPUTS),s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))/$(PLATFORM)/$(EXTENSION_ARTIFACTS_INPUTS),$(error cannot hash the extension tarball inputs (see EXTENSION_ARTIFACTS_INPUTS)))
 ifeq ($(EXTENSION_ARTIFACTS),true)
   # no pipe here: .SHELLSTATUS reports the last command of the pipeline
