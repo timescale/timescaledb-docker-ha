@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+# Print a short hash of what goes into an extension tarball: the Dockerfile up
+# to the builder stage (the toolchain and the build stages) and build_scripts/
+# without versions.yaml (the install scripts and the pinned PostgreSQL minors).
+# A new version in versions.yaml adds a tarball and does not change the others.
+# The Makefile uses the hash as the S3 prefix of the tarballs. Prints nothing if
+# a command fails.
+#
+# usage: extension_inputs
+
+set -euo pipefail
+cd "${BASH_SOURCE[0]%/*}/.."
+# the same file order on every machine
+LC_ALL=C
+
+files=()
+for f in build_scripts/*; do
+    [ "$f" = build_scripts/versions.yaml ] || files+=("$f")
+done
+
+# Without this line, sed does not cut the Dockerfile and the hash changes on
+# each Dockerfile change.
+grep -q '^FROM base AS builder' Dockerfile
+sum="$({ sed '/^FROM base AS builder/,$d' Dockerfile; cat "${files[@]}"; } | sha256sum)"
+echo "${sum:0:12}"

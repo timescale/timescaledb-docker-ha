@@ -2,6 +2,11 @@ name: Publish images
 
 on:
   workflow_dispatch:
+    inputs:
+      rebuild_extension_artifacts:
+        description: "Build cold and rebuild every extension tarball"
+        type: boolean
+        default: false
 
   push:
     branches:
@@ -83,10 +88,25 @@ jobs:
               if (process.env[name]) core.exportVariable(name, process.env[name]);
             }
 
+      # The S3 prefix of the extension tarballs is a hash of their inputs, so a
+      # build reuses them until an input changes. The hash does not include the
+      # unpinned packages of the base stage. Thus the first scheduled publish of
+      # each month rebuilds every tarball, and no tarball is older than about five
+      # weeks. The rebuild input of a manual run does the same.
+      - name: Decide on the tarball rebuild
+        id: rebuild
+        env:
+          EVENT: ${{ github.event_name }}
+          REBUILD_INPUT: ${{ inputs.rebuild_extension_artifacts }}
+        run: |
+          rebuild=false
+          [ "$REBUILD_INPUT" = true ] && rebuild=true
+          [ "$EVENT" = schedule ] && [ "$(date -u +%-d)" -le 7 ] && rebuild=true
+          echo "rebuild=$rebuild" | tee -a "$GITHUB_OUTPUT"
+
       # The packages in the image are not pinned. A cached build keeps the packages
       # of the build that wrote the cache. The weekly scheduled publish builds cold
       # and refreshes them; a publish from master ships what the PR build tested.
-      # The extension tarballs build from pinned inputs, so a cold build reuses them.
       - name: Build and publish (pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }})
         id: build
         env:
@@ -95,11 +115,14 @@ jobs:
           ALL_VERSIONS: ${{ matrix.all_versions }}
           OSS_ONLY: ${{ matrix.oss_only }}
           DOCKER_CACHE_SCOPE: pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }}-${{ matrix.platform }}
-          DOCKER_CACHE_FROM: ${{ github.event_name == 'schedule' && 'false' || 'true' }}
+          DOCKER_CACHE_FROM: ${{ (github.event_name == 'schedule' || steps.rebuild.outputs.rebuild == 'true') && 'false' || 'true' }}
           EXTENSION_ARTIFACTS: "true"
+          EXTENSION_ARTIFACTS_REBUILD: ${{ steps.rebuild.outputs.rebuild }}
+        # publish-builder rebuilds the tarballs. publish-release must not rebuild
+        # them again, so it uses the tarballs that publish-builder made.
         run: |
           GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder
-          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-release
+          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-release EXTENSION_ARTIFACTS_REBUILD=false
 
       # Checks the image this job pushed, by digest. The check job that ran after
       # the manifests pulled every image again on a fresh runner.
@@ -113,6 +136,7 @@ jobs:
           ALL_VERSIONS: "false"
           OSS_ONLY: "false"
           DOCKER_TAG_POSTFIX: "${{ matrix.all }}${{ matrix.oss }}-${{ matrix.platform }}"
+          CHECK_IMAGE: ${{ env.DOCKER_REGISTRY }}/${{ steps.build.outputs.release_id }}
         run: make check
 
       - name: export outputs

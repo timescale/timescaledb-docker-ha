@@ -95,6 +95,7 @@ jobs:
           # rather than letting ALL_VERSIONS append -all to a tag that does not exist.
           DOCKER_TAG_POSTFIX: "-cicheck-all-${{ matrix.platform }}"
           CHECK_ARCHES: ${{ matrix.platform }}
+          CHECK_IMAGE: ${{ env.DOCKER_REGISTRY }}/${{ steps.build.outputs.release_id }}
         run: make get-image-config check
 
       - name: Validate digests for manifest compatibility

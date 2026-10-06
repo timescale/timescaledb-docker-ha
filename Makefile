@@ -49,7 +49,8 @@ ifneq ($(strip $(DOCKER_CACHE_SCOPE)),)
   DOCKER_CACHE_GHA=type=gha,scope=$(DOCKER_CACHE_SCOPE)
   DOCKER_CACHE += --cache-to $(DOCKER_CACHE_GHA),mode=max
   ifneq ($(DOCKER_CACHE_FROM),false)
-    DOCKER_CACHE += --cache-from $(DOCKER_CACHE_GHA)
+    DOCKER_CACHE_FROM_ARGS := --cache-from $(DOCKER_CACHE_GHA)
+    DOCKER_CACHE += $(DOCKER_CACHE_FROM_ARGS)
   endif
 endif
 
@@ -214,7 +215,14 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 EXTENSION_ARTIFACTS?=false
 EXTENSION_ARTIFACTS_DIR=build_artifacts/$(PLATFORM)
 EXTENSION_ARTIFACTS_BUCKET?=timescale-ci-artifacts
-EXTENSION_ARTIFACTS_S3=s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))/$(PLATFORM)
+# The S3 prefix is a hash of what goes into a tarball, see
+# build_scripts/extension_inputs. A change to an input gives a new prefix, so the
+# next CI build rebuilds every tarball. To rebuild the tarballs for another
+# reason, set EXTENSION_ARTIFACTS_REBUILD=true (the "Publish images" workflow has
+# an input for it). If the hash is empty, a recipe that uses the S3 prefix stops.
+EXTENSION_ARTIFACTS_REBUILD?=false
+EXTENSION_ARTIFACTS_INPUTS:=$(shell ./build_scripts/extension_inputs)
+EXTENSION_ARTIFACTS_S3=$(if $(EXTENSION_ARTIFACTS_INPUTS),s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))/$(PLATFORM)/$(EXTENSION_ARTIFACTS_INPUTS),$(error cannot hash the extension tarball inputs (see EXTENSION_ARTIFACTS_INPUTS)))
 ifeq ($(EXTENSION_ARTIFACTS),true)
   # no pipe here: .SHELLSTATUS reports the last command of the pipeline
   EXTENSION_BUILDS:=$(shell OSS_ONLY="$(OSS_ONLY)" PG_VERSIONS="$(PG_VERSIONS)" TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" ./build_scripts/extension_builds)
@@ -226,8 +234,22 @@ ifeq ($(EXTENSION_ARTIFACTS),true)
 endif
 
 # One sync fetches every tarball of the platform for PG_VERSIONS in parallel.
+# It removes the local tarballs if .inputs has a different base image or hash,
+# or for a rebuild. A rebuild also removes the build cache of the current
+# builder, so the first tarball build makes a new base stage and the others use
+# it. A rebuild does not fetch from S3, so the next step builds every tarball.
 .PHONY: extension-artifacts-sync
 extension-artifacts-sync:
+	stamp="$(EXTENSION_ARTIFACTS_DIR)/.inputs"
+	key="$(DOCKER_FROM) $(EXTENSION_ARTIFACTS_INPUTS)"
+	if [ "$(EXTENSION_ARTIFACTS_REBUILD)" = true ] || [ "$$(cat "$$stamp" 2>/dev/null)" != "$$key" ]; then
+		rm -f "$(EXTENSION_ARTIFACTS_DIR)"/*.tar.gz
+		echo "$$key" > "$$stamp"
+	fi
+	if [ "$(EXTENSION_ARTIFACTS_REBUILD)" = true ]; then
+		docker buildx prune --all --force
+		exit 0
+	fi
 	[ -n "$(EXTENSION_ARTIFACTS_BUCKET)" ] || exit 0
 	aws s3 sync --region "$(RUNS_ON_AWS_REGION)" --no-progress --exclude '*' \
 		$(foreach pg,$(PG_VERSIONS),--include '*-pg$(pg).tar.gz') \
@@ -241,10 +263,12 @@ extension-artifacts: extension-artifacts-sync # fetch or build the extension tar
 
 # Build one tarball from the <extension>-artifact stage and store it. The build
 # reads the layer cache but does not write it: a write would replace the manifest
-# the image build reads with one that has only the base layers. The export goes
-# to a directory per target, so `make -j` builds do not share a file name.
+# the image build reads with one that has only the base layers. A rebuild does
+# not read the layer cache. USE_DOCKER_CACHE=false uses no cache, as for the
+# image. The export goes to a directory per target, so `make -j` builds do not
+# share a file name.
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_OUTPUT=--output type=local,dest=$(EXTENSION_ARTIFACTS_DIR)/$*.out
-$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_CACHE=$(DOCKER_CACHE_FROM_ARGS)
+$(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_CACHE=$(if $(filter false,$(USE_DOCKER_CACHE)),--no-cache,$(if $(filter true,$(EXTENSION_ARTIFACTS_REBUILD)),,$(DOCKER_CACHE_FROM_ARGS)))
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_EXTRA_BUILDARGS=
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz:
 	IFS=- read -r pkg ver pg <<< "$*"
@@ -285,7 +309,7 @@ endif
 
 .PHONY: get-image-config
 get-image-config:
-	docker run --platform "linux/$(PLATFORM)" --rm $(DOCKER_RELEASE_URL) cat /.image_config
+	docker run --platform "linux/$(PLATFORM)" --rm $(or $(CHECK_IMAGE),$(DOCKER_RELEASE_URL)) cat /.image_config
 
 .PHONY: builder
 builder: # build the `builder` target image
@@ -401,6 +425,11 @@ CHECK_NAME=ha-check
 # Which architectures `check` verifies. Callers that run on a native runner of
 # one architecture override this so nothing has to be emulated.
 CHECK_ARCHES?=amd64 arm64
+# The image that `check` verifies, by digest (<registry>/<repository>@sha256:...).
+# A job that pushed the image sets this to the digest it pushed. Without it,
+# `check` looks up the digest of the tag. The digest is of one platform, so set
+# CHECK_ARCHES to that platform.
+CHECK_IMAGE?=
 
 .PHONY: check
 check: # check images to see if they have all the requested content
@@ -415,10 +444,16 @@ check: # check images to see if they have all the requested content
 		# the image an earlier run pushed. A digest is content-addressed, so
 		# the mirror cannot answer it with the wrong image. fetch_tag_digest
 		# asks Docker Hub, and only Docker Hub tags can be resolved this way.
+		# Docker Hub can give the previous digest for some seconds after a push,
+		# so a job that pushed the image gives its digest in CHECK_IMAGE.
 		check_image="$(DOCKER_RELEASE_URL)"
-		case "$(DOCKER_RELEASE_URL)" in docker.io/*) \
-			check_image="$$(./fetch_tag_digest "$(DOCKER_RELEASE_URL)")";; \
-		esac
+		if [ -n "$(CHECK_IMAGE)" ]; then
+			check_image="$(CHECK_IMAGE)"
+		else
+			case "$(DOCKER_RELEASE_URL)" in docker.io/*) \
+				check_image="$$(./fetch_tag_digest "$(DOCKER_RELEASE_URL)")";; \
+			esac
+		fi
 		echo "checking image: $$check_image"
 		docker run \
 			--platform linux/"$$arch" \
