@@ -11,7 +11,7 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 #   files that install put in place. `make extension-artifacts` stores the tarball.
 
 usage() {
-    echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch]" >&2
+    echo "usage: $0 [-n] [versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch|pg_vectorsearch]" >&2
     echo "       $0 [-n] <timescaledb|toolkit> <version> <pg major>" >&2
     echo "       $0 pack <timescaledb|toolkit> <version> <pg major> <tarball>" >&2
     exit 1
@@ -90,7 +90,7 @@ if [ -n "$2" ]; then
     exit 0
 fi
 
-if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch$ ]]; then
+if [[ ! "$what" =~ ^versions|timescaledb|rust|all|pgvectorscale|toolkit|pg_textsearch|pg_vectorsearch$ ]]; then
     usage
 fi
 
@@ -123,6 +123,10 @@ toolkit) install_rust_extensions;;
 
 pg_textsearch | all)
     install_pg_textsearch
+    ;;
+
+pg_vectorsearch | all)
+    install_pg_vectorsearch
     ;;
 
 esac

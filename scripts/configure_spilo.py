@@ -55,7 +55,9 @@ extensions = {
     'pg_stat_kcache': (9.4, 11, True,  False),
     'pg_partman':     (9.4, 11, False, True),
     'set_user':       (9.4, 11, True,  False),
-    'pg_textsearch':  (17,  99, True,  True)
+    'pg_textsearch':  (17,  99, True,  True),
+    # No shared_preload_libraries entry: the extension does not need one.
+    'pg_vectorsearch': (18, 99, False, True)
 }
 
 AUTO_ENABLE_WALG_RESTORE = ('WAL_S3_BUCKET', 'WALE_S3_PREFIX', 'WALG_S3_PREFIX')
