@@ -111,6 +111,7 @@ install_timescaledb_for_pg_version() {
     done
 
     error "failed to install TimescaleDB ${ts_version} for PostgreSQL ${pg_version}"
+    return 1
 }
 
 # 18.1 -> 1801
@@ -215,8 +216,10 @@ install_timescaledb() {
             log "building $pkg-$version for pg$pg"
 
             PATH="/usr/lib/postgresql/$pg/bin:${ORIGINAL_PATH}"
-            git_clone "https://github.com/${GITHUB_REPO}" "$pkg" || continue
-            git_checkout $pkg "$version" || continue
+            # Stop on a clone or checkout error. With continue, the build
+            # passed and the image did not have this version.
+            git_clone "https://github.com/${GITHUB_REPO}" "$pkg" || return
+            git_checkout $pkg "$version" || return
             (
                 set -e
                 cd /build/$pkg
@@ -297,9 +300,11 @@ install_toolkit() {
         [ "$DRYRUN" = true ] && continue
 
         PATH="/usr/lib/postgresql/$pg/bin:${ORIGINAL_PATH}"
-        cargo_pgrx_init "$cargo_pgrx_version" "$pg" || continue
-        git_clone https://github.com/timescale/timescaledb-toolkit.git $pkg || continue
-        git_checkout $pkg "$version" || continue
+        # Stop on an error. With continue, the build passed and the image did
+        # not have this version.
+        cargo_pgrx_init "$cargo_pgrx_version" "$pg" || return
+        git_clone https://github.com/timescale/timescaledb-toolkit.git $pkg || return
+        git_checkout $pkg "$version" || return
         (
             cd /build/$pkg || exit 1
             CARGO_TARGET_DIR_NAME=target ./tools/build "-pg$pg" -profile "$rust_release" install || { echo "failed toolkit build for pg$pg, $pkg-$version"; exit 1; }
