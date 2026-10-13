@@ -110,7 +110,7 @@ require_cargo_pgx_version() {
 		return 1
 	fi
 	if ! cargo_pgx_installed; then
-		cargo install cargo-pgx --version "=$version"
+		cargo install --locked cargo-pgx --version "=$version"
 		err=$?
 		if [ $err -ne 0 ]; then
 			error "failed installing cargo-pgx-$version ($err)"
@@ -122,7 +122,7 @@ require_cargo_pgx_version() {
 	local current_version
 	current_version="$(cargo_pgx_version)"
 	if [[ -z "$current_version" || "$current_version" != "$version" ]]; then
-		cargo install cargo-pgx --version "=$version"
+		cargo install --locked cargo-pgx --version "=$version"
 		err=$?
 		if [ $err -ne 0 ]; then
 			error "failed installing cargo-pgx-$version ($err)"
@@ -142,7 +142,7 @@ require_cargo_pgrx_version() {
 		return 1
 	fi
 	if ! cargo_pgrx_installed; then
-		cargo install cargo-pgrx --version "=$version"
+		cargo install --locked cargo-pgrx --version "=$version"
 		err=$?
 		if [ $err -ne 0 ]; then
 			error "failed installing cargo-pgrx-$version ($err)"
@@ -154,7 +154,7 @@ require_cargo_pgrx_version() {
 	local current_version
 	current_version="$(cargo_pgrx_version)"
 	if [[ -z "$current_version" || "$current_version" != "$version" ]]; then
-		cargo install cargo-pgrx --version "=$version"
+		cargo install --locked cargo-pgrx --version "=$version"
 		err=$?
 		if [ $err -ne 0 ]; then
 			error "failed installing cargo-pgrx-$version ($err)"
