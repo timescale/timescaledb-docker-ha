@@ -63,6 +63,7 @@ check_base_components() {
 	check_pgvectorscale "$pg" "$lib"
 	check_toolkit "$pg" "$lib"
 	check_pg_textsearch "$pg" "$lib"
+	check_pg_vectorsearch "$pg" "$lib"
 	check_oss_extensions "$pg" "$lib"
 	check_others "$pg" "$lib"
 }
@@ -204,6 +205,25 @@ check_pg_textsearch() {
 		record_ext_version pg_textsearch "$pg" "$ver"
 	else
 		error "pg_textsearch-$ver not found for pg$pg"
+	fi
+}
+
+check_pg_vectorsearch() {
+	local pg="$1" lib="$2" ver="$PG_VECTORSEARCH_VERSION" relver
+	record_ext_version pg_vectorsearch "$pg" ""
+	if [ -z "$ver" ]; then return 0; fi
+
+	# pg_vectorsearch supports PostgreSQL 18+
+	if [ "$pg" -lt 18 ]; then
+		log "skipped: pg_vectorsearch-$ver for pg$pg (only pg18+ supported)"
+		return 0
+	fi
+
+	relver="${ver#v}"
+	if [ -s "$lib/pg_vectorsearch-${relver}.so" ]; then
+		record_ext_version pg_vectorsearch "$pg" "$ver"
+	else
+		error "pg_vectorsearch-$ver not found for pg$pg"
 	fi
 }
 

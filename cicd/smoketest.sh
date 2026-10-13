@@ -59,6 +59,10 @@ ORDER BY
 
 __SQL__
 
+if [ "${PG_MAJOR}" -ge 18 ] 2>/dev/null && [ -n "${PG_VECTORSEARCH_VERSION}" ]; then
+    psql -d postgres -c 'CREATE EXTENSION pg_vectorsearch;'
+fi
+
 psql -AtXq -f "${SCRIPTDIR}/version_info.sql" >/tmp/version_info.log
 pg_ctl stop -m immediate
 exit 0

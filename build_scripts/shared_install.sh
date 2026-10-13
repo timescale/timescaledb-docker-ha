@@ -408,3 +408,81 @@ install_pg_textsearch() {
         fi
     done
 }
+
+install_pg_vectorsearch() {
+    local version="${PG_VECTORSEARCH_VERSION}" relver pg src
+
+    if [ -z "$version" ]; then
+        log "PG_VECTORSEARCH_VERSION not set, skipping"
+        return 0
+    fi
+
+    # Release tags are vX.Y.Z. The source tarball and the versioned
+    # library (pg_vectorsearch-X.Y.Z.so) use the version without the v.
+    relver="${version#v}"
+    src="/build/pg_vectorsearch/pg_vectorsearch-${relver}"
+
+    log "fetching pg_vectorsearch-$relver source"
+
+    if [[ "$DRYRUN" != true ]]; then
+        (
+            set -ex
+
+            rm -rf /build/pg_vectorsearch
+            mkdir -p /build/pg_vectorsearch
+            cd /build/pg_vectorsearch
+
+            # set -e is off in this subshell (it is the left side of ||),
+            # so a failed download must exit before tar runs.
+            curl --silent \
+                 --show-error \
+                 --fail \
+                 --location \
+                 --output "pg_vectorsearch-${relver}.tar.gz" \
+                 "https://github.com/timescale/pg_vectorsearch/releases/download/${version}/pg_vectorsearch-${relver}.tar.gz" \
+                || exit 1
+
+            tar xzf "pg_vectorsearch-${relver}.tar.gz"
+        ) || {
+            error "failed fetching pg_vectorsearch-$relver"
+            return 1
+        }
+    fi
+
+    for pg in $(available_pg_versions); do
+        # pg_vectorsearch supports PostgreSQL 18+
+        if [ "$pg" -lt 18 ]; then
+            log "pg_vectorsearch-$version: skipping pg$pg (only pg18+ supported)"
+            continue
+        fi
+
+        log "building pg_vectorsearch-$version for pg$pg"
+
+        [[ "$DRYRUN" = true ]] && continue
+
+        (
+            set -ex
+
+            cd "$src"
+            # Do not link BLAS: an auto-detected library would be a
+            # runtime dependency of the extension, and the trimmed
+            # image does not keep it. postgresql=enabled fails setup
+            # if this pg major has no server headers, instead of
+            # skipping the extension.
+            meson setup "build-pg${pg}" \
+                --buildtype=release \
+                -Dpostgresql=enabled \
+                -Dpg_config="/usr/lib/postgresql/${pg}/bin/pg_config" \
+                -Dtools=disabled \
+                -Dblas=disabled \
+                || exit 1
+            meson install -C "build-pg${pg}"
+        ) || {
+            error "failed installing pg_vectorsearch-$version for pg$pg"
+            return 1
+        }
+        log "installed pg_vectorsearch-$version for pg$pg"
+    done
+
+    rm -rf /build/pg_vectorsearch
+}

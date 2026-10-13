@@ -145,8 +145,8 @@ RUN apt-get install -y python3 python3-pip
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
-RUN apt-get install -y ${BUILD_PACKAGES}
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev meson ninja-build"
+RUN apt-get update && apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
 
 # https://salsa.debian.org/postgresql/postgresql/-/commit/b995beb3cd1c2b8834605007227b3cedab6462e4
@@ -429,6 +429,10 @@ ARG PG_TEXTSEARCH_VERSION
 RUN PG_TEXTSEARCH_VERSION="${PG_TEXTSEARCH_VERSION}" \
     /build/scripts/install_extensions pg_textsearch
 
+ARG PG_VECTORSEARCH_VERSION
+RUN PG_VECTORSEARCH_VERSION="${PG_VECTORSEARCH_VERSION}" \
+    /build/scripts/install_extensions pg_vectorsearch
+
 USER root
 
 # shared_preload_libraries is set after all installs: `cargo pgrx init` runs initdb,
@@ -541,6 +545,7 @@ RUN /build/scripts/install_extensions versions > /.image_config; \
     echo "PGBACKREST_EXPORTER_VERSION=\"${PGBACKREST_EXPORTER_VERSION}\"" >> /.image_config; \
     echo "PGVECTORSCALE_VERSIONS=\"${PGVECTORSCALE_VERSIONS}\"" >> /.image_config; \
     echo "PG_TEXTSEARCH_VERSION=\"${PG_TEXTSEARCH_VERSION}\"" >> /.image_config; \
+    echo "PG_VECTORSEARCH_VERSION=\"${PG_VECTORSEARCH_VERSION}\"" >> /.image_config; \
     echo "PG_MAJOR=\"${PG_MAJOR}\"" >> /.image_config; \
     echo "PG_VERSIONS=\"${PG_VERSIONS}\"" >> /.image_config; \
     echo "FROM=\"${DOCKER_FROM}\"" >> /.image_config; \
