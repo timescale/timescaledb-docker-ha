@@ -255,6 +255,7 @@ RUN set -ex; \
 # This need to be done after the PostgreSQL packages have been installed,
 # to ensure we have the preferred libpq installations etc.
 RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-kubernetes python3-pysyncobj patroni
+RUN pip3 install --no-cache-dir 'py-consul'
 
 # Barman cloud
 # Required for CloudNativePG compatibility
