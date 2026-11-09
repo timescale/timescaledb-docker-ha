@@ -51,13 +51,19 @@ For updating changes in versions for timescaledb, pgvectorscale, or toolkit, upd
 
 Installing the timescaledb and toolkit versions takes most of the build time. CI builds each version once per
 PostgreSQL major and architecture, and keeps the tarball in the CI artifacts bucket `timescale-ci-artifacts` under
-`timescaledb-docker-ha/extensions/<base image>/<arch>/<inputs>/<extension>-<version>-pg<major>.tar.gz`.
-`<inputs>` is a hash of the Dockerfile up to the `builder` stage and of `build_scripts/` without `versions.yaml`.
-A change to one of them, such as a new PostgreSQL minor or Rust version, rebuilds every tarball. A new version in
-`build_scripts/versions.yaml` adds tarballs and does not change the hash. `make extension-artifacts` fetches the
-tarballs into `build_artifacts/<arch>/`, builds the missing ones from the `timescaledb-artifact` and
-`toolkit-artifact` Dockerfile stages and stores them. It removes the local tarballs when the base image or the hash changes. The image
-build unpacks the tarballs it finds and installs the rest itself. The first scheduled publish of each month rebuilds
+`timescaledb-docker-ha/extension-tarballs/<base image>/<arch>/<inputs>/`: the file
+`<extension>-<version>-pg<major>.tar.gz.sha256` holds the sha256 of the tarball, and `sha256/<sha256>.tar.gz` holds
+the tarball. `<inputs>` is a hash of the Dockerfile up to the `builder` stage, of `build_scripts/` without
+`versions.yaml`, of the `Makefile` and of the workflows. A change to one of them, such as a new PostgreSQL minor or
+Rust version, rebuilds every tarball. A new version in `build_scripts/versions.yaml` adds tarballs and does not
+change the hash. `make extension-artifacts` fetches the tarballs into `build_artifacts/<arch>/` and checks them
+against their sha256. It builds the missing ones from the `timescaledb-artifact` and `toolkit-artifact` Dockerfile
+stages. Only the "Publish images" workflow on master stores tarballs in the bucket, with `make
+extension-artifacts-upload`. The other builds only read them. The repository variables `EXTENSION_ARTIFACTS_BUCKET`
+and `EXTENSION_ARTIFACTS_ROLE_ARN` turn the reads and the upload on. `make extension-artifacts` removes the local
+tarballs when the base image or the hash changes. The image build unpacks the tarballs it finds and installs the
+rest itself. It stops if a tarball does not match its sha256, or has a file outside the extension files of its
+PostgreSQL major. It unpacks a tarball as an unprivileged user and copies only those files into place. The first scheduled publish of each month rebuilds
 every tarball, because the hash does not include the unpinned packages of the base stage. To rebuild every tarball
 for another reason, such as a change to the entry of an existing version in `versions.yaml`, run the
 "Publish images" workflow with "rebuild_extension_artifacts". Locally, `EXTENSION_ARTIFACTS_REBUILD=true` does the same and also removes the build cache of the current Docker builder. Without `EXTENSION_ARTIFACTS=true`, such as a
