@@ -345,6 +345,8 @@ install_pgvectorscale() {
 
             curl --silent \
                  --fail \
+                 --retry 5 \
+                 --retry-connrefused \
                  --location \
                  --output artifact.zip \
                  "https://github.com/timescale/pgvectorscale/releases/download/$version/pgvectorscale-$version-pg${pg}-${arch_deb}.zip"
@@ -392,6 +394,8 @@ install_pg_textsearch() {
             artifact="pg-textsearch-${version}-pg${pg}-${arch}.zip"
             curl --silent \
                  --fail \
+                 --retry 5 \
+                 --retry-connrefused \
                  --location \
                  --output artifact.zip \
                  "https://github.com/timescale/pg_textsearch/releases/download/${version}/${artifact}"
@@ -437,6 +441,8 @@ install_pg_vectorsearch() {
             curl --silent \
                  --show-error \
                  --fail \
+                 --retry 5 \
+                 --retry-connrefused \
                  --location \
                  --output "pg_vectorsearch-${relver}.tar.gz" \
                  "https://github.com/timescale/pg_vectorsearch/releases/download/${version}/pg_vectorsearch-${relver}.tar.gz" \

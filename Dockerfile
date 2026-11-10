@@ -60,14 +60,14 @@ RUN mkdir -p /build/scripts
 RUN chmod 777 /build
 WORKDIR /build/
 
-RUN curl -Ls https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor --output /usr/share/keyrings/postgresql.keyring
+RUN curl -fsSL --retry 5 --retry-connrefused https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor --output /usr/share/keyrings/postgresql.keyring
 RUN for t in deb deb-src; do \
         echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] https://apt.postgresql.org/pub/repos/apt/ $(lsb_release -s -c)-pgdg main 18" >> /etc/apt/sources.list.d/pgdg.list; \
         echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] https://apt-archive.postgresql.org/pub/repos/apt $(lsb_release -s -c)-pgdg-archive main" >> /etc/apt/sources.list.d/pgdg.list; \
     done
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
-RUN curl -Ls https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor --output /usr/share/keyrings/timescaledb.keyring
+RUN curl -fsSL --retry 5 --retry-connrefused https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor --output /usr/share/keyrings/timescaledb.keyring
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/timescaledb.keyring] https://packagecloud.io/timescale/timescaledb/ubuntu/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/timescaledb.list
 
 # The following tools are required for some of the processes we (TimescaleDB) regularly
@@ -79,13 +79,17 @@ RUN apt-get update; \
         less jq strace procps awscli vim-tiny gdb gdbserver dumb-init daemontools \
         postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop libnss-wrapper gosu \
         pg-activity lsof htop; \
-    curl -Lso /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_"$(dpkg --print-architecture)"; \
+    curl -fsSL --retry 5 --retry-connrefused -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_"$(dpkg --print-architecture)"; \
     chmod 755 /usr/local/bin/yq
 
 # pgbackrest-exporter
 ARG PGBACKREST_EXPORTER_VERSION="0.18.0"
 RUN arch="$(arch)"; [ "$arch" = aarch64 ] && arch=arm64; pkg="pgbackrest_exporter_${PGBACKREST_EXPORTER_VERSION}_linux_${arch}"; \
     curl --silent \
+        --show-error \
+        --fail \
+        --retry 5 \
+        --retry-connrefused \
         --location \
         --output /tmp/pkg.deb \
         "https://github.com/woblerr/pgbackrest_exporter/releases/download/v${PGBACKREST_EXPORTER_VERSION}/${pkg}.deb"; \
@@ -97,6 +101,10 @@ RUN arch="$(arch)"; [ "$arch" = aarch64 ] && arch=arm64; pkg="pgbackrest_exporte
 ARG PGBOUNCER_EXPORTER_VERSION="0.9.0"
 RUN pkg="pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-$(dpkg --print-architecture)"; \
     curl --silent \
+        --show-error \
+        --fail \
+        --retry 5 \
+        --retry-connrefused \
         --location \
         --output /tmp/pkg.tgz \
         "https://github.com/prometheus-community/pgbouncer_exporter/releases/download/v${PGBOUNCER_EXPORTER_VERSION}/${pkg}.tar.gz"; \
@@ -225,12 +233,16 @@ RUN if [ -n "${PGVECTO_RS}" ]; then \
             # Vecto.rs only support PostgreSQL 14..17
             if [[ $pg -ge 14 && $pg -lt 18 ]]; then \
                 curl --silent \
+                    --show-error \
+                    --fail \
+                    --retry 5 \
+                    --retry-connrefused \
                     --location \
                     --output /tmp/vectors.deb \
                     "https://github.com/tensorchord/pgvecto.rs/releases/download/v${PGVECTO_RS}/vectors-pg${pg}_${PGVECTO_RS}_$(dpkg --print-architecture).deb" && \
                 dpkg -i /tmp/vectors.deb && \
                 rm -rfv /tmp/vectors.deb && \
-                strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vectors.so"; \
+                strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vectors.so" || exit 1; \
             fi \
         done; \
     fi
@@ -241,13 +253,17 @@ RUN set -ex; \
     if [ -n "${VECTORCHORD}" ]; then \
         for pg in ${PG_VERSIONS}; do \
             curl --silent \
+                --show-error \
+                --fail \
+                --retry 5 \
+                --retry-connrefused \
                 --location \
                 --output /tmp/vectorchord.deb \
                 "https://github.com/tensorchord/VectorChord/releases/download/${VECTORCHORD}/postgresql-${pg}-vchord_${VECTORCHORD}-1_$(dpkg --print-architecture).deb" && \
             dpkg -i /tmp/vectorchord.deb && \
             rm -rfv /tmp/vectorchord.deb && \
             # 93MB before stripping, 3.5MB after
-            strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vchord.so"; \
+            strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vchord.so" || exit 1; \
         done; \
     fi
 
