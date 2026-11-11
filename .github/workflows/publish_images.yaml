@@ -61,6 +61,19 @@ jobs:
     steps:
       - uses: runs-on/action@284bff869d4a825f778ac7c38e50f1e31ef198fd # v2.6.0
 
+      # With an empty role, the credentials step below uses the runner role.
+      # Stop before the build, so that this job publishes nothing.
+      - name: Check the tarball upload variables
+        if: github.ref == 'refs/heads/master'
+        env:
+          EXTENSION_ARTIFACTS_BUCKET: ${{ vars.EXTENSION_ARTIFACTS_BUCKET }}
+          EXTENSION_ARTIFACTS_ROLE_ARN: ${{ vars.EXTENSION_ARTIFACTS_ROLE_ARN }}
+        run: |
+          if [ -z "$EXTENSION_ARTIFACTS_BUCKET" ] || [ -z "$EXTENSION_ARTIFACTS_ROLE_ARN" ]; then
+            echo "::error::Set the repository variables EXTENSION_ARTIFACTS_BUCKET and EXTENSION_ARTIFACTS_ROLE_ARN"
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -147,12 +160,11 @@ jobs:
 
       # Only master stores the tarballs that this job built, with a role that
       # only master can assume. The other refs and workflows only read them.
-      # The variables stay empty until the bucket lets only that role write.
       # A failed upload does not stop the publish: a later build makes the
       # missing tarballs again.
       - name: Get credentials for the tarball upload
         id: tarball-credentials
-        if: github.ref == 'refs/heads/master' && vars.EXTENSION_ARTIFACTS_BUCKET != '' && vars.EXTENSION_ARTIFACTS_ROLE_ARN != ''
+        if: github.ref == 'refs/heads/master'
         continue-on-error: true
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:

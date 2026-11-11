@@ -60,7 +60,8 @@ change the hash. `make extension-artifacts` fetches the tarballs into `build_art
 against their sha256. It builds the missing ones from the `timescaledb-artifact` and `toolkit-artifact` Dockerfile
 stages. Only the "Publish images" workflow on master stores tarballs in the bucket, with `make
 extension-artifacts-upload`. The other builds only read them. The repository variables `EXTENSION_ARTIFACTS_BUCKET`
-and `EXTENSION_ARTIFACTS_ROLE_ARN` turn the reads and the upload on. `make extension-artifacts` removes the local
+and `EXTENSION_ARTIFACTS_ROLE_ARN` turn the reads and the upload on. On master, the "Publish images" workflow stops
+before the build when one of them is empty. `make extension-artifacts` removes the local
 tarballs when the base image or the hash changes. The image build unpacks the tarballs it finds and installs the
 rest itself. It stops if a tarball does not match its sha256, or has a file outside the extension files of its
 PostgreSQL major. It unpacks a tarball as an unprivileged user and copies only those files into place. The first scheduled publish of each month rebuilds
