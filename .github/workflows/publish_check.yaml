@@ -18,7 +18,7 @@ env:
 
 jobs:
   # Dry-run the most demanding build variant (pg18-all = 4 PG versions) to catch
-  # disk space, build, and manifest issues before they hit the publish workflow.
+  # disk space and build issues before they hit the publish workflow.
   publish-check:
     name: Dry run pg18-all ${{ matrix.platform }}
     # On-demand capacity: this job needs 1h40m on average. A required check
@@ -41,11 +41,13 @@ jobs:
 
       - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
 
+      # BuildKit pulls the base image straight from Docker Hub. A login with the
+      # pull-only token gives a higher pull limit than anonymous pulls.
       - name: Login to Docker Hub
         uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
-          username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+          username: timescale
+          password: ${{ secrets.DOCKER_HUB_PULL_TOKEN }}
 
       - name: Setup | Docker Context
         run: if ! docker context use ha-builder; then docker context create ha-builder; fi
@@ -68,7 +70,8 @@ jobs:
               if (process.env[name]) core.exportVariable(name, process.env[name]);
             }
 
-      - name: Build and push
+      # `make release` also builds and smoke-tests the builder stage.
+      - name: Build
         id: build
         env:
           PLATFORM: ${{ matrix.platform }}
@@ -79,37 +82,13 @@ jobs:
           DOCKER_CACHE_SCOPE: pg18-all-${{ matrix.platform }}
           EXTENSION_ARTIFACTS_BUCKET: ${{ vars.EXTENSION_ARTIFACTS_BUCKET }}
           EXTENSION_ARTIFACTS: "true"
-        run: |
-          make publish-builder
-          make publish-release
+        run: make release
 
-      # Exercise the same `check` target master runs. Without this the target is
-      # only ever executed on a push to master, so a change to it cannot fail
-      # until after it has merged. amd64 only: this workflow builds one platform.
+      # The `check` target pulls its image from the registry first, so it cannot
+      # check a local image. check-sha runs the same install checks on the local
+      # release image that the build step tagged.
       - name: Check pg18-all ${{ matrix.platform }}
         env:
-          PG_MAJOR: "18"
           PLATFORM: ${{ matrix.platform }}
-          OSS_ONLY: "false"
-          # Each leg builds one platform and never runs publish-manifests, so the
-          # multi-arch tag is never pushed - only the arch-suffixed one. Spell it out
-          # rather than letting ALL_VERSIONS append -all to a tag that does not exist.
-          DOCKER_TAG_POSTFIX: "-cicheck-all-${{ matrix.platform }}"
-          CHECK_ARCHES: ${{ matrix.platform }}
-          CHECK_IMAGE: ${{ env.DOCKER_REGISTRY }}/${{ steps.build.outputs.release_id }}
-        run: make get-image-config check
-
-      - name: Validate digests for manifest compatibility
-        run: |
-          builder_id="${{ steps.build.outputs.builder_id }}"
-          release_id="${{ steps.build.outputs.release_id }}"
-
-          validate="$DOCKER_REGISTRY/$DOCKER_REPOSITORY:cicheck-validate"
-
-          for digest in "$builder_id" "$release_id"; do
-            echo "Validating $digest is not a manifest list..."
-            docker manifest rm "$validate" 2>/dev/null || true
-            docker manifest create "$validate" --amend "$DOCKER_REGISTRY/$digest"
-            echo "OK: $digest is a single-platform image"
-            docker manifest rm "$validate" 2>/dev/null || true
-          done
+          CHECK_IMAGE: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPOSITORY }}:pg18-cicheck-all-${{ matrix.platform }}
+        run: make get-image-config check-sha CICD_ARCH_URL="$CHECK_IMAGE"

@@ -30,6 +30,9 @@ jobs:
   publish:
     name: Publish pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }} ${{ matrix.platform }}
 
+    # The environment admits only master. It holds the Docker Hub token.
+    environment: dockerhub-staging
+
     strategy:
       fail-fast: false
       matrix:
@@ -79,11 +82,12 @@ jobs:
 
       - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
 
+      # An organization access token logs in with the organization name.
       - name: Login to Docker Hub
         uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
-          username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+          username: timescale
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Setup | Docker Context
         run: if ! docker context use ha-builder; then docker context create ha-builder; fi
@@ -137,11 +141,17 @@ jobs:
           EXTENSION_ARTIFACTS_BUCKET: ${{ vars.EXTENSION_ARTIFACTS_BUCKET }}
           EXTENSION_ARTIFACTS: "true"
           EXTENSION_ARTIFACTS_REBUILD: ${{ steps.rebuild.outputs.rebuild }}
+          STAGING_TAG: staging-pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }}
         # publish-builder rebuilds the tarballs. publish-release must not rebuild
         # them again, so it uses the tarballs that publish-builder made.
+        # Only the pushed tags change to staging tags. The URLs in the image stay
+        # the release URLs. publish-release also pushes the builder again, so
+        # both calls need both tags.
         run: |
-          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder
-          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-release EXTENSION_ARTIFACTS_REBUILD=false
+          staging="$DOCKER_REGISTRY/$DOCKER_REPOSITORY:$STAGING_TAG"
+          tags=(DOCKER_BUILDER_ARCH_URL="$staging-builder-$PLATFORM" DOCKER_RELEASE_ARCH_URL="$staging-$PLATFORM")
+          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-builder "${tags[@]}"
+          GIT_REV="${GITHUB_REF#refs/tags/}" make publish-release EXTENSION_ARTIFACTS_REBUILD=false "${tags[@]}"
 
       # Checks the image this job pushed, by digest. The check job that ran after
       # the manifests pulled every image again on a fresh runner.
@@ -193,12 +203,17 @@ jobs:
           name: outputs-${{ matrix.pg_major }}-${{ matrix.all_versions }}-${{ matrix.oss_only }}-${{ matrix.platform }}
           path: /tmp/outputs/*
           if-no-files-found: error
-          retention-days: 1
+          # The manifest jobs read these after the review, which can take days.
+          retention-days: 7
 
   publish-combined-manifests:
     name: Publish manifest pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
     needs: [ "publish" ]
     runs-on: runs-on/fleet=linux-2cpu-ondemand/env=ue1
+
+    # The environment admits only master and waits for a reviewer.
+    environment: dockerhub-publish
+
     strategy:
       fail-fast: false
 
@@ -220,32 +235,57 @@ jobs:
             all_versions: "true"
 
     steps:
-      - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
+      - uses: runs-on/action@284bff869d4a825f778ac7c38e50f1e31ef198fd # v2.6.0
 
       - name: Download arm64 outputs
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: outputs-${{ matrix.pg_major }}-${{ matrix.all_versions }}-${{ matrix.oss_only }}-arm64
-          path: /tmp/outputs
-          pattern: '*'
-          merge-multiple: true
+          path: /tmp/staged/arm64
 
       - name: Download amd64 outputs
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: outputs-${{ matrix.pg_major }}-${{ matrix.all_versions }}-${{ matrix.oss_only }}-amd64
-          path: /tmp/outputs
-          pattern: '*'
-          merge-multiple: true
+          path: /tmp/staged/amd64
 
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # An organization access token logs in with the organization name.
       - name: Login to Docker Hub
         uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
-          username: ${{ secrets.ORG_DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.ORG_DOCKER_HUB_ACCESS_TOKEN }}
+          username: timescale
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      # No rebuild: the release tags get the digests that the publish jobs checked.
+      # /tmp/outputs gets the amd64 version_info last, as before.
+      # A snapshot tag names one run attempt and is never pushed again, so it
+      # can be immutable on Docker Hub. All other tags move with each run.
+      - name: Promote the arch tags of pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
+        env:
+          POSTFIX: ${{ matrix.docker_tag_postfix }}
+          TAG: pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
+          SNAPSHOT: r${{ github.run_number }}.${{ github.run_attempt }}
+        run: |
+          repo="$DOCKER_REGISTRY/$DOCKER_REPOSITORY"
+          mkdir -p /tmp/outputs
+          builders=()
+          releases=()
+          for arch in arm64 amd64; do
+            cp /tmp/staged/"$arch"/* /tmp/outputs/
+            builder="$repo@sha256:$(basename /tmp/staged/"$arch"/builder-* | cut -d- -f2)"
+            release="$repo@sha256:$(basename /tmp/staged/"$arch"/release-* | cut -d- -f2)"
+            builders+=("$builder")
+            releases+=("$release")
+            docker buildx imagetools create --prefer-index=false --tag "$repo:$TAG-builder-$arch" "$builder"
+            docker buildx imagetools create --prefer-index=false --tag "$repo:$TAG-$arch" "$release"
+          done
+          pg="$(awk -F= '/postgresql.version=/ {print $2}' /tmp/outputs/version_info)"
+          ts="$(awk -F= '/timescaledb.version=/ {print $2}' /tmp/outputs/version_info)"
+          docker buildx imagetools create --tag "$repo:pg$pg-ts$ts$POSTFIX-$SNAPSHOT" "${releases[@]}"
+          docker buildx imagetools create --tag "$repo:pg$pg$POSTFIX-builder-$SNAPSHOT" "${builders[@]}"
 
       - name: Publish combined manifest for pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
