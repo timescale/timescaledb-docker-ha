@@ -12,6 +12,9 @@ concurrency:
   group: build-branch-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   DOCKER_REPOSITORY: timescale/timescaledb-ha
   DOCKER_REGISTRY: docker.io
