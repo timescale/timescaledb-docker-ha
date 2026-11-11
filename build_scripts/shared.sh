@@ -2,6 +2,9 @@
 
 set -e -o pipefail
 
+# crates.io can drop an HTTP/2 stream, and one failed download stops the image build.
+export CARGO_NET_RETRY=10 CARGO_HTTP_MULTIPLEXING=false
+
 ORIGINAL_PATH="$PATH"
 
 log() {
