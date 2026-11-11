@@ -75,47 +75,9 @@ The scripts outside the image need `yq`, `jq` and `shellcheck`. `mise install` i
 
 ## Verify your work
 
-For every pushed commit to this repository, a Docker Image will be built. Once your commit is pushed, a Docker Image will
-be built, and if successful, will be pushed. The tag of this Docker Image will be `cicd-<first 7 chars of commit sha>-amd64`,
-for example, for commit `baddcafe...`, the tag will look like:
-```text
-timescale/timescaledb-ha:cicd-baddcaf-amd64
-```
-
-#### Find out tag using commandline
-
-Assuming your current working directory is on the same commit as the one you pushed
-
-```console
-echo "timescale/timescaledb-ha:cicd-$(git rev-parse HEAD | cut -c 1-7)"
-```
-
-#### Find tag using GitHub Web interface
-
-- Actions
-- Click on the **Build branch** Workflow for your commit/branch
-- Look at the `Build and push branch summary` for the tag
-
-##### Example output
-
-```text
-Checking docker.io/timescale/timescaledb-ha:cicd-8578fce-amd64
-
-amd64: the base image was built 93 seconds ago
-...
-```
-
-In the above example, your Docker tag is `cicd-8578fce-amd64` and your full image url is:
-
-```text
-docker.io/timescale/timescaledb-ha:cicd-8578fce-amd64
-```
-
-## Test your Docker Image
-
-```console
-docker run --rm -ti -e POSTGRES_PASSWORD=smoketest docker.io/timescale/timescaledb-ha:cicd-baddcaf-amd64
-```
+For every commit pushed to a branch, the "Build branch" workflow builds the image for amd64 and arm64 and runs the
+install checks on it. It does not push the image, so there is no `cicd-*` image to pull. To test a branch, build the
+image locally, see [Build images](#build-images).
 
 ## Versioning and Releases
 
