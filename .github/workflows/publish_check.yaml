@@ -34,7 +34,7 @@ jobs:
             runs_on: runs-on/fleet=linux-8cpu-ondemand/env=ue1
 
     steps:
-      - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
+      - uses: runs-on/action@284bff869d4a825f778ac7c38e50f1e31ef198fd # v2.6.0
 
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -77,6 +77,7 @@ jobs:
           OSS_ONLY: "false"
           DOCKER_TAG_POSTFIX: "-cicheck"
           DOCKER_CACHE_SCOPE: pg18-all-${{ matrix.platform }}
+          EXTENSION_ARTIFACTS_BUCKET: ${{ vars.EXTENSION_ARTIFACTS_BUCKET }}
           EXTENSION_ARTIFACTS: "true"
         run: |
           make publish-builder

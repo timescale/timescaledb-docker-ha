@@ -51,10 +51,28 @@ jobs:
           - platform: arm64
             runs_on: runs-on/fleet=linux-8cpu-ondemand/env=ue1
 
+    # id-token: write lets the job assume the role that uploads the tarballs.
+    permissions:
+      contents: read
+      id-token: write
+
     runs-on: "${{ matrix.runs_on }}"
 
     steps:
-      - uses: runs-on/action@46910bf61b41721b0579f237e186afb35477007a # v2.3.0
+      - uses: runs-on/action@284bff869d4a825f778ac7c38e50f1e31ef198fd # v2.6.0
+
+      # With an empty role, the credentials step below uses the runner role.
+      # Stop before the build, so that this job publishes nothing.
+      - name: Check the tarball upload variables
+        if: github.ref == 'refs/heads/master'
+        env:
+          EXTENSION_ARTIFACTS_BUCKET: ${{ vars.EXTENSION_ARTIFACTS_BUCKET }}
+          EXTENSION_ARTIFACTS_ROLE_ARN: ${{ vars.EXTENSION_ARTIFACTS_ROLE_ARN }}
+        run: |
+          if [ -z "$EXTENSION_ARTIFACTS_BUCKET" ] || [ -z "$EXTENSION_ARTIFACTS_ROLE_ARN" ]; then
+            echo "::error::Set the repository variables EXTENSION_ARTIFACTS_BUCKET and EXTENSION_ARTIFACTS_ROLE_ARN"
+            exit 1
+          fi
 
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -116,6 +134,7 @@ jobs:
           OSS_ONLY: ${{ matrix.oss_only }}
           DOCKER_CACHE_SCOPE: pg${{ matrix.pg_major }}${{ matrix.all }}${{ matrix.oss }}-${{ matrix.platform }}
           DOCKER_CACHE_FROM: ${{ (github.event_name == 'schedule' || steps.rebuild.outputs.rebuild == 'true') && 'false' || 'true' }}
+          EXTENSION_ARTIFACTS_BUCKET: ${{ vars.EXTENSION_ARTIFACTS_BUCKET }}
           EXTENSION_ARTIFACTS: "true"
           EXTENSION_ARTIFACTS_REBUILD: ${{ steps.rebuild.outputs.rebuild }}
         # publish-builder rebuilds the tarballs. publish-release must not rebuild
@@ -138,6 +157,27 @@ jobs:
           DOCKER_TAG_POSTFIX: "${{ matrix.all }}${{ matrix.oss }}-${{ matrix.platform }}"
           CHECK_IMAGE: ${{ env.DOCKER_REGISTRY }}/${{ steps.build.outputs.release_id }}
         run: make check
+
+      # Only master stores the tarballs that this job built, with a role that
+      # only master can assume. The other refs and workflows only read them.
+      # A failed upload does not stop the publish: a later build makes the
+      # missing tarballs again.
+      - name: Get credentials for the tarball upload
+        id: tarball-credentials
+        if: github.ref == 'refs/heads/master'
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.EXTENSION_ARTIFACTS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Upload the extension tarballs
+        if: steps.tarball-credentials.outcome == 'success'
+        continue-on-error: true
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          EXTENSION_ARTIFACTS_BUCKET: ${{ vars.EXTENSION_ARTIFACTS_BUCKET }}
+        run: make extension-artifacts-upload
 
       - name: export outputs
         run: |

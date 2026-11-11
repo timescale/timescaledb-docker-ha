@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+
+# Fetch and upload the extension tarballs that `make extension-artifacts` keeps
+# in S3. Under the S3 prefix, <tarball>.sha256 holds the sha256 of a tarball in
+# sha256sum format, and sha256/<sha256>.tar.gz holds its content. An upload puts
+# all the contents first and the checksum files last. Thus two builds that
+# upload the same tarball, or a build that stops during an upload, do not leave
+# a checksum file that names a partial or missing content.
+#
+# usage: extension_cache fetch <s3 prefix> <dir> <pg major>...
+#        extension_cache upload <s3 prefix> <dir>
+#
+# fetch gets the tarballs of the given pg majors into <dir>, each with its
+# .sha256 file. It keeps a local tarball that matches its .sha256 file. It stops
+# with an error if a fetched tarball does not match its checksum. If the S3
+# lifecycle removed the content of a checksum file, fetch skips that tarball,
+# so make builds it.
+#
+# upload puts the tarballs that make built in this directory (they have a
+# .upload file) into S3. Only the publish workflow on master runs it. If an
+# upload fails, the .upload files stay.
+#
+# EXTENSION_ARTIFACTS_REGION sets the AWS region, if not empty.
+
+set -euo pipefail
+
+aws=(aws)
+[ -n "${EXTENSION_ARTIFACTS_REGION:-}" ] && aws+=(--region "$EXTENSION_ARTIFACTS_REGION")
+
+usage() {
+    echo "usage: $0 fetch <s3 prefix> <dir> <pg major>..." >&2
+    echo "       $0 upload <s3 prefix> <dir>" >&2
+    exit 1
+}
+
+# the sha256 in a checksum file, or an error if it is not one
+checksum_in() {
+    local sum
+    read -r sum _ < "$1" || true
+    if [[ ! "$sum" =~ ^[0-9a-f]{64}$ ]]; then
+        echo "no sha256 in $1" >&2
+        return 1
+    fi
+    echo "$sum"
+}
+
+checksum_of() {
+    local sum
+    sum="$(sha256sum < "$1")"
+    echo "${sum%% *}"
+}
+
+# true if <dir>/<name> exists and matches <dir>/<name>.sha256
+local_ok() {
+    [ -f "$1" ] && [ -f "$1.sha256" ] && [ "$(checksum_in "$1.sha256" 2> /dev/null)" = "$(checksum_of "$1")" ]
+}
+
+fetch() {
+    local s3="$1" dir="$2" tmp pg sum name want i
+    local -a includes=() names=() wants=()
+    shift 2
+    [ $# -gt 0 ] || usage
+
+    tmp="$(mktemp -d "$dir/.fetch.XXXXXX")"
+    # shellcheck disable=SC2064 # expand now: tmp is local
+    trap "rm -rf '$tmp'" EXIT
+
+    for pg in "$@"; do
+        includes+=(--include "*-pg$pg.tar.gz.sha256")
+    done
+    "${aws[@]}" s3 sync --no-progress --exclude '*' "${includes[@]}" "$s3/" "$tmp/sums/"
+
+    for sum in "$tmp"/sums/*.tar.gz.sha256; do
+        [ -e "$sum" ] || continue
+        name="$(basename "${sum%.sha256}")"
+        local_ok "$dir/$name" && continue
+        # make must not take a local tarball that does not match for a built one
+        rm -f "$dir/$name" "$dir/$name.sha256" "$dir/$name.upload"
+        want="$(checksum_in "$sum")"
+        names+=("$name")
+        wants+=("$want")
+    done
+    [ ${#names[@]} -gt 0 ] || return 0
+
+    includes=()
+    for want in "${wants[@]}"; do
+        includes+=(--include "$want.tar.gz")
+    done
+    "${aws[@]}" s3 cp --recursive --no-progress --exclude '*' "${includes[@]}" "$s3/sha256/" "$tmp/contents/"
+
+    for i in "${!names[@]}"; do
+        name="${names[$i]}"
+        want="${wants[$i]}"
+        if [ ! -f "$tmp/contents/$want.tar.gz" ]; then
+            echo "$name: no content in S3, make builds it" >&2
+            continue
+        fi
+        if [ "$(checksum_of "$tmp/contents/$want.tar.gz")" != "$want" ]; then
+            echo "$name: the content in S3 does not match its sha256 $want" >&2
+            exit 1
+        fi
+        # a link, not a move: two checksum files can name the same content
+        ln -f "$tmp/contents/$want.tar.gz" "$dir/$name"
+        cp "$tmp/sums/$name.sha256" "$dir/$name.sha256"
+        rm -f "$dir/$name.upload"
+    done
+}
+
+upload() {
+    local s3="$1" dir="$2" tmp mark name want
+    local -a marks=()
+    [ $# -eq 2 ] || usage
+
+    tmp="$(mktemp -d "$dir/.upload.XXXXXX")"
+    # shellcheck disable=SC2064 # expand now: tmp is local
+    trap "rm -rf '$tmp'" EXIT
+    mkdir "$tmp/contents" "$tmp/sums"
+
+    for mark in "$dir"/*.tar.gz.upload; do
+        [ -e "$mark" ] || continue
+        name="$(basename "${mark%.upload}")"
+        if ! local_ok "$dir/$name"; then
+            echo "$name does not match $name.sha256" >&2
+            exit 1
+        fi
+        want="$(checksum_in "$dir/$name.sha256")"
+        ln -f "$dir/$name" "$tmp/contents/$want.tar.gz"
+        cp "$dir/$name.sha256" "$tmp/sums/"
+        marks+=("$mark")
+    done
+    if [ ${#marks[@]} -eq 0 ]; then
+        echo "no tarball to upload" >&2
+        return 0
+    fi
+
+    "${aws[@]}" s3 cp --recursive --no-progress "$tmp/contents/" "$s3/sha256/"
+    "${aws[@]}" s3 cp --recursive --no-progress "$tmp/sums/" "$s3/"
+    rm -f "${marks[@]}"
+}
+
+case "${1:-}" in
+fetch)
+    [ $# -ge 4 ] || usage
+    shift
+    fetch "$@"
+    ;;
+upload)
+    [ $# -eq 3 ] || usage
+    shift
+    upload "$@"
+    ;;
+*) usage ;;
+esac

@@ -123,19 +123,105 @@ format_pg_major_minor_version() {
     echo $((major * 100 + minor))
 }
 
+# Run a command as nobody if this shell is root, so that tar never reads a
+# tarball with root rights. As postgres, the command runs as postgres.
+run_unprivileged() {
+    if [ "$(id -u)" -eq 0 ]; then
+        setpriv --reuid=nobody --regid=nogroup --clear-groups -- "$@"
+    else
+        "$@"
+    fi
+}
+
 # Unpack $1-$2 for pg$3 from a tarball of `make extension-artifacts`, mounted by
 # the Dockerfile. Returns 1 when there is no tarball. A tarball that does not
 # unpack fails the build: a fallback install would hide a corrupt object in S3.
+# The tarball must match its .sha256 file, and must hold only regular files
+# with the names that `install_extensions pack` gives, in the lib and extension
+# directories of pg$3. Each file gets mode 644 and the user of this shell as
+# owner, as with the deb packages and the source builds.
+# The callers run this in a condition, where set -e does not apply, so each
+# step checks its own result.
 unpack_artifact() {
-    local pkg="$1" version="$2" pg="$3" arch="$ARCH" artifact
+    local pkg="$1" version="$2" pg="$3" arch="$ARCH" artifact want="" got name allowed list line work stage file
     [ "$arch" = aarch64 ] && arch=arm64
     artifact="/build/artifacts/$arch/$pkg-$version-pg$pg.tar.gz"
-    [ -s "$artifact" ] || return 1
+    [ -e "$artifact" ] || return 1
     [ "$DRYRUN" = true ] && { log "would unpack $artifact"; return 0; }
-    if ! tar -xzf "$artifact" -C /; then
+
+    if [ -f "$artifact.sha256" ]; then
+        read -r want _ < "$artifact.sha256" || true
+    fi
+    if [[ ! "$want" =~ ^[0-9a-f]{64}$ ]]; then
+        error "no sha256 for $artifact: remove it, or make it again with \`make extension-artifacts\`"
+        exit 1
+    fi
+    if ! got="$(sha256sum < "$artifact")" || [ "${got%% *}" != "$want" ]; then
+        error "$artifact does not match its sha256 $want"
+        exit 1
+    fi
+
+    case "$pkg" in
+    timescaledb) name='timescaledb[-.][A-Za-z0-9._-]*';;
+    toolkit) name='timescaledb_toolkit[A-Za-z0-9._-]*';;
+    *) error "no file names known for $pkg"; exit 1;;
+    esac
+    allowed="^usr/(lib/postgresql/$pg/lib|share/postgresql/$pg/extension)/$name\$"
+
+    # GNU tar escapes control characters in names, so each entry is one line.
+    if ! list="$(run_unprivileged tar --quoting-style=escape -tvzf "$artifact")"; then
+        error "failed listing $artifact"
+        exit 1
+    fi
+    while IFS= read -r line; do
+        if [[ "$line" != -* ]]; then
+            error "$artifact has an entry that is not a regular file: $line"
+            exit 1
+        fi
+    done <<< "$list"
+    if ! list="$(run_unprivileged tar --quoting-style=escape -tzf "$artifact")"; then
+        error "failed listing $artifact"
+        exit 1
+    fi
+    while IFS= read -r line; do
+        if [[ ! "$line" =~ $allowed ]]; then
+            error "$artifact has an entry that is not a file of $pkg for pg$pg: $line"
+            exit 1
+        fi
+    done <<< "$list"
+
+    # tar writes only into $stage. The list of files goes into $work, which tar
+    # cannot write when it runs as nobody.
+    if ! work="$(mktemp -d)" || ! chmod 711 "$work" || ! mkdir "$work/stage" \
+        || { [ "$(id -u)" -eq 0 ] && ! chown nobody:nogroup "$work/stage"; }; then
+        error "failed making a directory to unpack $artifact"
+        exit 1
+    fi
+    stage="$work/stage"
+    if ! run_unprivileged tar --no-same-owner --no-same-permissions -xzf "$artifact" -C "$stage"; then
         error "failed unpacking $artifact"
         exit 1
     fi
+    if ! list="$(find "$stage" -mindepth 1 ! -type f ! -type d -print -quit)" || [ -n "$list" ]; then
+        error "$artifact unpacked an entry that is not a regular file"
+        exit 1
+    fi
+    if ! find "$stage" -type f -print0 > "$work/files"; then
+        error "failed listing the files unpacked from $artifact"
+        exit 1
+    fi
+    while IFS= read -r -d '' file; do
+        file="${file#"$stage"/}"
+        if [[ ! "$file" =~ $allowed ]]; then
+            error "$artifact unpacked $file, which is not a file of $pkg for pg$pg"
+            exit 1
+        fi
+        if ! install -m 0644 "$stage/$file" "/$file"; then
+            error "failed installing /$file from $artifact"
+            exit 1
+        fi
+    done < "$work/files"
+    rm -rf "$work"
     log "unpacked $artifact"
 }
 

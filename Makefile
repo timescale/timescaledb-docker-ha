@@ -209,10 +209,13 @@ DOCKER_BUILD_COMMAND=docker buildx build \
 
 # Extension tarballs, one per timescaledb or toolkit version, pg major and
 # architecture. The image unpacks them instead of installing or building.
-# EXTENSION_ARTIFACTS=true fetches the tarballs from the CI artifacts bucket,
-# which every CI runner reads and writes, and builds and stores the missing
-# ones. Without it the image installs the versions itself. An empty
-# EXTENSION_ARTIFACTS_BUCKET builds the tarballs without S3.
+# EXTENSION_ARTIFACTS=true fetches the tarballs from the CI artifacts bucket and
+# builds the missing ones. Each tarball has a .sha256 file next to it, and the
+# image build stops if a tarball does not match it. Without
+# EXTENSION_ARTIFACTS=true the image installs the versions itself. An empty
+# EXTENSION_ARTIFACTS_BUCKET builds the tarballs without S3. Only the "Publish
+# images" workflow on master stores tarballs in S3, with
+# `make extension-artifacts-upload`. Other builds only read them.
 # build_scripts/extension_builds needs yq.
 EXTENSION_ARTIFACTS?=false
 EXTENSION_ARTIFACTS_DIR=build_artifacts/$(PLATFORM)
@@ -224,7 +227,8 @@ EXTENSION_ARTIFACTS_BUCKET?=timescale-ci-artifacts
 # an input for it). If the hash is empty, a recipe that uses the S3 prefix stops.
 EXTENSION_ARTIFACTS_REBUILD?=false
 EXTENSION_ARTIFACTS_INPUTS:=$(shell ./build_scripts/extension_inputs)
-EXTENSION_ARTIFACTS_S3=$(if $(EXTENSION_ARTIFACTS_INPUTS),s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extensions/$(subst :,-,$(DOCKER_FROM))/$(PLATFORM)/$(EXTENSION_ARTIFACTS_INPUTS),$(error cannot hash the extension tarball inputs (see EXTENSION_ARTIFACTS_INPUTS)))
+EXTENSION_ARTIFACTS_S3=$(if $(EXTENSION_ARTIFACTS_INPUTS),s3://$(EXTENSION_ARTIFACTS_BUCKET)/timescaledb-docker-ha/extension-tarballs/$(subst :,-,$(DOCKER_FROM))/$(PLATFORM)/$(EXTENSION_ARTIFACTS_INPUTS),$(error cannot hash the extension tarball inputs (see EXTENSION_ARTIFACTS_INPUTS)))
+EXTENSION_CACHE=EXTENSION_ARTIFACTS_REGION="$(RUNS_ON_AWS_REGION)" ./build_scripts/extension_cache
 ifeq ($(EXTENSION_ARTIFACTS),true)
   # no pipe here: .SHELLSTATUS reports the last command of the pipeline
   EXTENSION_BUILDS:=$(shell OSS_ONLY="$(OSS_ONLY)" PG_VERSIONS="$(PG_VERSIONS)" TIMESCALEDB_VERSIONS="$(TIMESCALEDB_VERSIONS)" TOOLKIT_VERSIONS="$(TOOLKIT_VERSIONS)" ./build_scripts/extension_builds)
@@ -235,7 +239,8 @@ ifeq ($(EXTENSION_ARTIFACTS),true)
   builder release build build-oss build-sha: extension-artifacts
 endif
 
-# One sync fetches every tarball of the platform for PG_VERSIONS in parallel.
+# One fetch gets every tarball of the platform for PG_VERSIONS in parallel, and
+# checks each one against its .sha256 file in S3.
 # It removes the local tarballs if .inputs has a different base image or hash,
 # or for a rebuild. A rebuild also removes the build cache of the current
 # builder, so the first tarball build makes a new base stage and the others use
@@ -245,7 +250,7 @@ extension-artifacts-sync:
 	stamp="$(EXTENSION_ARTIFACTS_DIR)/.inputs"
 	key="$(DOCKER_FROM) $(EXTENSION_ARTIFACTS_INPUTS)"
 	if [ "$(EXTENSION_ARTIFACTS_REBUILD)" = true ] || [ "$$(cat "$$stamp" 2>/dev/null)" != "$$key" ]; then
-		rm -f "$(EXTENSION_ARTIFACTS_DIR)"/*.tar.gz
+		rm -f "$(EXTENSION_ARTIFACTS_DIR)"/*.tar.gz "$(EXTENSION_ARTIFACTS_DIR)"/*.tar.gz.sha256 "$(EXTENSION_ARTIFACTS_DIR)"/*.tar.gz.upload
 		echo "$$key" > "$$stamp"
 	fi
 	if [ "$(EXTENSION_ARTIFACTS_REBUILD)" = true ]; then
@@ -253,9 +258,7 @@ extension-artifacts-sync:
 		exit 0
 	fi
 	[ -n "$(EXTENSION_ARTIFACTS_BUCKET)" ] || exit 0
-	aws s3 sync --region "$(RUNS_ON_AWS_REGION)" --no-progress --exclude '*' \
-		$(foreach pg,$(PG_VERSIONS),--include '*-pg$(pg).tar.gz') \
-		"$(EXTENSION_ARTIFACTS_S3)/" "$(EXTENSION_ARTIFACTS_DIR)/"
+	$(EXTENSION_CACHE) fetch "$(EXTENSION_ARTIFACTS_S3)" "$(EXTENSION_ARTIFACTS_DIR)" $(PG_VERSIONS)
 
 # A second make builds what is still missing after the sync: make decides what a
 # target needs before it runs any recipe, so this make cannot see the synced files.
@@ -263,12 +266,13 @@ extension-artifacts-sync:
 extension-artifacts: extension-artifacts-sync # fetch or build the extension tarballs the image unpacks
 	[ -z "$(EXTENSION_ARTIFACT_FILES)" ] || $(MAKE) --no-print-directory $(EXTENSION_ARTIFACT_FILES)
 
-# Build one tarball from the <extension>-artifact stage and store it. The build
-# reads the layer cache but does not write it: a write would replace the manifest
-# the image build reads with one that has only the base layers. A rebuild does
-# not read the layer cache. USE_DOCKER_CACHE=false uses no cache, as for the
-# image. The export goes to a directory per target, so `make -j` builds do not
-# share a file name.
+# Build one tarball from the <extension>-artifact stage, and write its .sha256
+# file and the .upload file that marks it for extension-artifacts-upload. The
+# build reads the layer cache but does not write it: a write would replace the
+# manifest the image build reads with one that has only the base layers. A
+# rebuild does not read the layer cache. USE_DOCKER_CACHE=false uses no cache,
+# as for the image. The export goes to a directory per target, so `make -j`
+# builds do not share a file name.
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_OUTPUT=--output type=local,dest=$(EXTENSION_ARTIFACTS_DIR)/$*.out
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_CACHE=$(if $(filter false,$(USE_DOCKER_CACHE)),--no-cache,$(if $(filter true,$(EXTENSION_ARTIFACTS_REBUILD)),,$(DOCKER_CACHE_FROM_ARGS)))
 $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz: DOCKER_EXTRA_BUILDARGS=
@@ -277,9 +281,15 @@ $(EXTENSION_ARTIFACTS_DIR)/%.tar.gz:
 	$(DOCKER_BUILD_COMMAND) --target "$$pkg-artifact" --build-arg EXT_VERSION="$$ver" --build-arg EXT_PG="$${pg#pg}"
 	mv "$(EXTENSION_ARTIFACTS_DIR)/$*.out/extension.tar.gz" "$@"
 	rmdir "$(EXTENSION_ARTIFACTS_DIR)/$*.out"
-	if [ -n "$(EXTENSION_ARTIFACTS_BUCKET)" ]; then
-		aws s3 cp --region "$(RUNS_ON_AWS_REGION)" "$@" "$(EXTENSION_ARTIFACTS_S3)/$(@F)"
-	fi
+	(cd "$(@D)" && sha256sum "$(@F)") > "$@.sha256"
+	touch "$@.upload"
+
+# Store the tarballs that this directory built in S3. Only the "Publish images"
+# workflow on master runs this, with credentials that can write the S3 prefix.
+.PHONY: extension-artifacts-upload
+extension-artifacts-upload:
+	[ -n "$(EXTENSION_ARTIFACTS_BUCKET)" ] || exit 0
+	$(EXTENSION_CACHE) upload "$(EXTENSION_ARTIFACTS_S3)" "$(EXTENSION_ARTIFACTS_DIR)"
 
 # We provide the fast target as the first (=default) target, as it will skip installing
 # many optional extensions, and it will only install a single timescaledb (master) version.
