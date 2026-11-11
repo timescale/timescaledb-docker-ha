@@ -11,7 +11,6 @@ on:
   push:
     branches:
       - master
-      - main
     paths-ignore:
       - "*.md"
 
@@ -21,6 +20,9 @@ on:
 concurrency:
   group: publish-ha-images-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 env:
   DOCKER_REPOSITORY: timescale/timescaledb-ha

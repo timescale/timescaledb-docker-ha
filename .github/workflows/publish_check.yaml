@@ -12,6 +12,9 @@ concurrency:
   group: publish-check-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
   DOCKER_REPOSITORY: timescale/timescaledb-ha
   DOCKER_REGISTRY: docker.io
@@ -21,6 +24,9 @@ jobs:
   # disk space, build, and manifest issues before they hit the publish workflow.
   publish-check:
     name: Dry run pg18-all ${{ matrix.platform }}
+    # No RunsOn runner picks up a job from a fork pull request, so without this
+    # the job waits for a runner that never comes.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     # On-demand capacity: this job needs 1h40m on average. A required check
     # must not run that long on spot capacity.
     runs-on: ${{ matrix.runs_on }}
