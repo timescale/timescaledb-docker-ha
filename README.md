@@ -54,9 +54,9 @@ PostgreSQL major and architecture, and keeps the tarball in the CI artifacts buc
 `timescaledb-docker-ha/extension-tarballs/<base image>/<arch>/<inputs>/`: the file
 `<extension>-<version>-pg<major>.tar.gz.sha256` holds the sha256 of the tarball, and `sha256/<sha256>.tar.gz` holds
 the tarball. `<inputs>` is a hash of the Dockerfile up to the `builder` stage, of `build_scripts/` without
-`versions.yaml`, of the `Makefile` and of the workflows. A change to one of them, such as a new PostgreSQL minor or
-Rust version, rebuilds every tarball. A new version in `build_scripts/versions.yaml` adds tarballs and does not
-change the hash. `make extension-artifacts` fetches the tarballs into `build_artifacts/<arch>/` and checks them
+`versions.yaml` and of the `Makefile`. A change to one of them, such as a new PostgreSQL minor or Rust version,
+rebuilds every tarball. A new version in `build_scripts/versions.yaml` adds tarballs and does not change the hash.
+The workflows are not in the hash, because they select which tarballs to build and do not change their contents. `make extension-artifacts` fetches the tarballs into `build_artifacts/<arch>/` and checks them
 against their sha256. It builds the missing ones from the `timescaledb-artifact` and `toolkit-artifact` Dockerfile
 stages. Only the "Publish images" workflow on master stores tarballs in the bucket, with `make
 extension-artifacts-upload`. The other builds only read them. The repository variables `EXTENSION_ARTIFACTS_BUCKET`

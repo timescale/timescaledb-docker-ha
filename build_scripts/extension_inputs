@@ -2,9 +2,12 @@
 
 # Print a short hash of what goes into an extension tarball: the Dockerfile up
 # to the builder stage (the toolchain and the build stages), build_scripts/
-# without versions.yaml (the install scripts and the pinned PostgreSQL minors),
-# the Makefile and the workflows (how CI builds and stores the tarballs).
+# without versions.yaml (the install scripts and the pinned PostgreSQL minors)
+# and the Makefile (the build arguments).
 # A new version in versions.yaml adds a tarball and does not change the others.
+# The workflows are not in the hash: they select which tarballs to build, not
+# their contents, and a hash change makes every build compile all tarballs again.
+# If a workflow starts to set a build argument, add that workflow to the hash.
 # The Makefile uses the hash as the S3 prefix of the tarballs. Prints nothing if
 # a command fails.
 #
@@ -15,7 +18,7 @@ cd "${BASH_SOURCE[0]%/*}/.."
 # the same file order on every machine
 LC_ALL=C
 
-files=(Makefile .github/workflows/*)
+files=(Makefile)
 for f in build_scripts/*; do
     [ "$f" = build_scripts/versions.yaml ] || files+=("$f")
 done
