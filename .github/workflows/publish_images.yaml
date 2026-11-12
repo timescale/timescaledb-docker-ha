@@ -205,7 +205,7 @@ jobs:
           name: outputs-${{ matrix.pg_major }}-${{ matrix.all_versions }}-${{ matrix.oss_only }}-${{ matrix.platform }}
           path: /tmp/outputs/*
           if-no-files-found: error
-          # The manifest jobs read these after the review, which can take days.
+          # A failed manifest job can re-run for 7 days without a rebuild.
           retention-days: 7
 
   publish-combined-manifests:
@@ -213,7 +213,7 @@ jobs:
     needs: [ "publish" ]
     runs-on: runs-on/fleet=linux-2cpu-ondemand/env=ue1
 
-    # The environment admits only master and waits for a reviewer.
+    # The environment admits only master.
     environment: dockerhub-publish
 
     strategy:
