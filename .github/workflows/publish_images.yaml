@@ -263,37 +263,28 @@ jobs:
 
       # No rebuild: the release tags get the digests that the publish jobs checked.
       # /tmp/outputs gets the amd64 version_info last, as before.
-      # A snapshot tag names one run attempt and is never pushed again, so it
-      # can be immutable on Docker Hub. All other tags move with each run.
       - name: Promote the arch tags of pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
-          POSTFIX: ${{ matrix.docker_tag_postfix }}
           TAG: pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
-          SNAPSHOT: r${{ github.run_number }}.${{ github.run_attempt }}
         run: |
           repo="$DOCKER_REGISTRY/$DOCKER_REPOSITORY"
           mkdir -p /tmp/outputs
-          builders=()
-          releases=()
           for arch in arm64 amd64; do
             cp /tmp/staged/"$arch"/* /tmp/outputs/
             builder="$repo@sha256:$(basename /tmp/staged/"$arch"/builder-* | cut -d- -f2)"
             release="$repo@sha256:$(basename /tmp/staged/"$arch"/release-* | cut -d- -f2)"
-            builders+=("$builder")
-            releases+=("$release")
             docker buildx imagetools create --prefer-index=false --tag "$repo:$TAG-builder-$arch" "$builder"
             docker buildx imagetools create --prefer-index=false --tag "$repo:$TAG-$arch" "$release"
           done
-          pg="$(awk -F= '/postgresql.version=/ {print $2}' /tmp/outputs/version_info)"
-          ts="$(awk -F= '/timescaledb.version=/ {print $2}' /tmp/outputs/version_info)"
-          docker buildx imagetools create --tag "$repo:pg$pg-ts$ts$POSTFIX-$SNAPSHOT" "${releases[@]}"
-          docker buildx imagetools create --tag "$repo:pg$pg$POSTFIX-builder-$SNAPSHOT" "${builders[@]}"
 
+      # A snapshot tag names one run attempt and is never pushed again, so it
+      # can be immutable on Docker Hub. All other tags move with each run.
       - name: Publish combined manifest for pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
         env:
           PG_MAJOR: ${{ matrix.pg_major }}
           VERSION_TAG: pg${{ matrix.pg_major}}${{ matrix.docker_tag_postfix }}-builder
           DOCKER_TAG_POSTFIX: ${{ matrix.docker_tag_postfix }}
+          SNAPSHOT: r${{ github.run_number }}.${{ github.run_attempt }}
         run: make publish-manifests
 
   dispatch-ha-image-published-event:

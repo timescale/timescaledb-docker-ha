@@ -119,6 +119,9 @@ VERSION_INFO = /tmp/outputs/version_info
 VAR_PGMAJORMINOR="$$(awk -F '=' '/postgresql.version=/ {print $$2}' $(VERSION_INFO) 2>/dev/null)"
 VAR_TSVERSION="$$(awk -F '=' '/timescaledb.version=/ {print $$2}' $(VERSION_INFO) 2>/dev/null)"
 VAR_TSMAJOR="$$(awk -F '[.=]' '/timescaledb.version=/ {print $$3 "." $$4}' $(VERSION_INFO))"
+# The manifest loops push a snapshot tag with the same command as the other tags, so all tags of a manifest get one digest.
+SNAPSHOT_BUILDER_TAG=$(if $(SNAPSHOT),pg$(VAR_PGMAJORMINOR)$(DOCKER_TAG_POSTFIX)-builder-$(SNAPSHOT))
+SNAPSHOT_RELEASE_TAG=$(if $(SNAPSHOT),pg$(VAR_PGMAJORMINOR)-ts$(VAR_TSVERSION)$(DOCKER_TAG_POSTFIX)-$(SNAPSHOT))
 
 # In these steps we do some introspection to find out some details of the versions
 # that are inside the Docker image. As we use the Ubuntu packages, we do not know until
@@ -389,8 +392,8 @@ publish-combined-builder-manifest: $(VERSION_INFO) # publish a combined builder 
 	done
 	cat $(VERSION_INFO) || true
 	echo "Creating manifest $(DOCKER_BUILDER_URL) that includes $(DOCKER_BUILDER_URL)-amd64 and $(DOCKER_BUILDER_URL)-arm64 for pg $(VAR_PGMAJORMINOR)}"
-	for tag in pg$(PG_MAJOR) pg$(VAR_PGMAJORMINOR); do
-		url="$(DOCKER_PUBLISH_URL):$$tag$(DOCKER_TAG_POSTFIX)-builder"
+	for tag in $(SNAPSHOT_BUILDER_TAG) pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX)-builder pg$(VAR_PGMAJORMINOR)$(DOCKER_TAG_POSTFIX)-builder; do
+		url="$(DOCKER_PUBLISH_URL):$$tag"
 		docker manifest rm "$$url" || true
 		docker manifest create "$$url" "$${images[@]}"
 		docker manifest push "$$url"
@@ -407,8 +410,8 @@ publish-combined-manifest: $(VERSION_INFO)
 	done
 	cat $(VERSION_INFO) || true
 	echo "Creating manifest $(DOCKER_RELEASE_URL) that includes $(DOCKER_RELEASE_URL)-amd64 and $(DOCKER_RELEASE_URL)-arm64 for pg $(VAR_PGMAJORMINOR)"
-	for tag in pg$(PG_MAJOR) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR) pg$(VAR_PGMAJORMINOR)-ts$(VAR_TSVERSION); do
-		url="$(DOCKER_PUBLISH_URL):$$tag$(DOCKER_TAG_POSTFIX)"
+	for tag in $(SNAPSHOT_RELEASE_TAG) pg$(PG_MAJOR)$(DOCKER_TAG_POSTFIX) pg$(PG_MAJOR)-ts$(VAR_TSMAJOR)$(DOCKER_TAG_POSTFIX) pg$(VAR_PGMAJORMINOR)-ts$(VAR_TSVERSION)$(DOCKER_TAG_POSTFIX); do
+		url="$(DOCKER_PUBLISH_URL):$$tag"
 		docker manifest rm "$$url" || true
 		docker manifest create "$$url" "$${images[@]}"
 		docker manifest push "$$url"
