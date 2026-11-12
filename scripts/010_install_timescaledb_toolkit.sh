@@ -23,8 +23,12 @@ if [ -z "${POSTGRESQL_CONF_DIR:-}" ]; then
 	POSTGRESQL_CONF_DIR=${PGDATA}
 fi
 
+# OSS images do not ship timescaledb_toolkit, so only create it when available
 cat <<EOF >"${create_sql}"
-CREATE EXTENSION IF NOT EXISTS timescaledb_toolkit CASCADE;
+SELECT 'CREATE EXTENSION IF NOT EXISTS timescaledb_toolkit CASCADE'
+FROM pg_catalog.pg_available_extensions
+WHERE name = 'timescaledb_toolkit'
+\gexec
 EOF
 
 # create extension timescaledb_toolkit in initial databases
