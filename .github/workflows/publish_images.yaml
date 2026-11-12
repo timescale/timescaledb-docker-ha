@@ -205,7 +205,8 @@ jobs:
           name: outputs-${{ matrix.pg_major }}-${{ matrix.all_versions }}-${{ matrix.oss_only }}-${{ matrix.platform }}
           path: /tmp/outputs/*
           if-no-files-found: error
-          retention-days: 1
+          # A failed manifest job can re-run for 7 days without a rebuild.
+          retention-days: 7
 
   publish-combined-manifests:
     name: Publish manifest pg${{ matrix.pg_major }}${{ matrix.docker_tag_postfix }}
