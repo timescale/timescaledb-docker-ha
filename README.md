@@ -105,9 +105,9 @@ using the tag commit text.
 ### Publish the images to Docker Hub and other registries
 
 The "Publish images" workflow pushes each image to a staging tag such as
-`timescale/timescaledb-ha:staging-pg17-all-amd64`. Do not use the staging tags. The release tags move to the checked
-digests only after a reviewer approves the run's `dockerhub-publish` environment. Each approved run also adds snapshot
-tags that end in `-r<run number>.<attempt>`. No run pushes a snapshot tag again.
+`timescale/timescaledb-ha:staging-pg17-all-amd64`. Do not use the staging tags. The `Publish manifest` jobs then move
+the release tags to the checked digests. Only `master` can publish, and each change to `master` needs an approved pull
+request. Each run also adds snapshot tags that end in `-r<run number>.<attempt>`. No run pushes a snapshot tag again.
 
 They will be written under quite a few aliases, for example, for PostgreSQL 15.2 and Timescale 2.10.3, the following images will be built and pushed/overwritten:
 
