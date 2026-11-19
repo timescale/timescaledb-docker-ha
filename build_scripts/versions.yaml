@@ -25,72 +25,6 @@ default-arch: both
 ## The pinned PostgreSQL versions are in postgres_versions.yaml.
 ## `make extension-artifacts` reads this file to list the release tarballs.
 timescaledb:
-  2.13.0:
-    pg-max: 16
-  2.13.1:
-    pg-max: 16
-  2.14.0:
-    pg-max: 16
-  2.14.1:
-    pg-max: 16
-  2.14.2:
-    pg-max: 16
-  2.15.0:
-    pg-max: 16
-  2.15.1:
-    pg-max: 16
-  2.15.2:
-    pg-max: 16
-  2.15.3:
-    pg-max: 16
-  2.16.0:
-    pg-max: 16
-  2.16.1:
-    pg-max: 16
-  2.17.0:
-    pg-max: 17
-  2.17.1:
-    pg-max: 17
-  2.17.2:
-    pg-max: 17
-  2.18.0:
-    pg-max: 17
-  2.18.1:
-    pg-max: 17
-  2.18.2:
-    pg-max: 17
-  2.19.0:
-    pg-max: 17
-  2.19.1:
-    pg-max: 17
-  2.19.2:
-    pg-max: 17
-  2.19.3:
-    pg-max: 17
-  2.20.0:
-    pg-min: 15
-    pg-max: 17
-  2.20.1:
-    pg-min: 15
-    pg-max: 17
-  2.20.2:
-    pg-min: 15
-    pg-max: 17
-  2.20.3:
-    pg-min: 15
-    pg-max: 17
-  2.21.0:
-    pg-min: 15
-    pg-max: 17
-  2.21.1:
-    pg-min: 15
-    pg-max: 17
-  2.21.2:
-    pg-min: 15
-    pg-max: 17
-  2.21.3:
-    pg-min: 15
-    pg-max: 17
   2.21.4:
     pg-min: 15
     pg-max: 17
@@ -106,33 +40,6 @@ timescaledb:
   2.23.1:
     pg-min: 15
     pg-max: 18
-  2.24.0:
-    pg-min: 15
-    pg-max: 18
-  2.25.0:
-    pg-min: 15
-    pg-max: 18
-  2.25.1:
-    pg-min: 15
-    pg-max: 18
-  2.25.2:
-    pg-min: 15
-    pg-max: 18
-  2.26.0:
-    pg-min: 15
-    pg-max: 18
-  2.26.1:
-    pg-min: 15
-    pg-max: 18
-  2.26.2:
-    pg-min: 15
-    pg-max: 18
-  2.26.3:
-    pg-min: 15
-    pg-max: 18
-  2.26.4:
-    pg-min: 15
-    pg-max: 18
   2.27.0:
     pg-min: 15
     pg-max: 18
@@ -140,6 +47,9 @@ timescaledb:
     pg-min: 15
     pg-max: 18
   2.27.2:
+    pg-min: 15
+    pg-max: 18
+  2.27.3:
     pg-min: 15
     pg-max: 18
   2.28.0:
@@ -154,6 +64,9 @@ timescaledb:
   2.28.3:
     pg-min: 15
     pg-max: 18
+  2.28.5:
+    pg-min: 15
+    pg-max: 18
   2.29.0:
     pg-min: 16
     pg-max: 18
@@ -161,6 +74,9 @@ timescaledb:
     pg-min: 16
     pg-max: 18
   2.29.2:
+    pg-min: 16
+    pg-max: 18
+  2.29.3:
     pg-min: 16
     pg-max: 18
   2.30.0:
@@ -172,7 +88,13 @@ timescaledb:
   2.30.2:
     pg-min: 16
     pg-max: 18
+  2.30.3:
+    pg-min: 16
+    pg-max: 18
   2.31.0:
+    pg-min: 16
+    pg-max: 18
+  2.31.2:
     pg-min: 16
     pg-max: 18
   2.32.0:
