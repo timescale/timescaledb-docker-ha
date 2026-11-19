@@ -106,12 +106,6 @@ timescaledb:
   2.23.1:
     pg-min: 15
     pg-max: 18
-  2.26.3:
-    pg-min: 15
-    pg-max: 17
-  2.26.4:
-    pg-min: 15
-    pg-max: 17
   2.27.0:
     pg-min: 15
     pg-max: 18
