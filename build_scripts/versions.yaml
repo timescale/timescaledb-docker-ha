@@ -49,6 +49,9 @@ timescaledb:
   2.27.2:
     pg-min: 15
     pg-max: 18
+  2.27.3:
+    pg-min: 15
+    pg-max: 18
   2.28.0:
     pg-min: 15
     pg-max: 18
@@ -61,6 +64,9 @@ timescaledb:
   2.28.3:
     pg-min: 15
     pg-max: 18
+  2.28.5:
+    pg-min: 15
+    pg-max: 18
   2.29.0:
     pg-min: 16
     pg-max: 18
@@ -68,6 +74,9 @@ timescaledb:
     pg-min: 16
     pg-max: 18
   2.29.2:
+    pg-min: 16
+    pg-max: 18
+  2.29.3:
     pg-min: 16
     pg-max: 18
   2.30.0:
@@ -79,7 +88,13 @@ timescaledb:
   2.30.2:
     pg-min: 16
     pg-max: 18
+  2.30.3:
+    pg-min: 16
+    pg-max: 18
   2.31.0:
+    pg-min: 16
+    pg-max: 18
+  2.31.2:
     pg-min: 16
     pg-max: 18
   2.32.0:
