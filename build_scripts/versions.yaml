@@ -138,7 +138,7 @@ toolkit:
     cargo-pgrx: 0.18.1
     pg-min: 15
     pg-max: 18
-  1.27.0:
+  1.27.0+p2:
     cargo-pgrx: 0.18.1
     pg-min: 15
     pg-max: 18
