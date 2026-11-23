@@ -507,8 +507,8 @@ install_pg_vectorsearch() {
         return 0
     fi
 
-    # Release tags are vX.Y.Z. The source tarball and the versioned
-    # library (pg_vectorsearch-X.Y.Z.so) use the version without the v.
+    # Release tags are vX.Y.Z. The source tarball uses the version
+    # without the v.
     relver="${version#v}"
     src="/build/pg_vectorsearch/pg_vectorsearch-${relver}"
 

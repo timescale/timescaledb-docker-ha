@@ -209,7 +209,7 @@ check_pg_textsearch() {
 }
 
 check_pg_vectorsearch() {
-	local pg="$1" lib="$2" ver="$PG_VECTORSEARCH_VERSION" relver
+	local pg="$1" lib="$2" ver="$PG_VECTORSEARCH_VERSION" relver libfile
 	record_ext_version pg_vectorsearch "$pg" ""
 	if [ -z "$ver" ]; then return 0; fi
 
@@ -219,8 +219,16 @@ check_pg_vectorsearch() {
 		return 0
 	fi
 
+	# 0.1.0 shipped a version-named library (pg_vectorsearch-0.1.0.so);
+	# later releases install an unversioned pg_vectorsearch.so.
 	relver="${ver#v}"
-	if [ -s "$lib/pg_vectorsearch-${relver}.so" ]; then
+	if [ "$relver" = "0.1.0" ]; then
+		libfile="pg_vectorsearch-${relver}.so"
+	else
+		libfile="pg_vectorsearch.so"
+	fi
+
+	if [ -s "$lib/$libfile" ]; then
 		record_ext_version pg_vectorsearch "$pg" "$ver"
 	else
 		error "pg_vectorsearch-$ver not found for pg$pg"
