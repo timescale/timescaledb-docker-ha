@@ -328,11 +328,15 @@ ENV MAKEFLAGS=-j4
 
 # pg_stat_monitor is a Query Performance Monitoring tool for PostgreSQL
 # https://github.com/percona/pg_stat_monitor
+# This clone and the two below must check out the commit that the Makefile pins for the tag.
+# So an upstream tag that moves stops the build.
 ARG PG_STAT_MONITOR
+ARG PG_STAT_MONITOR_SHA
 RUN if [ -n "${PG_STAT_MONITOR}"  ]; then \
         git clone https://github.com/percona/pg_stat_monitor /build/pg_stat_monitor; \
         cd /build/pg_stat_monitor; \
         git checkout "${PG_STAT_MONITOR}"; \
+        [ "$(git rev-parse HEAD)" = "${PG_STAT_MONITOR_SHA:-}" ] || { echo >&2 "pg_stat_monitor ${PG_STAT_MONITOR} is not commit '${PG_STAT_MONITOR_SHA:-}'"; exit 1; }; \
         git reset HEAD --hard; \
         for pg in ${PG_VERSIONS}; do \
             [ "$pg" -gt 17 ] && continue; \
@@ -346,10 +350,12 @@ RUN if [ -n "${PG_STAT_MONITOR}"  ]; then \
 # It is also useful to determine whether the DB is actively used
 # https://github.com/RafiaSabih/pg_auth_mon
 ARG PG_AUTH_MON
+ARG PG_AUTH_MON_SHA
 RUN if [ -n "${PG_AUTH_MON}" ]; then \
         git clone https://github.com/RafiaSabih/pg_auth_mon /build/pg_auth_mon; \
         cd /build/pg_auth_mon; \
         git checkout "${PG_AUTH_MON}"; \
+        [ "$(git rev-parse HEAD)" = "${PG_AUTH_MON_SHA:-}" ] || { echo >&2 "pg_auth_mon ${PG_AUTH_MON} is not commit '${PG_AUTH_MON_SHA:-}'"; exit 1; }; \
         for pg in ${PG_VERSIONS}; do \
             git reset HEAD --hard; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make clean; \
@@ -360,10 +366,12 @@ RUN if [ -n "${PG_AUTH_MON}" ]; then \
 # logerrors is an extension to count the number of errors logged by postgrs, grouped by the error codes
 # https://github.com/munakoiso/logerrors
 ARG PG_LOGERRORS
+ARG PG_LOGERRORS_SHA
 RUN if [ -n "${PG_LOGERRORS}" ]; then \
         git clone https://github.com/munakoiso/logerrors /build/logerrors; \
         cd /build/logerrors; \
         git checkout "${PG_LOGERRORS}"; \
+        [ "$(git rev-parse HEAD)" = "${PG_LOGERRORS_SHA:-}" ] || { echo >&2 "logerrors ${PG_LOGERRORS} is not commit '${PG_LOGERRORS_SHA:-}'"; exit 1; }; \
         for pg in ${PG_VERSIONS}; do \
             git reset HEAD --hard; \
             PATH="/usr/lib/postgresql/${pg}/bin:${PATH}" make clean; \
