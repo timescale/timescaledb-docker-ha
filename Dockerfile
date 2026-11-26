@@ -105,6 +105,7 @@ RUN arch="$(dpkg --print-architecture)"; \
 
 # pgbackrest-exporter
 # The sha256 values are for this version. Change the version and the values together.
+# renovate: datasource=github-releases depName=woblerr/pgbackrest_exporter extractVersion=^v(?<version>.*)$
 ARG PGBACKREST_EXPORTER_VERSION="0.18.0"
 RUN arch="$(arch)"; [ "$arch" = aarch64 ] && arch=arm64; pkg="pgbackrest_exporter_${PGBACKREST_EXPORTER_VERSION}_linux_${arch}"; \
     case "$(dpkg --print-architecture)" in \
@@ -127,6 +128,7 @@ RUN arch="$(arch)"; [ "$arch" = aarch64 ] && arch=arm64; pkg="pgbackrest_exporte
 
 # pgbouncer-exporter
 # The sha256 values are for this version. Change the version and the values together.
+# renovate: datasource=github-releases depName=prometheus-community/pgbouncer_exporter extractVersion=^v(?<version>.*)$
 ARG PGBOUNCER_EXPORTER_VERSION="0.9.0"
 RUN pkg="pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-$(dpkg --print-architecture)"; \
     case "$(dpkg --print-architecture)" in \

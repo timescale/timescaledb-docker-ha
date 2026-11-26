@@ -13,19 +13,28 @@ PG_VERSIONS?=
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 PGVECTORSCALE_VERSIONS?=all
 POSTGIS_VERSIONS?=3
+# renovate: datasource=github-releases depName=RafiaSabih/pg_auth_mon
 PG_AUTH_MON?=v3.0
 PG_AUTH_MON_SHA?=cdab237c11c98dc81dbe7bdfb2c07a80e0336640
+# renovate: datasource=github-releases depName=percona/pg_stat_monitor
 PG_STAT_MONITOR?=2.2.0
 PG_STAT_MONITOR_SHA?=f334af03a6348066133c5e3a73117a5a6b982faa
+# renovate: datasource=github-releases depName=munakoiso/logerrors
 PG_LOGERRORS?=v2.1.5
 PG_LOGERRORS_SHA?=3f8615ebbe74b17224676b226f85b9925691833a
 PGVECTO_RS?=0.4.0
+# renovate: datasource=github-releases depName=tensorchord/VectorChord
 VECTORCHORD?=0.5.3
 TIMESCALEDB_VERSIONS?=all
 TOOLKIT_VERSIONS?=all
+# renovate: datasource=github-releases depName=timescale/pg_textsearch
 PG_TEXTSEARCH_VERSION?=v1.5.1
+# renovate: datasource=github-releases depName=timescale/pg_vectorsearch
 PG_VECTORSEARCH_VERSION?=v0.1.0
+# The Dockerfile ARG defaults repeat these two pins, so Renovate updates both.
+# renovate: datasource=github-releases depName=prometheus-community/pgbouncer_exporter extractVersion=^v(?<version>.*)$
 PGBOUNCER_EXPORTER_VERSION?=0.9.0
+# renovate: datasource=github-releases depName=woblerr/pgbackrest_exporter extractVersion=^v(?<version>.*)$
 PGBACKREST_EXPORTER_VERSION?=0.18.0
 
 # This is used to build the docker --platform, so pick amd64 or arm64
