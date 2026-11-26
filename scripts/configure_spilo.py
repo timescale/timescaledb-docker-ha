@@ -581,9 +581,9 @@ def get_dcs_config(config, placeholders):
             config['kubernetes'].update({'use_endpoints': True, 'pod_ip': placeholders['instance_data']['ip'],
                                          'ports': [{'port': 5432, 'name': 'postgresql'}]})
     elif 'ZOOKEEPER_HOSTS' in placeholders:
-        config = {'zookeeper': {'hosts': yaml.load(placeholders['ZOOKEEPER_HOSTS'])}}
+        config = {'zookeeper': {'hosts': yaml.safe_load(placeholders['ZOOKEEPER_HOSTS'])}}
     elif 'EXHIBITOR_HOSTS' in placeholders and 'EXHIBITOR_PORT' in placeholders:
-        config = {'exhibitor': {'hosts': yaml.load(placeholders['EXHIBITOR_HOSTS']),
+        config = {'exhibitor': {'hosts': yaml.safe_load(placeholders['EXHIBITOR_HOSTS']),
                                 'port': placeholders['EXHIBITOR_PORT']}}
     elif 'ETCD_HOST' in placeholders:
         config = {'etcd': {'host': placeholders['ETCD_HOST']}}
@@ -761,7 +761,7 @@ def write_crontab(placeholders, overwrite):
         lines += [('{LOG_SHIP_SCHEDULE} nice -n 5 envdir "{LOG_ENV_DIR}"' +
                    ' /scripts/upload_pg_log_to_s3.py').format(**placeholders)]
 
-    lines += yaml.load(placeholders['CRONTAB'])
+    lines += yaml.safe_load(placeholders['CRONTAB'])
 
     setup_crontab('postgres', lines)
 
@@ -840,7 +840,7 @@ redirect_stderr=true
 def get_binary_version(bin_dir):
     postgres = os.path.join(bin_dir or '', 'postgres')
     version = subprocess.check_output([postgres, '--version']).decode()
-    version = re.match('^[^\s]+ [^\s]+ (\d+)\.(\d+)', version)
+    version = re.match(r'^[^\s]+ [^\s]+ (\d+)\.(\d+)', version)
     return '.'.join(version.groups()) if int(version.group(1)) < 10 else version.group(1)
 
 
@@ -861,10 +861,10 @@ def main():
             'ETCD_DISCOVERY_DOMAIN' not in placeholders):
         write_etcd_configuration(placeholders)
 
-    config = yaml.load(pystache_render(TEMPLATE, placeholders))
+    config = yaml.safe_load(pystache_render(TEMPLATE, placeholders))
     config.update(get_dcs_config(config, placeholders))
 
-    user_config = yaml.load(os.environ.get('SPILO_CONFIGURATION', os.environ.get('PATRONI_CONFIGURATION', ''))) or {}
+    user_config = yaml.safe_load(os.environ.get('SPILO_CONFIGURATION', os.environ.get('PATRONI_CONFIGURATION', ''))) or {}
     if not isinstance(user_config, dict):
         config_var_name = 'SPILO_CONFIGURATION' if 'SPILO_CONFIGURATION' in os.environ else 'PATRONI_CONFIGURATION'
         raise ValueError('{0} should contain a dict, yet it is a {1}'.format(config_var_name, type(user_config)))

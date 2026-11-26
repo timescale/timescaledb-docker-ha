@@ -84,7 +84,9 @@ install_timescaledb_for_pg_version() {
     # which makes 18.4 the real predecessor of 18.6:
     # https://www.postgresql.org/about/news/postgresql-186-1711-1615-1519-1424-and-19-beta-3-released-3365/
     local -r skipped_minors=" 1805 "
-    local -r fallback_depth=3
+    # Depth 4 reaches the newest 2.27.0 packages for ubuntu24.04, which are three
+    # minors behind the pin.
+    local -r fallback_depth=4
 
     candidate="${pg_full_suffix}"
     while [ "${#suffixes[@]}" -lt "${fallback_depth}" ]; do
