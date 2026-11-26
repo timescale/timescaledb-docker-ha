@@ -287,9 +287,67 @@ jobs:
           SNAPSHOT: r${{ github.run_number }}.${{ github.run_attempt }}
         run: make publish-manifests
 
+  # Sign every image digest of this run, so a consumer can check where it came from.
+  attest-images:
+    name: Attest the published images
+    needs: [ "publish-combined-manifests" ]
+    if: github.ref == 'refs/heads/master'
+    runs-on: runs-on/fleet=linux-2cpu/env=ue1
+
+    # No environment and no secrets. Sigstore signs with the OIDC token of this job.
+    permissions:
+      id-token: write
+      attestations: write
+
+    steps:
+      - uses: runs-on/action@4a3bfc79f21a9b97e972e2ba75a2b0b1e9688670 # v2.7.1
+
+      - name: Download the published digests
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: outputs-*
+          path: /tmp/outputs
+
+      # One line for each image: the digest and its arch tag.
+      - name: List the published digests
+        run: |
+          set -euo pipefail
+          repo="$DOCKER_REGISTRY/$DOCKER_REPOSITORY"
+          : > /tmp/subjects.txt
+          for dir in /tmp/outputs/outputs-*; do
+            IFS=- read -r _ pg_major all_versions oss_only arch <<< "$(basename "$dir")"
+            tag="pg$pg_major"
+            [ "$all_versions" = true ] && tag="$tag-all"
+            [ "$oss_only" = true ] && tag="$tag-oss"
+            for kind in builder release; do
+              digest="$(basename "$dir/$kind"-*)"
+              digest="${digest#"$kind"-}"
+              if [[ ! "$digest" =~ ^[0-9a-f]{64}$ ]]; then
+                echo "::error::$dir has no $kind digest"
+                exit 1
+              fi
+              name="$repo:$tag-$arch"
+              [ "$kind" = builder ] && name="$repo:$tag-builder-$arch"
+              echo "$digest  $name" >> /tmp/subjects.txt
+            done
+          done
+          if [ ! -s /tmp/subjects.txt ]; then
+            echo "::error::No published digests to attest"
+            exit 1
+          fi
+          cat /tmp/subjects.txt
+
+      - name: Attest the published digests
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-checksums: /tmp/subjects.txt
+          # The attestation stays in GitHub, so this job needs no Docker Hub token.
+          push-to-registry: false
+
   dispatch-ha-image-published-event:
     name: Dispatch HA image published event
-    needs: [ "publish-combined-manifests" ]
+    # Send the event only after the images are signed.
+    needs: [ "publish-combined-manifests", "attest-images" ]
     if: ${{ github.event_name == 'push' }}
     runs-on: runs-on/fleet=linux-2cpu-ondemand/env=ue1
 
