@@ -1,0 +1,27 @@
+name: Login to Docker Hub
+description: Log in to Docker Hub as the timescale organization, with one retry
+inputs:
+  token:
+    description: Docker Hub access token of the timescale organization
+    required: true
+runs:
+  using: composite
+  steps:
+    # auth.docker.io sometimes times out. A second attempt stops one timeout
+    # from failing a long build job.
+    - id: first-login
+      continue-on-error: true
+      uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+      with:
+        username: timescale
+        password: ${{ inputs.token }}
+
+    - if: steps.first-login.outcome == 'failure'
+      shell: bash
+      run: sleep 15
+
+    - if: steps.first-login.outcome == 'failure'
+      uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+      with:
+        username: timescale
+        password: ${{ inputs.token }}
