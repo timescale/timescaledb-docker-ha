@@ -261,22 +261,34 @@ RUN for pg in ${PG_VERSIONS}; do \
         done; \
     done
 
+# The pgvecto.rs and VectorChord steps install a .deb only when this file has exactly one
+# sha256 line for its file name. A version change needs new lines in the file.
+COPY checksums/tensorchord.sha256 /build/checksums/tensorchord.sha256
+
 # the strip command is due to the vectors.so size: 450mb before stripping, 12mb after
 ARG PGVECTO_RS
-RUN if [ -n "${PGVECTO_RS}" ]; then \
+RUN check_deb() { \
+        local line; \
+        line="$(awk -v f="$(basename "$1")" '$2 == f' /build/checksums/tensorchord.sha256)"; \
+        [ "$(printf '%s\n' "$line" | grep -c .)" -eq 1 ] || { echo >&2 "need exactly one sha256 line for $(basename "$1")"; return 1; }; \
+        (cd "$(dirname "$1")" && printf '%s\n' "$line" | sha256sum -c -); \
+    }; \
+    if [ -n "${PGVECTO_RS}" ]; then \
         for pg in ${PG_VERSIONS}; do \
             # Vecto.rs only support PostgreSQL 14..17
             if [[ $pg -ge 14 && $pg -lt 18 ]]; then \
+                deb="$(mktemp -d)/vectors-pg${pg}_${PGVECTO_RS}_$(dpkg --print-architecture).deb"; \
                 curl --silent \
                     --show-error \
                     --fail \
                     --retry 5 \
                     --retry-connrefused \
                     --location \
-                    --output /tmp/vectors.deb \
-                    "https://github.com/tensorchord/pgvecto.rs/releases/download/v${PGVECTO_RS}/vectors-pg${pg}_${PGVECTO_RS}_$(dpkg --print-architecture).deb" && \
-                dpkg -i /tmp/vectors.deb && \
-                rm -rfv /tmp/vectors.deb && \
+                    --output "$deb" \
+                    "https://github.com/tensorchord/pgvecto.rs/releases/download/v${PGVECTO_RS}/$(basename "$deb")" && \
+                check_deb "$deb" && \
+                dpkg -i "$deb" && \
+                rm -rfv "$(dirname "$deb")" && \
                 strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vectors.so" || exit 1; \
             fi \
         done; \
@@ -285,18 +297,26 @@ RUN if [ -n "${PGVECTO_RS}" ]; then \
 # VectorChord (vchord) is a PostgreSQL extension designed for scalable, high-performance, and disk-efficient vector similarity search. It's the successor of pgvecto.rs
 ARG VECTORCHORD
 RUN set -ex; \
+    check_deb() { \
+        local line; \
+        line="$(awk -v f="$(basename "$1")" '$2 == f' /build/checksums/tensorchord.sha256)"; \
+        [ "$(printf '%s\n' "$line" | grep -c .)" -eq 1 ] || { echo >&2 "need exactly one sha256 line for $(basename "$1")"; return 1; }; \
+        (cd "$(dirname "$1")" && printf '%s\n' "$line" | sha256sum -c -); \
+    }; \
     if [ -n "${VECTORCHORD}" ]; then \
         for pg in ${PG_VERSIONS}; do \
+            deb="$(mktemp -d)/postgresql-${pg}-vchord_${VECTORCHORD}-1_$(dpkg --print-architecture).deb"; \
             curl --silent \
                 --show-error \
                 --fail \
                 --retry 5 \
                 --retry-connrefused \
                 --location \
-                --output /tmp/vectorchord.deb \
-                "https://github.com/tensorchord/VectorChord/releases/download/${VECTORCHORD}/postgresql-${pg}-vchord_${VECTORCHORD}-1_$(dpkg --print-architecture).deb" && \
-            dpkg -i /tmp/vectorchord.deb && \
-            rm -rfv /tmp/vectorchord.deb && \
+                --output "$deb" \
+                "https://github.com/tensorchord/VectorChord/releases/download/${VECTORCHORD}/$(basename "$deb")" && \
+            check_deb "$deb" && \
+            dpkg -i "$deb" && \
+            rm -rfv "$(dirname "$deb")" && \
             # 93MB before stripping, 3.5MB after
             strip --strip-unneeded "/usr/lib/postgresql/${pg}/lib/vchord.so" || exit 1; \
         done; \
