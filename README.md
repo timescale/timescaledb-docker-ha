@@ -146,10 +146,13 @@ Do these steps when a data directory that an Ubuntu 22.04 image made starts with
   version. For a glibc locale, rebuild the indexes on text columns if you cannot accept a risk of a changed sort
   order. For an ICU locale, the query below lists the indexes to rebuild. Then run this for each database,
   `template1` included: `ALTER DATABASE <name> REFRESH COLLATION VERSION`.
-- A database whose default locale is `C`, `POSIX` or `C.UTF-8` has no default collation version, so it needs only
-  the first step. `docker-entrypoint.sh` makes `C.UTF-8` databases.
+- A database whose default locale is `C`, `POSIX` or `C.UTF-8` has no default collation version, so it does not
+  need the `ALTER DATABASE` command. The ICU step still applies to it. `docker-entrypoint.sh` makes `C.UTF-8`
+  databases.
 
-This query lists the indexes that use an ICU collation:
+This query lists the indexes that have a key column with an ICU collation. It does not find an index that uses an
+ICU collation only in an expression or in a `WHERE` clause. If the database can have such indexes, run
+`REINDEX DATABASE` instead.
 
 ```sql
 SELECT DISTINCT i.indexrelid::regclass AS index, c.collname
