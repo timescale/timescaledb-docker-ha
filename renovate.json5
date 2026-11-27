@@ -1,0 +1,120 @@
+// Copy of default.json5 from timescale/renovate-config at a520923684.
+// The Mend Renovate app does not resolve presets from that private repo in
+// a public repo, so the rules live here. Update this copy by hand when the
+// shared preset changes.
+// The org default still applies secure-registry.json5, own-releases.json5
+// and security-alerts.json5. This repo has no npm packages, so it does not
+// extend own-releases.json5 again after config:best-practices.
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  // config:best-practices adds digest pins for Docker images and GitHub
+  // Actions, configMigration and abandonment checks on top of
+  // config:recommended.
+  extends: [
+    'config:best-practices',
+    'mergeConfidence:all-badges',
+    'schedule:weekly',
+    // The pre-commit manager is off by default. It updates the rev of each
+    // hook repo in .pre-commit-config.yaml (pre-commit and prek).
+    ':enablePreCommit',
+  ],
+  labels: [
+    'dependencies',
+  ],
+  semanticCommitType: 'chore',
+  minimumReleaseAge: '7 days',
+  prConcurrentLimit: 10,
+  mise: {
+    // The defaults cover .config/mise/conf.d but not .mise/conf.d.
+    managerFilePatterns: [
+      '/(^|/)\\.mise/conf\\.d/[^/]+\\.toml$/',
+    ],
+  },
+  customManagers: [
+    {
+      // Tracks any pin with a comment on the line above it, so a repo needs
+      // no own regex manager:
+      //   # renovate: datasource=<ds> depName=<name> [packageName=<p>] [versioning=<v>] [extractVersion=<re>]
+      customType: 'regex',
+      description: 'Pins annotated with a "# renovate:" comment',
+      managerFilePatterns: [
+        '/(^|/)Dockerfile[^/]*$/',
+        '/(^|/)[^/]*\\.Dockerfile$/',
+        '/(^|/)Makefile$/',
+        '/(^|/)[^/]*\\.mk$/',
+        // Any YAML: workflows, actions, compose, Helm values, k8s manifests.
+        '/\\.ya?ml$/',
+        '/\\.sh$/',
+        '/\\.toml$/',
+        '/\\.(tf|tfvars|hcl)$/',
+        '/(^|/)\\.env[^/]*$/',
+      ],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)(?: packageName=(?<packageName>[^\\s]+))?(?: versioning=(?<versioning>[^\\s]+))?(?: extractVersion=(?<extractVersion>[^\\s]+))?\\s+[^\\n]*?(?::=|[:=])\\s*["\']?(?<currentValue>[^"\'\\s]+)',
+      ],
+      // A template wins over a capture group, so fall back only when the
+      // comment has no versioning.
+      versioningTemplate: '{{#if versioning}}{{{versioning}}}{{else}}semver-coerced{{/if}}',
+    },
+  ],
+  packageRules: [
+    {
+      description: 'One weekly PR for every non-major update not handled by a more specific rule. Majors stay out so that one breaking bump does not block the rest.',
+      groupName: 'non-major dependencies',
+      // renovate-approve (installed on all org repos) approves the PR, and
+      // it merges when its checks pass. Only these update types: majors and
+      // lockfile maintenance (which can cross a major) stay manual.
+      automerge: true,
+      matchUpdateTypes: [
+        'digest',
+        'patch',
+        'minor',
+        'pin',
+        'pinDigest',
+      ],
+    },
+    {
+      description: 'Label major updates for manual review',
+      matchUpdateTypes: [
+        'major',
+      ],
+      addLabels: [
+        'major-update',
+      ],
+    },
+    {
+      description: 'Group GitHub Actions updates into a single PR, majors included',
+      matchManagers: [
+        'github-actions',
+      ],
+      groupName: 'github actions',
+      separateMajorMinor: false,
+    },
+    {
+      description: 'Group docker-compose image updates into a single PR',
+      matchManagers: [
+        'docker-compose',
+      ],
+      groupName: 'docker-compose images',
+    },
+    {
+      // config:best-practices sets npm to 3 days in a preset rule, which
+      // overrides the top-level 7 days. Lockfile, pin and other updates
+      // without a release timestamp keep the preset value. Our own packages
+      // are left out, so that the own-releases.json5 rule stays in effect.
+      description: 'npm: 7-day gate, same as every other datasource',
+      matchDatasources: [
+        'npm',
+      ],
+      matchPackageNames: [
+        '!@timescale/**',
+      ],
+      matchUpdateTypes: [
+        'major',
+        'minor',
+        'patch',
+      ],
+      minimumReleaseAge: '7 days',
+    },
+  ],
+}
