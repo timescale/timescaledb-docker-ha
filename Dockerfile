@@ -336,13 +336,17 @@ RUN apt-get install -y timescaledb-tools
 ## Entrypoints as they are from the Timescale image and its default upstream repositories.
 ## This ensures the default interface (entrypoint) equals the one of the github.com/timescale/timescaledb-docker one,
 ## which allows this Docker Image to be a drop-in replacement for those Docker Images.
-ARG GITHUB_TIMESCALEDB_DOCKER_REF=main
+# The ref is a commit SHA, so a push to timescaledb-docker cannot change this image.
+# The HEAD check also stops a branch or tag that has the same name as the SHA.
+ARG GITHUB_TIMESCALEDB_DOCKER_REF=bf86167470ea968e678ab1f01135acca300dacf2
 ARG GITHUB_DOCKERLIB_POSTGRES_REF=master
 
-RUN cd /build; \
+RUN [[ "${GITHUB_TIMESCALEDB_DOCKER_REF}" =~ ^[0-9a-f]{40}$ ]] || { echo >&2 "GITHUB_TIMESCALEDB_DOCKER_REF must be a commit SHA, not '${GITHUB_TIMESCALEDB_DOCKER_REF}'"; exit 1; }; \
+    cd /build; \
     git clone https://github.com/timescale/timescaledb-docker; \
     cd timescaledb-docker; \
     git checkout ${GITHUB_TIMESCALEDB_DOCKER_REF}; \
+    [ "$(git rev-parse HEAD)" = "${GITHUB_TIMESCALEDB_DOCKER_REF}" ] || { echo >&2 "timescaledb-docker HEAD is not ${GITHUB_TIMESCALEDB_DOCKER_REF}"; exit 1; }; \
     cp -a docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/; \
     ln -s /usr/bin/timescaledb-tune /usr/local/bin/timescaledb-tune
 
