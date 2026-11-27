@@ -60,14 +60,24 @@ RUN mkdir -p /build/scripts
 RUN chmod 777 /build
 WORKDIR /build/
 
-RUN curl -fsSL --retry 5 --retry-connrefused https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor --output /usr/share/keyrings/postgresql.keyring
+# apt trusts each key below for all packages of its repository. So the build checks the
+# fingerprint of each key file before it writes the keyring.
+RUN curl -fsSL --retry 5 --retry-connrefused -o /tmp/postgresql.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc; \
+    fpr="$(gpg --show-keys --with-colons /tmp/postgresql.asc | awk -F: '$1 == "pub" { p = 1; next } $1 == "fpr" && p { print $10; p = 0 }')"; \
+    [ "$fpr" = B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8 ] || { echo >&2 "postgresql.org key fingerprint is '${fpr}'"; exit 1; }; \
+    gpg --dearmor --output /usr/share/keyrings/postgresql.keyring /tmp/postgresql.asc; \
+    rm -f /tmp/postgresql.asc
 RUN for t in deb deb-src; do \
         echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] https://apt.postgresql.org/pub/repos/apt/ $(lsb_release -s -c)-pgdg main 18" >> /etc/apt/sources.list.d/pgdg.list; \
         echo "$t [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/postgresql.keyring] https://apt-archive.postgresql.org/pub/repos/apt $(lsb_release -s -c)-pgdg-archive main" >> /etc/apt/sources.list.d/pgdg.list; \
     done
 
 # timescaledb-tune, as well as timescaledb-parallel-copy
-RUN curl -fsSL --retry 5 --retry-connrefused https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor --output /usr/share/keyrings/timescaledb.keyring
+RUN curl -fsSL --retry 5 --retry-connrefused -o /tmp/timescaledb.asc https://packagecloud.io/timescale/timescaledb/gpgkey; \
+    fpr="$(gpg --show-keys --with-colons /tmp/timescaledb.asc | awk -F: '$1 == "pub" { p = 1; next } $1 == "fpr" && p { print $10; p = 0 }')"; \
+    [ "$fpr" = 1005FB68604CE9B8F6879CF759F18EDF47F24417 ] || { echo >&2 "packagecloud timescaledb key fingerprint is '${fpr}'"; exit 1; }; \
+    gpg --dearmor --output /usr/share/keyrings/timescaledb.keyring /tmp/timescaledb.asc; \
+    rm -f /tmp/timescaledb.asc
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/timescaledb.keyring] https://packagecloud.io/timescale/timescaledb/ubuntu/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/timescaledb.list
 
 # The following tools are required for some of the processes we (TimescaleDB) regularly
