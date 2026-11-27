@@ -13,13 +13,13 @@ PG_VERSIONS?=
 # Additional PostgreSQL extensions we want to include with specific version/commit tags
 PGVECTORSCALE_VERSIONS?=all
 POSTGIS_VERSIONS?=3
-# renovate: datasource=github-releases depName=RafiaSabih/pg_auth_mon
+# renovate-digest: datasource=github-tags depName=RafiaSabih/pg_auth_mon
 PG_AUTH_MON?=v3.0
 PG_AUTH_MON_SHA?=cdab237c11c98dc81dbe7bdfb2c07a80e0336640
-# renovate: datasource=github-releases depName=percona/pg_stat_monitor
+# renovate-digest: datasource=github-tags depName=percona/pg_stat_monitor
 PG_STAT_MONITOR?=2.2.0
 PG_STAT_MONITOR_SHA?=f334af03a6348066133c5e3a73117a5a6b982faa
-# renovate: datasource=github-releases depName=munakoiso/logerrors
+# renovate-digest: datasource=github-tags depName=munakoiso/logerrors
 PG_LOGERRORS?=v2.1.5
 PG_LOGERRORS_SHA?=3f8615ebbe74b17224676b226f85b9925691833a
 PGVECTO_RS?=0.4.0

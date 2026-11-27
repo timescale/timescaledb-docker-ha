@@ -56,6 +56,24 @@
       // comment has no versioning.
       versioningTemplate: '{{#if versioning}}{{{versioning}}}{{else}}semver-coerced{{/if}}',
     },
+    // This repo only, not in the shared preset.
+    {
+      // The Dockerfile checks that each tag clone is at the commit of its
+      // _SHA pin. So Renovate must change the tag and the commit in one PR:
+      //   # renovate-digest: datasource=github-tags depName=<owner>/<repo>
+      //   NAME?=<tag>
+      //   NAME_SHA?=<commit>
+      // For an annotated tag, github-tags gives the commit, not the tag object.
+      customType: 'regex',
+      description: 'Makefile tag pins with a "# renovate-digest:" comment and a _SHA pin on the next line',
+      managerFilePatterns: [
+        '/(^|/)Makefile$/',
+      ],
+      matchStrings: [
+        '# renovate-digest: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)\\n[A-Z0-9_]+\\?=(?<currentValue>[^\\s]+)\\n[A-Z0-9_]+_SHA\\?=(?<currentDigest>[0-9a-f]{40})',
+      ],
+      versioningTemplate: 'semver-coerced',
+    },
   ],
   packageRules: [
     {
@@ -115,6 +133,62 @@
         'patch',
       ],
       minimumReleaseAge: '7 days',
+    },
+    // This repo only, not in the shared preset. These rules come last, so
+    // they replace the group and automerge of the rules above.
+    {
+      description: 'Our own extensions: one PR that a person merges, so we choose when an extension release goes into the image',
+      matchManagers: [
+        'custom.regex',
+      ],
+      matchPackageNames: [
+        'timescale/**',
+      ],
+      groupName: 'timescale extensions',
+      automerge: false,
+    },
+    {
+      // Renovate changes only the version. The build fails until a person
+      // adds the sha256 values of the new release to the PR. A separate
+      // group keeps that failure out of the non-major group.
+      description: 'Downloads that the build checks against sha256 values in this repo',
+      matchDepNames: [
+        'prometheus-community/pgbouncer_exporter',
+        'woblerr/pgbackrest_exporter',
+        'tensorchord/VectorChord',
+      ],
+      groupName: 'sha256-pinned downloads',
+      automerge: false,
+    },
+    {
+      // The _SHA pins exist to stop a tag that moves upstream. A digest
+      // update for the same tag means that the tag moved, so a person
+      // checks it.
+      description: 'Digest updates of the "# renovate-digest:" tag pins',
+      matchManagers: [
+        'custom.regex',
+      ],
+      matchDatasources: [
+        'github-tags',
+      ],
+      matchUpdateTypes: [
+        'digest',
+      ],
+      groupName: 'moved upstream tags',
+      automerge: false,
+    },
+    {
+      // CI builds through make, and the Makefile DOCKER_FROM build arg
+      // replaces this ARG default. So a PR for the default does not change
+      // the image.
+      description: 'No updates for the ubuntu default of the Dockerfile DOCKER_FROM ARG',
+      matchDatasources: [
+        'docker',
+      ],
+      matchDepNames: [
+        'ubuntu',
+      ],
+      enabled: false,
     },
   ],
 }
