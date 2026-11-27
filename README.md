@@ -137,14 +137,19 @@ Do these steps when a data directory that an Ubuntu 22.04 image made starts with
 
 - Before the move, update the extension in each database that has `timescaledb_toolkit` 1.18.0:
   `ALTER EXTENSION timescaledb_toolkit UPDATE`. The Ubuntu 24.04 images do not have the 1.18.0 library.
-- A database with the `C`, `POSIX` or `C.UTF-8` locale needs no step. `docker-entrypoint.sh` makes `C.UTF-8` databases.
-- A database with a glibc locale such as `en_US.UTF-8` logs `collation version mismatch` for each connection, and
-  `CREATE DATABASE` fails until `template1` has the new version. Rebuild the indexes on text columns if you cannot
-  accept a risk of a changed sort order, then run this in each database, `template1` included:
-  `ALTER DATABASE <name> REFRESH COLLATION VERSION`.
 - ICU 74 sorts some strings in a different order than ICU 70. An index that uses an ICU collation can be corrupt
-  after the move. Run `REINDEX` on each of these indexes, then run `ALTER COLLATION <name> REFRESH VERSION` for each
-  collation that reports a mismatch. This query lists the indexes:
+  after the move. Do this step in each database, also when its default locale is `C`, `POSIX` or `C.UTF-8`: a
+  column or an index can name an ICU collation. Run `REINDEX` on each index that the query below lists, then run
+  `ALTER COLLATION <name> REFRESH VERSION` for each collation that reports a mismatch.
+- A database whose default locale is a glibc locale such as `en_US.UTF-8`, or an ICU locale, logs
+  `collation version mismatch` for each connection, and `CREATE DATABASE` fails until `template1` has the new
+  version. For a glibc locale, rebuild the indexes on text columns if you cannot accept a risk of a changed sort
+  order. For an ICU locale, the query below lists the indexes to rebuild. Then run this for each database,
+  `template1` included: `ALTER DATABASE <name> REFRESH COLLATION VERSION`.
+- A database whose default locale is `C`, `POSIX` or `C.UTF-8` has no default collation version, so it needs only
+  the first step. `docker-entrypoint.sh` makes `C.UTF-8` databases.
+
+This query lists the indexes that use an ICU collation:
 
 ```sql
 SELECT DISTINCT i.indexrelid::regclass AS index, c.collname
