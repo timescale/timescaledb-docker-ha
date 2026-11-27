@@ -94,8 +94,14 @@ RUN arch="$(dpkg --print-architecture)"; \
     rm -f /tmp/yq
 
 # pgbackrest-exporter
+# The sha256 values are for this version. Change the version and the values together.
 ARG PGBACKREST_EXPORTER_VERSION="0.18.0"
 RUN arch="$(arch)"; [ "$arch" = aarch64 ] && arch=arm64; pkg="pgbackrest_exporter_${PGBACKREST_EXPORTER_VERSION}_linux_${arch}"; \
+    case "$(dpkg --print-architecture)" in \
+        amd64) sha256='2a7f4b2c29c4b6123c4f6f394c5a0933288f898595351243c2c21510d30cdf49' ;; \
+        arm64) sha256='92b3f61de59225c845f977908827acd4134a79e8f5f21ebe858ee12ea1c30b0d' ;; \
+        *) echo >&2 "no pgbackrest_exporter sha256 for $(dpkg --print-architecture)"; exit 1 ;; \
+    esac; \
     curl --silent \
         --show-error \
         --fail \
@@ -104,13 +110,20 @@ RUN arch="$(arch)"; [ "$arch" = aarch64 ] && arch=arm64; pkg="pgbackrest_exporte
         --location \
         --output /tmp/pkg.deb \
         "https://github.com/woblerr/pgbackrest_exporter/releases/download/v${PGBACKREST_EXPORTER_VERSION}/${pkg}.deb"; \
+    echo "${sha256}  /tmp/pkg.deb" | sha256sum -c -; \
     cd /tmp; \
     dpkg -i ./pkg.deb; \
     rm -rfv /tmp/pkg.deb
 
 # pgbouncer-exporter
+# The sha256 values are for this version. Change the version and the values together.
 ARG PGBOUNCER_EXPORTER_VERSION="0.9.0"
 RUN pkg="pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-$(dpkg --print-architecture)"; \
+    case "$(dpkg --print-architecture)" in \
+        amd64) sha256='405a9eaf1576d262c933dc3d325444c87adc2aefca3d61cc523ce179f81dc9dd' ;; \
+        arm64) sha256='bf6dd0bf9322eb4769017fa0c9f1a7e8d3667c42d0c752cf2244883d876c2ffb' ;; \
+        *) echo >&2 "no pgbouncer_exporter sha256 for $(dpkg --print-architecture)"; exit 1 ;; \
+    esac; \
     curl --silent \
         --show-error \
         --fail \
@@ -119,6 +132,7 @@ RUN pkg="pgbouncer_exporter-${PGBOUNCER_EXPORTER_VERSION}.linux-$(dpkg --print-a
         --location \
         --output /tmp/pkg.tgz \
         "https://github.com/prometheus-community/pgbouncer_exporter/releases/download/v${PGBOUNCER_EXPORTER_VERSION}/${pkg}.tar.gz"; \
+    echo "${sha256}  /tmp/pkg.tgz" | sha256sum -c -; \
     cd /tmp; \
     tar xvzf /tmp/pkg.tgz "$pkg"/pgbouncer_exporter; \
     mv -v /tmp/"$pkg"/pgbouncer_exporter /usr/local/bin/pgbouncer_exporter; \
