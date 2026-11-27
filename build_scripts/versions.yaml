@@ -108,9 +108,6 @@ timescaledb:
 #    pg-min: 16
 #    pg-max: 18
 toolkit:
-  1.18.0:
-    cargo-pgrx: 0.10.2
-    pg-max: 16
   1.19.0:
     cargo-pgrx: 0.12.8
     pg-max: 17
