@@ -91,6 +91,7 @@ RUN apt-get update; \
         pg-activity lsof htop
 
 # A new upstream yq release must not change the image, so the build checks a fixed sha256.
+# renovate: datasource=github-releases depName=mikefarah/yq extractVersion=^v(?<version>.*)$
 ARG YQ_VERSION="4.54.3"
 RUN arch="$(dpkg --print-architecture)"; \
     case "$arch" in \
@@ -340,6 +341,7 @@ RUN apt-get install -y timescaledb-tools
 ## which allows this Docker Image to be a drop-in replacement for those Docker Images.
 # The ref is a commit SHA, so a push to timescaledb-docker cannot change this image.
 # The HEAD check also stops a branch or tag that has the same name as the SHA.
+# renovate-branch: datasource=git-refs depName=timescale/timescaledb-docker packageName=https://github.com/timescale/timescaledb-docker branch=main
 ARG GITHUB_TIMESCALEDB_DOCKER_REF=bf86167470ea968e678ab1f01135acca300dacf2
 ARG GITHUB_DOCKERLIB_POSTGRES_REF=master
 

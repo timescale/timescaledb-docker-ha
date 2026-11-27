@@ -112,6 +112,8 @@ GITHUB_OUTPUT?=/dev/null
 
 # These parameters control which entrypoints we add to the scripts
 GITHUB_DOCKERLIB_POSTGRES_REF=master
+# The Dockerfile ARG default repeats this pin, so Renovate updates both.
+# renovate-branch: datasource=git-refs depName=timescale/timescaledb-docker packageName=https://github.com/timescale/timescaledb-docker branch=main
 GITHUB_TIMESCALEDB_DOCKER_REF=bf86167470ea968e678ab1f01135acca300dacf2
 
 ALLOW_ADDING_EXTENSIONS?=true
