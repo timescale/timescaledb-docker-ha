@@ -78,9 +78,20 @@ RUN apt-get update; \
     apt-get install -y \
         less jq strace procps awscli vim-tiny gdb gdbserver dumb-init daemontools \
         postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop libnss-wrapper gosu \
-        pg-activity lsof htop; \
-    curl -fsSL --retry 5 --retry-connrefused -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_"$(dpkg --print-architecture)"; \
-    chmod 755 /usr/local/bin/yq
+        pg-activity lsof htop
+
+# A new upstream yq release must not change the image, so the build checks a fixed sha256.
+ARG YQ_VERSION="4.54.3"
+RUN arch="$(dpkg --print-architecture)"; \
+    case "$arch" in \
+        amd64) sha256='129534601871538efe0ba4c5e62a34fb1d5f469bcb975c4fddeb467d82974973' ;; \
+        arm64) sha256='89f69310b61b68d1245065a1241d1fc843f7a36cd6103ffd77ad987613bd1b67' ;; \
+        *) echo >&2 "no yq sha256 for ${arch}"; exit 1 ;; \
+    esac; \
+    curl -fsSL --retry 5 --retry-connrefused -o /tmp/yq "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_${arch}"; \
+    echo "${sha256}  /tmp/yq" | sha256sum -c -; \
+    install -m 755 /tmp/yq /usr/local/bin/yq; \
+    rm -f /tmp/yq
 
 # pgbackrest-exporter
 ARG PGBACKREST_EXPORTER_VERSION="0.18.0"
