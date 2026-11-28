@@ -74,6 +74,21 @@
       ],
       versioningTemplate: 'semver-coerced',
     },
+    {
+      // The build checks out a commit of a branch, not a tag. Renovate
+      // follows the head of the branch and changes the commit:
+      //   # renovate-branch: datasource=git-refs depName=<name> packageName=<git URL> branch=<branch>
+      //   NAME=<commit>
+      customType: 'regex',
+      description: 'Commit pins that follow a branch, with a "# renovate-branch:" comment',
+      managerFilePatterns: [
+        '/(^|/)Makefile$/',
+        '/(^|/)Dockerfile$/',
+      ],
+      matchStrings: [
+        '# renovate-branch: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+) packageName=(?<packageName>[^\\s]+) branch=(?<currentValue>[^\\s]+)\\n[^\\n]*?=(?<currentDigest>[0-9a-f]{40})',
+      ],
+    },
   ],
   packageRules: [
     {
@@ -148,6 +163,17 @@
       automerge: false,
     },
     {
+      // git-refs gives no release timestamp. With the 7-day gate, Renovate
+      // holds the update forever. A person merges this PR, so the gate is off.
+      description: 'The timescaledb-docker commit pin goes in the timescale extensions PR',
+      matchDepNames: [
+        'timescale/timescaledb-docker',
+      ],
+      groupName: 'timescale extensions',
+      automerge: false,
+      minimumReleaseAge: null,
+    },
+    {
       // Renovate changes only the version. The build fails until a person
       // adds the sha256 values of the new release to the PR. A separate
       // group keeps that failure out of the non-major group.
@@ -156,6 +182,7 @@
         'prometheus-community/pgbouncer_exporter',
         'woblerr/pgbackrest_exporter',
         'tensorchord/VectorChord',
+        'mikefarah/yq',
       ],
       groupName: 'sha256-pinned downloads',
       automerge: false,
