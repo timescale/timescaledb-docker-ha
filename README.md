@@ -128,3 +128,38 @@ For `OSS_ONLY` builds, the following tags will be published:
 
 The `-all` portion of the tags specifies that the image contains pg15, as well as version 13, and 14. Otherwise, only
 the single version of PostgreSQL is included in the image.
+
+## Move a data directory from an Ubuntu 22.04 image to an Ubuntu 24.04 image
+
+The Ubuntu 24.04 images have glibc 2.39 and ICU 74. The Ubuntu 22.04 images have glibc 2.35 and ICU 70. PostgreSQL
+records the collation version of each database and collation, and compares it with the version of the library.
+Do these steps when a data directory that an Ubuntu 22.04 image made starts with an Ubuntu 24.04 image:
+
+- Before the move, update the extension in each database that has `timescaledb_toolkit` 1.18.0:
+  `ALTER EXTENSION timescaledb_toolkit UPDATE`. The Ubuntu 24.04 images do not have the 1.18.0 library.
+- ICU 74 sorts some strings in a different order than ICU 70. An index that uses an ICU collation can be corrupt
+  after the move. Do this step in each database, also when its default locale is `C`, `POSIX` or `C.UTF-8`: a
+  column or an index can name an ICU collation. Run `REINDEX` on each index that the query below lists, then run
+  `ALTER COLLATION <name> REFRESH VERSION` for each collation that reports a mismatch.
+- A database whose default locale is a glibc locale such as `en_US.UTF-8`, or an ICU locale, logs
+  `collation version mismatch` for each connection, and `CREATE DATABASE` fails until `template1` has the new
+  version. For a glibc locale, rebuild the indexes on text columns if you cannot accept a risk of a changed sort
+  order. For an ICU locale, the query below lists the indexes to rebuild. Then run this for each database,
+  `template1` included: `ALTER DATABASE <name> REFRESH COLLATION VERSION`.
+- A database whose default locale is `C`, `POSIX` or `C.UTF-8` has no default collation version, so it does not
+  need the `ALTER DATABASE` command. The ICU step still applies to it. `docker-entrypoint.sh` makes `C.UTF-8`
+  databases.
+
+This query lists the indexes that have a key column with an ICU collation. It does not find an index that uses an
+ICU collation only in an expression or in a `WHERE` clause. If the database can have such indexes, run
+`REINDEX DATABASE` instead.
+
+```sql
+SELECT DISTINCT i.indexrelid::regclass AS index, c.collname
+FROM pg_index i
+CROSS JOIN LATERAL unnest(i.indcollation) AS u(colloid)
+JOIN pg_collation c ON c.oid = u.colloid
+WHERE c.collprovider = 'i'
+   OR (c.collprovider = 'd'
+       AND (SELECT datlocprovider = 'i' FROM pg_database WHERE datname = current_database()));
+```

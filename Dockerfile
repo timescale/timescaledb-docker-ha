@@ -25,7 +25,7 @@
 ## the changes required are not that big for this Docker Image. Most of the
 ## tools we use will be the same across the board, as most of our tools our
 ## installed using external repositories.
-ARG DOCKER_FROM=ubuntu:22.04
+ARG DOCKER_FROM=ubuntu:24.04
 FROM ${DOCKER_FROM} AS base
 
 SHELL ["/bin/bash", "-exu", "-o", "pipefail", "-c"]
@@ -40,8 +40,10 @@ ARG PG_MAJOR=17
 ENV DEBIAN_FRONTEND=noninteractive
 
 # We need full control over the running user, including the UID, therefore we
-# create the postgres user as the first thing on our list
-RUN adduser --home /home/postgres --uid 1000 --disabled-password --gecos "" postgres
+# create the postgres user as the first thing on our list.
+# ubuntu:24.04 has a user "ubuntu" with UID 1000, and does not have adduser.
+RUN if id ubuntu >/dev/null 2>&1; then userdel --remove ubuntu; fi; \
+    useradd --create-home --home-dir /home/postgres --uid 1000 --user-group --shell /bin/bash postgres
 
 RUN echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf.d/01norecommend
 RUN echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/01norecommend
@@ -86,7 +88,7 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/t
 RUN apt-get update; \
     apt-get upgrade -y; \
     apt-get install -y \
-        less jq strace procps awscli vim-tiny gdb gdbserver dumb-init daemontools \
+        less jq strace procps vim-tiny gdb gdbserver dumb-init daemontools \
         postgresql-common pgbouncer pgbackrest lz4 libpq-dev libpq5 pgtop libnss-wrapper gosu \
         pg-activity lsof htop
 
@@ -103,6 +105,21 @@ RUN arch="$(dpkg --print-architecture)"; \
     echo "${sha256}  /tmp/yq" | sha256sum -c -; \
     install -m 755 /tmp/yq /usr/local/bin/yq; \
     rm -f /tmp/yq
+
+# Ubuntu 24.04 has no awscli package, so this installs AWS CLI v2 from the AWS bundle.
+ARG AWSCLI_VERSION="2.41.2"
+RUN arch="$(arch)"; \
+    case "$arch" in \
+        x86_64) awscliSha256='2db6f80635cf554a506f3b3c1d070937b87526193fb37e0ac80c8705398219da' ;; \
+        aarch64) awscliSha256='710601ab1a7d15622416e3a6c238dc04a58cce6d920cae3307dbe4667d4f96bb' ;; \
+        *) echo >&2 "unsupported architecture: ${arch}"; exit 1 ;; \
+    esac; \
+    curl -fsSL --retry 5 --retry-connrefused -o /tmp/awscli.zip "https://awscli.amazonaws.com/awscli-exe-linux-${arch}-${AWSCLI_VERSION}.zip"; \
+    echo "${awscliSha256} */tmp/awscli.zip" | sha256sum -c -; \
+    unzip -q /tmp/awscli.zip -d /tmp; \
+    /tmp/aws/install; \
+    rm -rf /tmp/awscli.zip /tmp/aws; \
+    aws --version
 
 # pgbackrest-exporter
 # The sha256 values are for this version. Change the version and the values together.
@@ -191,15 +208,9 @@ RUN apt-get install -y python3 python3-pip
 
 # We install some build dependencies and mark the installed packages as auto-installed,
 # this will cause the cleanup to get rid of all of these packages
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev meson ninja-build"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python3-dev wget libsodium-dev meson ninja-build"
 RUN apt-get update && apt-get install -y ${BUILD_PACKAGES}
 RUN apt-mark auto ${BUILD_PACKAGES}
-
-# https://salsa.debian.org/postgresql/postgresql/-/commit/b995beb3cd1c2b8834605007227b3cedab6462e4
-# This looks like a build-/test-only dependency, and they expect us to use the real tzdata when actually running.
-# TODO: keep watching this to see if they remove the limitation. If the old tzdata becomes unavailable, we'll have to
-# do something more drastic.
-RUN apt-get install -y --allow-downgrades tzdata="2022a-*"
 
 # versions.yaml is copied in later, so a change to it does not rebuild the PostgreSQL install.
 COPY --chown=postgres:postgres build_scripts/*.sh build_scripts/install_extensions build_scripts/postgres_versions.yaml /build/scripts/
@@ -209,9 +220,6 @@ RUN apt-get update; \
     for pg in ${PG_VERSIONS}; do \
         mk-build-deps "postgresql-${pg}" && apt-get install -y ./postgresql-${pg}-build-deps*.deb && apt-mark auto postgresql-${pg}-build-deps || exit 1; \
     done
-
-# TODO: There's currently a build-dependency problem related to tzdata, remove this when it's resolved
-RUN apt-get install -y tzdata
 
 RUN packages=""; \
     for pg in ${PG_VERSIONS}; do \
@@ -332,7 +340,9 @@ RUN apt-get install -y python3-etcd python3-requests python3-pystache python3-ku
 
 # Barman cloud
 # Required for CloudNativePG compatibility
-RUN pip3 install --no-cache-dir 'barman[cloud,azure,snappy,google]'
+# Ubuntu 24.04 marks the system Python as externally managed (PEP 668). pip
+# still installs into /usr/local, as it did on 22.04.
+RUN pip3 install --no-cache-dir --break-system-packages 'barman[cloud,azure,snappy,google]'
 
 RUN apt-get install -y timescaledb-tools
 
@@ -656,7 +666,7 @@ FROM builder AS trimmed
 
 USER root
 
-ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python2-dev python3-dev wget libsodium-dev"
+ENV BUILD_PACKAGES="binutils cmake devscripts equivs gcc git gpg gpg-agent libc-dev libc6-dev libkrb5-dev libperl-dev libssl-dev lsb-release make patchutils python3-dev wget libsodium-dev"
 
 RUN set -ex; \
     apt-get purge -y ${BUILD_PACKAGES}; \
