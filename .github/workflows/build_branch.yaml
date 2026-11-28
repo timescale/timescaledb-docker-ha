@@ -48,10 +48,9 @@ jobs:
       # BuildKit pulls the base image straight from Docker Hub. A login with the
       # pull-only token gives a higher pull limit than anonymous pulls.
       - name: Login to Docker Hub
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        uses: $/.github/actions/docker-hub-login
         with:
-          username: timescale
-          password: ${{ secrets.DOCKER_HUB_PULL_TOKEN }}
+          token: ${{ secrets.DOCKER_HUB_PULL_TOKEN }}
 
       - name: Setup | Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0

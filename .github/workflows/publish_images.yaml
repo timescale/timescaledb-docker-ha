@@ -86,10 +86,9 @@ jobs:
 
       # An organization access token logs in with the organization name.
       - name: Login to Docker Hub
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        uses: $/.github/actions/docker-hub-login
         with:
-          username: timescale
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          token: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Setup | Docker Context
         run: if ! docker context use ha-builder; then docker context create ha-builder; fi
@@ -256,10 +255,9 @@ jobs:
 
       # An organization access token logs in with the organization name.
       - name: Login to Docker Hub
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        uses: $/.github/actions/docker-hub-login
         with:
-          username: timescale
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          token: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       # No rebuild: the release tags get the digests that the publish jobs checked.
       # /tmp/outputs gets the amd64 version_info last, as before.

@@ -1,0 +1,19 @@
+name: Login to Docker Hub
+description: Log in to Docker Hub as the timescale organization, and try again when the login fails
+inputs:
+  token:
+    description: Docker Hub access token of the timescale organization
+    required: true
+  attempts:
+    description: Number of login attempts before the step fails. The wait between attempts starts at 15 s, doubles, and stops at 2 min.
+    default: "10"
+runs:
+  using: composite
+  steps:
+    # auth.docker.io sometimes times out, so one failed login must not fail a
+    # long build job. login-action has no retry, so the script runs docker login.
+    - shell: bash
+      env:
+        DOCKER_HUB_TOKEN: ${{ inputs.token }}
+        ATTEMPTS: ${{ inputs.attempts }}
+      run: '"${GITHUB_ACTION_PATH}/login.sh"'
